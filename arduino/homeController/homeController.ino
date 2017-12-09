@@ -1,3 +1,4 @@
+
 // Copyright 2017 Stefan Schmidt
 
 #include <WiFi.h>
@@ -5,11 +6,15 @@
 #include <PubSubClient.h>
 #include "homeController_cfg.h"
 #include "SimpleEsp32Ble.h"
+#include "HomeBle.h"
 
 static char strMqttStatus[6];
 static uint8_t bleCmd[7];
 static uint8_t bleCmdLen;
- 
+
+HomeBLE* ble;
+BLEAddr bleAddr("00:1a:22:0c:5e:15");
+
 WiFiClient espClient;
 PubSubClient client(espClient);
 
@@ -135,6 +140,10 @@ printMem();
   bleCmdLen = 0;
 }*/
 
+
+
+ 
+
  
 void setup() {
 
@@ -143,16 +152,15 @@ void setup() {
 
   Serial.begin(115200);
   printMem();
-  initBLE();
 
-//  BLEDevice::init("");
-//  pBLEServerAddress = new BLEAddress("00:1a:22:0c:5e:15");
-//  pBLEClient = BLEDevice::createClient();
+  ble = new HomeBLE();
+  ble->init();
+
   client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);
 
   WiFi.begin(WLAN_SSID, WLAN_PASSWORD);
-printMem();
+  printMem();
 
 }
 
@@ -160,30 +168,30 @@ printMem();
 void connectWLAN()
 {
   if(WiFi.status() != WL_CONNECTED) {
-
-    printMem();
+    int i=15;
+    Serial.print("Connecting to WiFi..");
     while (WiFi.status() != WL_CONNECTED) {
+      if(--i == 0) {
+        Serial.println(" trying reboot");
+        softReset();
+      }
       delay(1000);
-      Serial.println("Connecting to WiFi..");
+      Serial.print(".");
     }
-    Serial.println("connected!");
-printMem();
-}
+    Serial.println(" connected!");
+  }
 }
 
 void connectMQTT()
 {
   while (!client.connected()) {
-    Serial.println("Connecting to MQTT...");
- printMem();
+    Serial.print("Connecting to MQTT.. ");
     if (client.connect("ESP32Client", MQTT_USER, MQTT_PASSWORD )) {
- printMem();
       Serial.println("connected!");  
       client.subscribe("eq3/mode");
-printMem();      
     } else {
       Serial.print("failed with state ");
-      Serial.print(client.state());
+      Serial.println(client.state());
       delay(2000);
     }
   }
@@ -284,7 +292,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
- 
+
 void loop() {
 
   connectWLAN();
@@ -297,5 +305,18 @@ void loop() {
 
   publishMqttStatus();  
 
-  updateBLE(bleCmd, &bleCmdLen);
+  if(bleCmdLen > 0)
+  {
+    if(ble->isState(SimpleBLE::disconnected)) {
+      ble->connect(bleAddr);
+    }
+
+    if(ble->isState(SimpleBLE::ready)) {
+      if( ble->write(0x411, bleCmd, bleCmdLen, true) ) {
+        bleCmdLen = 0;
+      }
+    }
+  }
+
+//  updateBLE(bleCmd, &bleCmdLen);
 }
