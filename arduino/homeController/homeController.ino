@@ -1,9 +1,10 @@
 // Copyright 2017 Stefan Schmidt
 
 #include <WiFi.h>
-#include "BLEDevice.h"
+//#include "BLEDevice.h"
 #include <PubSubClient.h>
 #include "homeController_cfg.h"
+#include "SimpleEsp32Ble.h"
 
 static char strMqttStatus[6];
 static uint8_t bleCmd[7];
@@ -12,7 +13,7 @@ static uint8_t bleCmdLen;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-
+/*
 static BLEUUID serviceUUID("3e135142-654f-9090-134a-a6ff5bb77046");
 static BLEUUID cmdUUID("3fa4585a-ce4a-3bad-db4b-b8df8179ea09");
 static BLEUUID notificationUUID("d0e8434d-cd29-0996-af41-6c90f4e0eb2a");
@@ -21,11 +22,27 @@ static BLERemoteCharacteristic* pBLERemoteCharacteristic;
 static BLERemoteCharacteristic* pBLENotificationCharacteristic;
 static BLEClient* pBLEClient;
 static BLERemoteService* pBLERemoteService;
-
+*/
 
 void(* softReset) (void) = 0;//declare reset function at address 0
 
 
+void printMem()
+{
+  Serial.print("mem: ");
+  Serial.print(xPortGetFreeHeapSize());
+  Serial.print("/");
+  Serial.println(xPortGetMinimumEverFreeHeapSize());
+}
+
+void setMqttResponse(uint8_t* pData, size_t length) {
+    if(length==6) {
+      sprintf(strMqttStatus, "*%02x%02x%02x%02x", pData[2], pData[3], pData[4], pData[5]);
+    }
+  
+}
+
+/*
 static void notifyCallback( BLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) 
 {
     Serial.print(">BT: len: ");
@@ -49,17 +66,8 @@ bool executeBLE() {
     Serial.println("Still connected to BLE");
   }
   else {
-
-    if(pBLEClient) {
-      Serial.println("BLE connection lost. Delete old client.");
-      pBLEClient->disconnect();
-      delay(100);
-      delete pBLEClient;
-      delay(500);
-    }
-
-    pBLEClient = BLEDevice::createClient();
-    
+ 
+    printMem();
     Serial.print("Connecting to BLE: ");
     Serial.print(pBLEServerAddress->toString().c_str());
     
@@ -69,6 +77,8 @@ bool executeBLE() {
       Serial.println(" ..failed!");
       return false;
     }
+
+    printMem();
 
     // Obtain a reference to the service we are after in the remote BLE server.
     pBLERemoteService = pBLEClient->getService(serviceUUID);
@@ -96,59 +106,81 @@ bool executeBLE() {
       pBLENotificationCharacteristic->registerForNotify(notifyCallback);
     }
     Serial.println("..BLE ready");
+    delay(200);
   }
 
+printMem();
   Serial.print("<BT: ");
   for(uint8_t i=0; i<bleCmdLen; i++) {
     Serial.print(bleCmd[i], HEX);
     Serial.print(", ");
   }
-  Serial.println("");
-  pBLERemoteCharacteristic->writeValue(bleCmd, bleCmdLen, true);
+  Serial.print(" : ");  
+  Serial.println(bleCmdLen);
+  
+  if(pBLERemoteCharacteristic) {
+    pBLERemoteCharacteristic->writeValue(bleCmd, bleCmdLen, true);
+  }
   Serial.println("-writeValue");
+printMem();
+
+  if(pBLENotificationCharacteristic) {
+
+    if(pBLENotificationCharacteristic->canRead()) {
+
+      
+    }
+  }
 
   bleCmdLen = 0;
-}
+}*/
 
  
 void setup() {
 
   strMqttStatus[0] = 0;
   bleCmdLen = 0;
-  pBLEClient = nullptr;
 
   Serial.begin(115200);
+  printMem();
+  initBLE();
 
-  BLEDevice::init("");
-  pBLEServerAddress = new BLEAddress("00:1a:22:0c:5e:15");
+//  BLEDevice::init("");
+//  pBLEServerAddress = new BLEAddress("00:1a:22:0c:5e:15");
+//  pBLEClient = BLEDevice::createClient();
   client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);
 
   WiFi.begin(WLAN_SSID, WLAN_PASSWORD);
+printMem();
+
 }
 
 
 void connectWLAN()
 {
   if(WiFi.status() != WL_CONNECTED) {
-    
+
+    printMem();
     while (WiFi.status() != WL_CONNECTED) {
       delay(1000);
       Serial.println("Connecting to WiFi..");
     }
     Serial.println("connected!");
-  }
+printMem();
+}
 }
 
 void connectMQTT()
 {
   while (!client.connected()) {
     Serial.println("Connecting to MQTT...");
- 
+ printMem();
     if (client.connect("ESP32Client", MQTT_USER, MQTT_PASSWORD )) {
- 
+ printMem();
       Serial.println("connected!");  
       client.subscribe("eq3/mode");
+printMem();      
     } else {
       Serial.print("failed with state ");
       Serial.print(client.state());
@@ -177,6 +209,7 @@ void publishMqttStatus()
       Serial.println(" - FAILED");
     }
     strMqttStatus[0] = 0;
+    printMem();
   }
 }
 
@@ -246,6 +279,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
       bleCmd[6] = getNextVal(payload+11); // second
       bleCmdLen = 7;
     }
+
+    printMem();
   }
 }
 
@@ -258,7 +293,9 @@ void loop() {
   
   client.loop();
 
-  executeBLE();
+ // executeBLE();
 
   publishMqttStatus();  
+
+  updateBLE(bleCmd, &bleCmdLen);
 }
