@@ -1,5 +1,6 @@
 package de.meek.myhome;
 
+import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,6 +9,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -20,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import helpers.Format;
 import helpers.MqttHelper;
 
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
@@ -114,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
     NoDefaultSpinner spinnerTemp;
     Handler handler = new Handler();
     Handler handlerRefresh = new Handler();
+    Button button;
 
 
     CmdItem2 cmdBoost = new CmdItem2("Boost on", "booston", "Boost off", "boostoff", false);
@@ -212,6 +217,34 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == Const.ACTIVITY_TEMP) {
+            if (resultCode == RESULT_OK) {
+
+                String cmd = data.getStringExtra("cmd");
+                if(cmd!=null) {
+                    mqttHelper.sendCmd(cmd);
+                }
+
+                int newTemp = data.getIntExtra("newTemp", -1);
+                if(newTemp != -1) {
+                    requestSetTemp(newTemp);
+                }
+            }
+        }
+    }
+
+    public void showTempActivity(View view) {
+        Intent intent = new Intent(this, TempActivity.class);
+//        EditText editText = (EditText) findViewById(R.id.editText);
+    //    String message = editText.getText().toString();
+        intent.putExtra("temp", temp);
+        intent.putExtra("percent", percent);
+        intent.putExtra( "room","Wohnzimmer");
+    //    startActivity(intent);
+        startActivityForResult(intent,Const.ACTIVITY_TEMP);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -221,6 +254,7 @@ public class MainActivity extends AppCompatActivity {
         txtViewStatus = (TextView) findViewById(R.id.txtViewStatus);
         txtViewMsg = (TextView) findViewById(R.id.txtViewMsg);
         txtViewTemp = (TextView) findViewById(R.id.txtViewTemp);
+        button = (Button) findViewById(R.id.button);
 
 
 
@@ -352,9 +386,12 @@ public class MainActivity extends AppCompatActivity {
                             statusStr += " - on";
 
 
-                        String tempStr = (Float.toString(temp/10f) +  "°  (" + percent + "%)");
+                        //String tempStr = (Float.toString(temp/10f) +  "°  (" + percent + "%)");
+                        String tempStr = Format.tempToString(temp, percent);
                         txtViewStatus.setText(statusStr);
                         txtViewTemp.setText(tempStr);
+
+                        button.setText(statusStr + "   " + tempStr);
 
                         cmdBoost.setState2(boostIsActive);
 
