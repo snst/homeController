@@ -12,7 +12,7 @@
     <LinearLayout
         android:id="@+id/linearLayout"
         android:layout_width="0dp"
-        android:layout_height="184dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:gravity="top"
         android:orientation="vertical"
@@ -28,14 +28,41 @@
             android:layout_marginTop="10dp"
             android:onClick="onBtnRoom"
             android:tag="Living"
-            android:text="Room"
+            android:text="Living"
+            android:textSize="22sp" />
+
+        <Button
+            android:id="@+id/btnRoom2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:tag="Bed"
+            android:text="Bed"
+            android:textSize="22sp" />
+
+        <Button
+            android:id="@+id/btnRoom3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:tag="Bath"
+            android:text="Bath"
+            android:textSize="22sp" />
+
+        <Button
+            android:id="@+id/btnRoom4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:tag="Kitchen"
+            android:text="Kitchen"
             android:textSize="22sp" />
 
         <Button
             android:id="@+id/btnRefresh"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="20dp"
             android:onClick="onBtnRefresh"
             android:text="Refresh"
             android:textSize="22sp" />
