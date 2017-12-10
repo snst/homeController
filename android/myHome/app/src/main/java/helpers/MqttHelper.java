@@ -13,20 +13,22 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import de.meek.myhome.AccountConfig;
+
 /**
- * Created by stefan schmidt on 02.12.2017.
+ * Created by stefan on 02.12.2017.
  */
 
 public class MqttHelper {
     public MqttAndroidClient mqttAndroidClient;
 
-    final String serverUri = "tcp://xxx.cloudmqtt.com:17695";
+    final String serverUri = AccountConfig.MQTT_SERVER_URI;
 
-    final String clientId = "ExampleAndroidClient";
-    final String subscriptionTopic = "eq3/+";
+    final String clientId = AccountConfig.MQTT_CLIENT_ID;
+    final String subscriptionTopic = AccountConfig.MQTT_SUBSCRIPTION_TOPIC;
 
-    final String username = "xxx";
-    final String password = "xxx";
+    final String username = AccountConfig.MQTT_USERNAME;
+    final String password = AccountConfig.MQTT_PASSWORD;
 
     public MqttHelper(Context context){
         mqttAndroidClient = new MqttAndroidClient(context, serverUri, clientId);
