@@ -5,12 +5,10 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -19,115 +17,26 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
-import helpers.Format;
 import helpers.MqttHelper;
 
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
 public class MainActivity extends AppCompatActivity {
 
-
-    interface ICmd {
-        public String toString();
-        public String getCmd();
-        public void exec();
-    }
-
-    public class CmdTemp implements ICmd {
-
-        int temp;
-        public CmdTemp(int _temp)
-        {
-            temp = _temp;
-        }
-        public String getCmd() { return null; }
-        public String toString() {
-            if(temp==45)
-                return "Off";
-            else if(temp==300)
-                return "On";
-            else
-                return Float.toString(temp/10f) +  "°";
-        }
-        public void exec() { requestSetTemp(temp);}
-
-    }
-
-    public class CmdItem implements ICmd {
-        public String name;
-        public String cmd;
-
-        public CmdItem(String _name, String _cmd) {
-            name = _name;
-            cmd = _cmd;
-        }
-        public CmdItem(String _name) {
-            name = _name;
-            cmd = null;
-        }
-
-        public String getCmd() {
-            return cmd;
-        }
-
-        public void exec() {};
-
-        public String toString() {
-            return name;
-        }
-    }
-
-    public class CmdItem2 implements ICmd {
-        public String name;
-        public String cmd;
-        public String name2;
-        public String cmd2;
-        public boolean state2;
-
-        public CmdItem2(String _name, String _cmd, String _name2, String _cmd2, boolean _state2) {
-            name = _name;
-            name2 = _name2;
-            cmd = _cmd;
-            cmd2 = _cmd2;
-            state2 = _state2;
-        }
-
-        public String getCmd() {
-            return state2 ? cmd2 : cmd;
-        }
-
-        public String toString() {
-            return state2 ? name2 : name;
-        }
-
-        public void setState2(boolean _state2) {
-            state2 = _state2;
-        }
-
-        public void exec() {}
-    }
-
     MqttHelper mqttHelper;
-    TextView txtViewStatus;
     TextView txtViewMsg;
-    TextView txtViewTemp;
-    NoDefaultSpinner spinner;
-    NoDefaultSpinner spinnerTemp;
     Handler handler = new Handler();
-    Handler handlerRefresh = new Handler();
-    Button button;
-
-
-    CmdItem2 cmdBoost = new CmdItem2("Boost on", "booston", "Boost off", "boostoff", false);
-
+    boolean modeAuto = false;
+    boolean boostIsActive = false;
+    int temp;
+    int percent;
     int msgCntStatus = 0;
     int msgCntMode = 0;
 
-    int temp;
-    int percent;
+    public void sendCmd(String cmd) {
+        mqttHelper.sendCmd(cmd);
+    }
 
     public void requestStatus() {
         DateFormat dateFormat = new SimpleDateFormat("yyMMddHHmmss");
@@ -136,21 +45,9 @@ public class MainActivity extends AppCompatActivity {
         mqttHelper.sendCmd(txt);
     }
 
-    /*
-    public void requestUpdatePeriodic() {
-        handlerRefresh.removeCallbacksAndMessages(null);
-        handlerRefresh.postDelayed(new Runnable() {
-
-            @Override
-            public void run() {
-                requestStatus();
-            }
-
-        }, 10000); // 5000ms delay
-    }
-*/
-
     public void requestSetTemp(int temp) {
+        sendCmd("t" + Integer.toString(temp));
+        /*
         final int val = temp;
         handler.removeCallbacksAndMessages(null);
         handler.postDelayed(new Runnable() {
@@ -161,60 +58,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }, 1000); // 5000ms delay
-    }
-
-    public void updateTempSpinner(int temp) {
-
-        List<CmdTemp> spinnerTempArray = new ArrayList<CmdTemp>();
-        spinnerTempArray.add(new CmdTemp(45));
-        spinnerTempArray.add(new CmdTemp(75));
-        spinnerTempArray.add(new CmdTemp(100));
-        spinnerTempArray.add(new CmdTemp(125));
-        spinnerTempArray.add(new CmdTemp(150));
-        spinnerTempArray.add(new CmdTemp(170));
-        spinnerTempArray.add(new CmdTemp(180));
-        spinnerTempArray.add(new CmdTemp(190));
-        spinnerTempArray.add(new CmdTemp(200));
-        spinnerTempArray.add(new CmdTemp(210));
-        spinnerTempArray.add(new CmdTemp(220));
-        spinnerTempArray.add(new CmdTemp(230));
-        spinnerTempArray.add(new CmdTemp(240));
-        spinnerTempArray.add(new CmdTemp(250));
-        spinnerTempArray.add(new CmdTemp(260));
-        spinnerTempArray.add(new CmdTemp(280));
-        spinnerTempArray.add(new CmdTemp(300));
-
-        /*
-        CmdTemp c = (CmdTemp) spinnerTemp.getSelectedItem();
-        if(c != null && c.temp == temp)
-            return;
-
-
-        List<CmdTemp> spinnerTempArray = new ArrayList<CmdTemp>();
-
-        spinnerTempArray.add(new CmdTemp(45));
-        for(int t=50; t<300; t+=10)
-        {
-            if(t==temp && temp>150) {
-                spinnerTempArray.add(new CmdTemp(t-5));
-            }
-            spinnerTempArray.add(new CmdTemp(t));
-            if(t==temp && temp<240) {
-                spinnerTempArray.add(new CmdTemp(t+5));
-            }
-        }*/
-
-        ArrayAdapter<CmdTemp> adapterTemp = new ArrayAdapter<CmdTemp>(
-                this, android.R.layout.simple_spinner_item, spinnerTempArray);
-
-        adapterTemp.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerTemp.setAdapter(adapterTemp);
-        for(int i=0; i<spinnerTempArray.size(); i++) {
-            if(spinnerTempArray.get(i).temp == temp) {
-                spinnerTemp.setSelection(i);
-            }
-        }
-
+        */
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -234,107 +78,70 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void showTempActivity(View view) {
+    public void onBtnRefresh(View view) {
+        requestStatus();
+    }
+
+    public void onBtnRoom(View view) {
         Intent intent = new Intent(this, TempActivity.class);
-//        EditText editText = (EditText) findViewById(R.id.editText);
-    //    String message = editText.getText().toString();
-        intent.putExtra("temp", temp);
-        intent.putExtra("percent", percent);
-        intent.putExtra( "room","Wohnzimmer");
-    //    startActivity(intent);
+        intent.putExtra(Const.INTENT_X_TEMP, temp);
+        intent.putExtra(Const.INTENT_X_PERCENT, percent);
+        String roomName = (String)view.getTag();
+        intent.putExtra(Const.INTENT_X_ROOM, roomName!=null?roomName:"??");
+        intent.putExtra(Const.INTENT_X_AUTO, modeAuto);
+        intent.putExtra(Const.INTENT_X_BOOST, boostIsActive);
         startActivityForResult(intent,Const.ACTIVITY_TEMP);
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch(id) {
+            case R.id.action_ping:
+                sendCmd(Cmd.PING);
+                break;
+            case R.id.action_reboot:
+                sendCmd(Cmd.REBOOT);
+                break;
+            case R.id.action_refresh:
+                requestStatus();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        spinner = (NoDefaultSpinner) findViewById(R.id.spinner);
-        spinnerTemp = (NoDefaultSpinner) findViewById(R.id.spinnerTemp);
-        txtViewStatus = (TextView) findViewById(R.id.txtViewStatus);
         txtViewMsg = (TextView) findViewById(R.id.txtViewMsg);
-        txtViewTemp = (TextView) findViewById(R.id.txtViewTemp);
-        button = (Button) findViewById(R.id.button);
+        updateRoom(R.id.btnRoom1, false);
+        startMqtt();
+    }
 
-
-
-
-        List<ICmd> spinnerArray =  new ArrayList<ICmd>();
-        spinnerArray.add(new CmdItem("Status") {
-            @Override
-            public void exec() {
-                requestStatus();
-            }
-        });
-        spinnerArray.add(cmdBoost);
-        spinnerArray.add(new CmdItem("Off", "off"));
-        spinnerArray.add(new CmdItem("On", "on"));
-        spinnerArray.add(new CmdItem("Eco", "eco"));
-        spinnerArray.add(new CmdItem("Comfort", "comfort"));
-        spinnerArray.add(new CmdItem("Manual", "manual"));
-        spinnerArray.add(new CmdItem("Auto", "auto"));
-        spinnerArray.add(new CmdItem("Ping", "ping"));
-        spinnerArray.add(new CmdItem("Reset", "reset"));
-
-        ArrayAdapter<ICmd> adapter = new ArrayAdapter<ICmd>(
-                this, android.R.layout.simple_spinner_item, spinnerArray);
-
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
-
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                ICmd c = (ICmd) spinner.getSelectedItem();
-                String cmd = c.getCmd();
-                if(cmd != null) {
-                    mqttHelper.sendCmd(cmd);
+    void updateRoom(int btnId, boolean valid) {
+        Button btn = (Button) findViewById(btnId);
+        if(btn != null) {
+            String statusStr = (String) btn.getTag();
+            if(statusStr != null) {
+                if(valid) {
+                    statusStr += "  [";
+                    statusStr += modeAuto ? "A" : "M";
+                    if (boostIsActive)
+                        statusStr += "B";
+                    statusStr += "]    ";
+                    statusStr += Format.tempAndPercentToString(temp, percent);
                 }
-                else {
-                    c.exec();
-                }
+                btn.setText(statusStr);
             }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
-
-        updateTempSpinner(200);
-
-
-
-        spinnerTemp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                ICmd c = (ICmd) spinnerTemp.getSelectedItem();
-                c.exec();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-            }
-        });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-         startMqtt();
-
+        }
     }
 
     private void startMqtt(){
@@ -371,36 +178,12 @@ public class MainActivity extends AppCompatActivity {
                        // int i2 = Integer.parseInt(sub2, 16 );
                         temp = 5 * Integer.parseInt(sub3, 16 );
 
-                        boolean modeAuto = (status & 1)==0;
-                        boolean boostIsActive = (status & 4)>0;
+                        modeAuto = (status & 1)==0;
+                        boostIsActive = (status & 4)>0;
 
-                        String statusStr = "";
-                        statusStr += modeAuto ? "auto" : "manual";
-                        if(boostIsActive)
-                            statusStr += " - boost";
-
-                        if(temp==45)
-                            statusStr += " - off";
-
-                        if(temp==300)
-                            statusStr += " - on";
-
-
-                        //String tempStr = (Float.toString(temp/10f) +  "°  (" + percent + "%)");
-                        String tempStr = Format.tempToString(temp, percent);
-                        txtViewStatus.setText(statusStr);
-                        txtViewTemp.setText(tempStr);
-
-                        button.setText(statusStr + "   " + tempStr);
-
-                        cmdBoost.setState2(boostIsActive);
-
-                        //updateTempSpinner(temp);
-
-                        ((BaseAdapter) spinner.getAdapter()).notifyDataSetChanged();
+                        updateRoom(R.id.btnRoom1, true);
                     } else if(s.equals("pong")) {
                         msgCntStatus++;
-
                     }
 
                 } else {
@@ -411,7 +194,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
-
             }
         });
     }

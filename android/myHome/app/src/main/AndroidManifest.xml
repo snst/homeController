@@ -23,7 +23,8 @@
 
         <service android:name="org.eclipse.paho.android.service.MqttService" />
 
-        <activity android:name=".TempActivity"></activity>
+        <activity android:name=".TempActivity" />
+
     </application>
 
 </manifest>

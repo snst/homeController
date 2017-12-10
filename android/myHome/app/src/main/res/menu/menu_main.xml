@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_refresh"
+        android:title="refresh" />
+    <item
+        android:id="@+id/action_ping"
+        android:title="ping" />
+    <item
+        android:id="@+id/action_reboot"
+        android:title="reboot" />
+</menu>
