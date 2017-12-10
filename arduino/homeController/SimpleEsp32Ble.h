@@ -51,9 +51,8 @@ class SimpleBLE {
   public:
   enum eState { deinit, disconnected, connecting, connected, ready };
   eState state;
-
+  bool isWriting;
   struct gattc_profile_inst gattcProfile[MAX_APP]; 
-
   
   SimpleBLE();
   virtual ~SimpleBLE() {}
@@ -80,13 +79,18 @@ class SimpleBLE {
     Serial.println("SimpleBLE::onServiceFound()");
   }
 
-  virtual bool registerNotify(uint16_t handle);
+  virtual void onWritten(bool success) {
+    Serial.print("SimpleBLE::onWritten() ");
+    Serial.println(success ? "ok" : "failed");
+  }
 
-  virtual bool write(uint16_t handle, uint8_t* data, uint8_t len, bool response);
+  bool registerNotify(uint16_t handle);
 
-  virtual bool connect(BLEAddr& addr);
+  bool write(uint16_t handle, uint8_t* data, uint8_t len, bool response);
 
-  virtual bool init();
+  bool connect(BLEAddr& addr);
+
+  bool init();
 
   bool isState(eState _state) {
     return state == _state;
@@ -94,6 +98,13 @@ class SimpleBLE {
 
   void setState(eState _state) {
     state = _state;
+    if(state < connected) {
+      isWriting = false;
+    }
+  }
+
+  bool canWrite() {
+    return state==ready && !isWriting;
   }
 
 };

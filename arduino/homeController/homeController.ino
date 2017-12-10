@@ -44,107 +44,8 @@ void setMqttResponse(uint8_t* pData, size_t length) {
     if(length==6) {
       sprintf(strMqttStatus, "*%02x%02x%02x%02x", pData[2], pData[3], pData[4], pData[5]);
     }
-  
 }
 
-/*
-static void notifyCallback( BLERemoteCharacteristic* pCharacteristic, uint8_t* pData, size_t length, bool isNotify) 
-{
-    Serial.print(">BT: len: ");
-    Serial.println(length);
-//    Serial.print(pCharacteristic->getUUID().toString().c_str());
-
-    if(length==6) {
-      sprintf(strMqttStatus, "*%02x%02x%02x%02x", pData[2], pData[3], pData[4], pData[5]);
-    }
-}
-
-
-
-bool executeBLE() {
-
-  if(bleCmdLen == 0) {
-    return false;
-  }
-
-  if(pBLEClient && pBLEClient->isConnected()) {
-    Serial.println("Still connected to BLE");
-  }
-  else {
- 
-    printMem();
-    Serial.print("Connecting to BLE: ");
-    Serial.print(pBLEServerAddress->toString().c_str());
-    
-    if(pBLEClient->connect(*pBLEServerAddress)) {
-      Serial.println(" ..connected!");
-    } else {
-      Serial.println(" ..failed!");
-      return false;
-    }
-
-    printMem();
-
-    // Obtain a reference to the service we are after in the remote BLE server.
-    pBLERemoteService = pBLEClient->getService(serviceUUID);
-    if (pBLERemoteService == nullptr) {
-      Serial.print("Failed service UUID: ");
-      Serial.println(serviceUUID.toString().c_str());
-      return false;
-    }
-    
-    // Obtain a reference to the characteristic in the service of the remote BLE server.
-    pBLERemoteCharacteristic = pBLERemoteService->getCharacteristic(cmdUUID);
-    if (pBLERemoteCharacteristic == nullptr) {
-      Serial.print("Failed UUID: ");
-      Serial.println(cmdUUID.toString().c_str());
-      return false;
-    }    
-  
-    pBLENotificationCharacteristic = pBLERemoteService->getCharacteristic(notificationUUID);
-    if (pBLENotificationCharacteristic == nullptr) {
-      Serial.print("Failed UUID: ");
-      Serial.println(notificationUUID.toString().c_str());
-      return false;
-    }    
-    else {
-      pBLENotificationCharacteristic->registerForNotify(notifyCallback);
-    }
-    Serial.println("..BLE ready");
-    delay(200);
-  }
-
-printMem();
-  Serial.print("<BT: ");
-  for(uint8_t i=0; i<bleCmdLen; i++) {
-    Serial.print(bleCmd[i], HEX);
-    Serial.print(", ");
-  }
-  Serial.print(" : ");  
-  Serial.println(bleCmdLen);
-  
-  if(pBLERemoteCharacteristic) {
-    pBLERemoteCharacteristic->writeValue(bleCmd, bleCmdLen, true);
-  }
-  Serial.println("-writeValue");
-printMem();
-
-  if(pBLENotificationCharacteristic) {
-
-    if(pBLENotificationCharacteristic->canRead()) {
-
-      
-    }
-  }
-
-  bleCmdLen = 0;
-}*/
-
-
-
- 
-
- 
 void setup() {
 
   strMqttStatus[0] = 0;
@@ -161,7 +62,6 @@ void setup() {
 
   WiFi.begin(WLAN_SSID, WLAN_PASSWORD);
   printMem();
-
 }
 
 
@@ -301,22 +201,20 @@ void loop() {
   
   client.loop();
 
- // executeBLE();
-
-  publishMqttStatus();  
-
   if(bleCmdLen > 0)
   {
     if(ble->isState(SimpleBLE::disconnected)) {
       ble->connect(bleAddr);
     }
 
-    if(ble->isState(SimpleBLE::ready)) {
+    if(ble->canWrite()) {
       if( ble->write(0x411, bleCmd, bleCmdLen, true) ) {
         bleCmdLen = 0;
       }
     }
   }
 
-//  updateBLE(bleCmd, &bleCmdLen);
+  publishMqttStatus();  
+
+  vTaskDelay(200/portTICK_PERIOD_MS);
 }

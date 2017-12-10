@@ -1,32 +1,23 @@
 #include "SimpleEsp32Ble.h"
 
 #define GATTC_TAG "GATTC_DEMO"
-#define REMOTE_SERVICE_UUID        0x7046
-#define REMOTE_NOTIFY_CHAR_UUID_CMD    0xea09
-#define REMOTE_NOTIFY_CHAR_UUID_PERLY    0xeb2a
+//#define REMOTE_SERVICE_UUID        0x7046
+//#define REMOTE_NOTIFY_CHAR_UUID_CMD    0xea09
+//#define REMOTE_NOTIFY_CHAR_UUID_PERLY    0xeb2a
 
 #define PROFILE_NUM      1
-#define PROFILE_A_APP_ID 0
 #define INVALID_HANDLE   0
 
-//static const char remote_device_name[] = "ESP_GATTS_DEMO";
-static bool connect    = false;
-static bool get_server = false;
-static esp_gattc_char_elem_t *char_elem_result   = NULL;
-static esp_gattc_descr_elem_t *descr_elem_result = NULL;
+//static esp_gattc_char_elem_t *char_elem_result   = NULL;
+//static esp_gattc_descr_elem_t *descr_elem_result = NULL;
 
-static bool doConnect = false;
-static bool connected = false;
-static esp_bd_addr_t BLE_ADDR;
-
-/* eclare static functions */
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
 static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
 
-SimpleBLE* pBLE = nullptr;
+static SimpleBLE* pBLE = nullptr;
 
-
+/*
 static esp_bt_uuid_t remote_filter_service_uuid = {
     .len = ESP_UUID_LEN_16,
     .uuid = {.uuid16 = REMOTE_SERVICE_UUID,},
@@ -48,7 +39,7 @@ static esp_ble_scan_params_t ble_scan_params = {
     .scan_filter_policy     = BLE_SCAN_FILTER_ALLOW_ALL,
     .scan_interval          = 0x50,
     .scan_window            = 0x30
-};
+};*/
 
 static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param)
 {
@@ -108,6 +99,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
     case ESP_GATTC_SEARCH_RES_EVT: {
         Serial.print("ESP_GATTC_SEARCH_RES_EVT) srvc_id=0x");
+        /*
         esp_gatt_srvc_id_t *srvc_id =(esp_gatt_srvc_id_t *)&p_data->search_res.srvc_id;
        // Serial.println(srvc_id->id.uuid.len);
         Serial.println(srvc_id->id.uuid.uuid.uuid16, HEX);
@@ -118,7 +110,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
             pBLE->gattcProfile[APP_ID].service_start_handle = p_data->search_res.start_handle;
             pBLE->gattcProfile[APP_ID].service_end_handle = p_data->search_res.end_handle;
     //        ESP_LOGI(GATTC_TAG, "UUID16: %x", srvc_id->id.uuid.uuid.uuid16);
-        }
+        }*/
     } break;
 
     case ESP_GATTC_SEARCH_CMPL_EVT: {
@@ -132,9 +124,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
             pBLE->onServiceFound();
         }
 
-/*
-
-        if (get_server){
+/*        if (get_server){
             uint16_t count = 0;
             esp_gatt_status_t status = esp_ble_gattc_get_attr_count( gattc_if,
                                                                      p_data->search_cmpl.conn_id,
@@ -144,7 +134,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                                                                      INVALID_HANDLE,
                                                                      &count);
             if (status != ESP_GATT_OK){
-    Serial.println("esp_ble_gattc_get_attr_count error");
+              Serial.println("esp_ble_gattc_get_attr_count error");
             }
 
             if (count > 0){
@@ -307,6 +297,7 @@ pBLE->onConnected();
 
     case ESP_GATTC_WRITE_DESCR_EVT: {
           Serial.print("ESP_GATTC_WRITE_DESCR_EVT) ??");
+          /*
         if (p_data->write.status != ESP_GATT_OK) {
             Serial.println("failed");
        //     ESP_LOGE(GATTC_TAG, "write descr failed, error status = %x", p_data->write.status);
@@ -324,7 +315,7 @@ pBLE->onConnected();
                                     write_char_data,
                                     ESP_GATT_WRITE_TYPE_RSP,
                                     ESP_GATT_AUTH_REQ_NONE);
-        }
+        }*/
     } break;
 
     case ESP_GATTC_SRVC_CHG_EVT: {
@@ -336,13 +327,17 @@ pBLE->onConnected();
     } break;
 
     case ESP_GATTC_WRITE_CHAR_EVT: {
+      Serial.print("ESP_GATTC_WRITE_CHAR_EVT) ");
+      pBLE->isWriting = false;
+      pBLE->onWritten(p_data->write.status == ESP_GATT_OK);
+      /*
         Serial.print("ESP_GATTC_WRITE_CHAR_EVT) ");
         if (p_data->write.status == ESP_GATT_OK){
             Serial.println("ok");
         } else {
             Serial.println("failed");
          //   ESP_LOGE(GATTC_TAG, "write char failed, error status = %x", p_data->write.status);
-        }
+        }*/
     } break;
 
     case ESP_GATTC_DISCONNECT_EVT: {
@@ -494,7 +489,6 @@ bool SimpleBLE::init()
 
     gattcProfile[APP_ID].gattc_cb = gattc_profile_event_handler;
     gattcProfile[APP_ID].gattc_if = ESP_GATT_IF_NONE;
-    state = disconnected;
     
     // Initialize NVS.
     esp_err_t ret = nvs_flash_init();
@@ -507,63 +501,57 @@ bool SimpleBLE::init()
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     ret = esp_bt_controller_init(&bt_cfg);
     if (ret) {
-    Serial.println("-initBLE1");
-//        ESP_LOGE(GATTC_TAG, "%s initialize controller failed, error code = %x\n", __func__, ret);
-        return false;
+      Serial.println("-initBLE1");
+      return false;
     }
 
     ret = esp_bt_controller_enable(ESP_BT_MODE_BLE);
     if (ret) {
-//        ESP_LOGE(GATTC_TAG, "%s enable controller failed, error code = %x\n", __func__, ret);
-    Serial.println("-initBLE2");
-        return false;
+      Serial.println("-initBLE2");
+      return false;
     }
 
     ret = esp_bluedroid_init();
     if (ret) {
-   //     ESP_LOGE(GATTC_TAG, "%s init bluetooth failed, error code = %x\n", __func__, ret);
-    Serial.println("-initBLE3");
-        return false;
+      Serial.println("-initBLE3");
+      return false;
     }
 
     ret = esp_bluedroid_enable();
     if (ret) {
- //       ESP_LOGE(GATTC_TAG, "%s enable bluetooth failed, error code = %x\n", __func__, ret);
-    Serial.println("-initBLE4");
-        return false;
+       Serial.println("-initBLE4");
+       return false;
     }
 
     //register the  callback function to the gap module
     ret = esp_ble_gap_register_callback(esp_gap_cb);
     if (ret){
-   //     ESP_LOGE(GATTC_TAG, "%s gap register failed, error code = %x\n", __func__, ret);
-    Serial.println("-initBLE5");
-        return false;
+      Serial.println("-initBLE5");
+      return false;
     }
 
     //register the callback function to the gattc module
     ret = esp_ble_gattc_register_callback(esp_gattc_cb);
     if(ret){
-  //      ESP_LOGE(GATTC_TAG, "%s gattc register failed, error code = %x\n", __func__, ret);
-    Serial.println("-initBLE6");
-        return false;
+      Serial.println("-initBLE6");
+      return false;
     }
 
-    ret = esp_ble_gattc_app_register(PROFILE_A_APP_ID);
+    ret = esp_ble_gattc_app_register(APP_ID);
     if (ret){
-    Serial.println("-initBLE7");
-//        ESP_LOGE(GATTC_TAG, "%s gattc app register failed, error code = %x\n", __func__, ret);
+      Serial.println("-initBLE7");
     }
+  
     esp_err_t local_mtu_ret = esp_ble_gatt_set_local_mtu(500);
     if (local_mtu_ret){
-//        ESP_LOGE(GATTC_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
-    Serial.println("-initBLE8");
+      Serial.println("-initBLE8");
     }
 
     Serial.println("-SimpleBLE::init");
+    setState(disconnected);
 
-  vTaskDelay(200/portTICK_PERIOD_MS);
-  return true;
+    vTaskDelay(200/portTICK_PERIOD_MS);
+    return true;
 }
 
 bool SimpleBLE::write(uint16_t handle, uint8_t* data, uint8_t len, bool response) {
@@ -597,10 +585,12 @@ bool SimpleBLE::connect(BLEAddr& addr) {
     Serial.println(errRc == ESP_OK ? "ok" : "failed");
 
     if(errRc == ESP_OK) {
-        state = connecting;
+        setState(connecting);
         return true;
+    } else {
+      setState(disconnected);
+      return false;
     }
-    return false;
 }
 
 
@@ -613,6 +603,6 @@ bool SimpleBLE::registerNotify(uint16_t handle) {
 
 
 SimpleBLE::SimpleBLE() 
-: state(deinit) {
+: state(deinit), isWriting(false) {
     Serial.println("SimpleBLE()");
 }

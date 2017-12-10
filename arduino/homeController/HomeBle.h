@@ -11,7 +11,6 @@ class HomeBLE : public SimpleBLE
     HomeBLE();
     virtual ~HomeBLE();
     virtual void onReceiveNotify(uint8_t* pData, uint8_t len);
-    virtual void onServiceFound();
     virtual void onConnected();
 };
 
