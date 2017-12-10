@@ -14,5 +14,5 @@ public class Cmd {
     public static final String COMFORT = "comfort";
     public static final String AUTO = "auto";
     public static final String MANUAL = "manual";
-    public static final String REBOOT = "reboot";
+    public static final String REBOOT = "reset";
 }

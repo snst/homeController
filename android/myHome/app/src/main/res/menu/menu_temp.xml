@@ -6,16 +6,16 @@
 
     <item
         android:id="@+id/action_save1"
-        android:title="save 1" />
+        android:title="Preset 1" />
     <item
         android:id="@+id/action_save2"
-        android:title="save 2" />
+        android:title="Preset 2" />
     <item
         android:id="@+id/action_save3"
-        android:title="save 3" />
+        android:title="Preset 3" />
     <item
         android:id="@+id/action_save4"
-        android:title="save 4" />
+        android:title="Preset 4" />
 
 
 </menu>

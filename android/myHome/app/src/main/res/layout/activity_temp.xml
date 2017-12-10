@@ -69,20 +69,20 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/btnOn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="onBtnOn"
-                android:text="On" />
-
-            <Button
                 android:id="@+id/btnOff"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:onClick="onBtnOff"
                 android:text="off" />
+
+            <Button
+                android:id="@+id/btnOn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onBtnOn"
+                android:text="On" />
         </LinearLayout>
 
         <LinearLayout
