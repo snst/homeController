@@ -1,8 +1,8 @@
-package de.meek.myhome;
-
 /**
- * Created by stefan on 10.12.2017.
+ * Copyright (c) 2017 by Stefan Schmidt
  */
+
+package de.meek.myhome;
 
 public class Cmd {
     public static final String PING = "ping";

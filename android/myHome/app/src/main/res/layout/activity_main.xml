@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:onClick="onBtnRoom"
-            android:tag="Living"
+            android:tag="0"
             android:text="Living"
             android:textSize="22sp" />
 
@@ -36,7 +36,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:tag="Bed"
+            android:onClick="onBtnRoom"
+            android:tag="1"
             android:text="Bed"
             android:textSize="22sp" />
 
@@ -45,7 +46,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:tag="Bath"
+            android:onClick="onBtnRoom"
+            android:tag="2"
             android:text="Bath"
             android:textSize="22sp" />
 
@@ -54,7 +56,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:tag="Kitchen"
+            android:keyboardNavigationCluster="false"
+            android:onClick="onBtnRoom"
+            android:tag="3"
             android:text="Kitchen"
             android:textSize="22sp" />
 

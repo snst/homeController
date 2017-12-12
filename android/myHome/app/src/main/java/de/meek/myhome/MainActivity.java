@@ -1,15 +1,19 @@
+/**
+ * Copyright (c) 2017 by Stefan Schmidt
+ */
+
 package de.meek.myhome;
 
 import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
@@ -27,12 +31,13 @@ public class MainActivity extends AppCompatActivity {
     MqttHelper mqttHelper;
     TextView txtViewMsg;
     Handler handler = new Handler();
-    boolean modeAuto = false;
-    boolean boostIsActive = false;
-    int temp;
-    int percent;
+
     int msgCntStatus = 0;
     int msgCntMode = 0;
+
+    public Room getRoom(int i) {
+        return House.getRoom(i);
+    }
 
     public void sendCmd(String cmd) {
         mqttHelper.sendCmd(cmd);
@@ -61,19 +66,30 @@ public class MainActivity extends AppCompatActivity {
         */
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == Const.ACTIVITY_TEMP) {
-            if (resultCode == RESULT_OK) {
+    public void refreshAllRooms() {
+        for(int i=0; i<House.getSize(); i++) {
+            updateRoom(getRoom(i));
+        }
+    }
 
-                String cmd = data.getStringExtra("cmd");
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        refreshAllRooms();
+
+        if (resultCode == RESULT_OK) {
+            if (requestCode == Const.ACTIVITY_TEMP) {
+
+                String cmd = data.getStringExtra(Const.INTENT_NEW_CMD);
                 if(cmd!=null) {
                     mqttHelper.sendCmd(cmd);
                 }
 
-                int newTemp = data.getIntExtra("newTemp", -1);
+                int newTemp = data.getIntExtra(Const.INTENT_X_NEW_TEMP, -1);
                 if(newTemp != -1) {
                     requestSetTemp(newTemp);
                 }
+            } else if( requestCode == Const.ACTIVITY_SETTINGS) {
+                restartMqtt();
             }
         }
     }
@@ -82,14 +98,13 @@ public class MainActivity extends AppCompatActivity {
         requestStatus();
     }
 
+
     public void onBtnRoom(View view) {
+
+        String roomTag = (String)view.getTag();
+        int roomId = Integer.parseInt(roomTag);
         Intent intent = new Intent(this, TempActivity.class);
-        intent.putExtra(Const.INTENT_X_TEMP, temp);
-        intent.putExtra(Const.INTENT_X_PERCENT, percent);
-        String roomName = (String)view.getTag();
-        intent.putExtra(Const.INTENT_X_ROOM, roomName!=null?roomName:"??");
-        intent.putExtra(Const.INTENT_X_AUTO, modeAuto);
-        intent.putExtra(Const.INTENT_X_BOOST, boostIsActive);
+        intent.putExtra(Const.INTENT_X_ROOM_ID, roomId);
         startActivityForResult(intent,Const.ACTIVITY_TEMP);
     }
 
@@ -112,36 +127,64 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_refresh:
                 requestStatus();
                 break;
+            case R.id.action_main_settings:
+                showSettingsActivity();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
 
+
+    void showSettingsActivity() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivityForResult(intent,Const.ACTIVITY_SETTINGS);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         txtViewMsg = (TextView) findViewById(R.id.txtViewMsg);
-        updateRoom(R.id.btnRoom1, false);
+        AccountConfig.load(this);
+
+        House.addRoom(new Room(this, 0, R.id.btnRoom1));
+        House.addRoom(new Room(this, 1, R.id.btnRoom2));
+        House.addRoom(new Room(this, 2, R.id.btnRoom3));
+        House.addRoom(new Room(this, 3, R.id.btnRoom4));
+
+        refreshAllRooms();
+
         startMqtt();
     }
 
-    void updateRoom(int btnId, boolean valid) {
-        Button btn = (Button) findViewById(btnId);
+    void updateRoom(Room room) {
+        Button btn = (Button) findViewById(room.buttonId);
         if(btn != null) {
-            String statusStr = (String) btn.getTag();
-            if(statusStr != null) {
-                if(valid) {
-                    statusStr += "  [";
-                    statusStr += modeAuto ? "A" : "M";
-                    if (boostIsActive)
-                        statusStr += "B";
-                    statusStr += "]    ";
-                    statusStr += Format.tempAndPercentToString(temp, percent);
-                }
-                btn.setText(statusStr);
+            String statusStr = room.name;
+            if(room.valid) {
+                statusStr += "  [";
+                statusStr += room.autoActive ? "A" : "M";
+                if (room.boostActive)
+                    statusStr += "B";
+                statusStr += "]    ";
+                statusStr += Format.tempAndPercentToString(room.temp, room.percent);
             }
+            btn.setText(statusStr);
         }
+    }
+
+    private void restartMqtt() {
+
+        mqttHelper.disconnect();;
+        mqttHelper = null;
+        startMqtt();
+    }
+
+    public void showStatusMqttConnected() {
+        Toast.makeText(this, "MQTT connected", Toast.LENGTH_SHORT).show();
+    }
+    public void showStatusMqttDisconnected() {
+        Toast.makeText(this, "MQTT disconnected", Toast.LENGTH_SHORT).show();
     }
 
     private void startMqtt(){
@@ -149,43 +192,40 @@ public class MainActivity extends AppCompatActivity {
         mqttHelper.setCallback(new MqttCallbackExtended() {
             @Override
             public void connectComplete(boolean b, String s) {
+                showStatusMqttConnected();
                 requestStatus();
             }
 
             @Override
             public void connectionLost(Throwable throwable) {
-
+                showStatusMqttDisconnected();
             }
 
             @Override
             public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
-                Log.w("Debug",mqttMessage.toString());
+                //Log.w("Debug",mqttMessage.toString());
+
+                Room room = getRoom(0);
 
                 if(topic.endsWith("/status")) {
 
-                    String s = mqttMessage.toString();
-                    if(s.length() == 9 && s.charAt(0)=='*') { // status from eq3
+                    msgCntStatus++;
 
-                        msgCntStatus++;
+                    byte[] b = mqttMessage.getPayload();
+                    if(b.length==5 && b[0]=='*') {
 
-                        String sub0 = s.substring(1, 3);
-                        String sub1 = s.substring(3, 5);
-                        String sub2 = s.substring(5, 7);
-                        String sub3 = s.substring(7, 9);
 
-                        int status = Integer.parseInt(sub0, 16 );
-                        percent = Integer.parseInt(sub1, 16 );
-                       // int i2 = Integer.parseInt(sub2, 16 );
-                        temp = 5 * Integer.parseInt(sub3, 16 );
+                        int status = b[1];
+                        room.percent =  b[2];
+                        // b[3];
+                        room.temp = 5 *  b[4];
 
-                        modeAuto = (status & 1)==0;
-                        boostIsActive = (status & 4)>0;
+                        room.autoActive = (status & 1)==0;
+                        room.boostActive = (status & 4)>0;
 
-                        updateRoom(R.id.btnRoom1, true);
-                    } else if(s.equals("pong")) {
-                        msgCntStatus++;
+                        room.valid = true;
+                        updateRoom(room);
                     }
-
                 } else {
                     msgCntMode++;
                 }

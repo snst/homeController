@@ -8,7 +8,7 @@
 #include "SimpleEsp32Ble.h"
 #include "HomeBle.h"
 
-static char strMqttStatus[6];
+static uint8_t mqttStatus[5];
 static uint8_t bleCmd[7];
 static uint8_t bleCmdLen;
 
@@ -42,13 +42,14 @@ void printMem()
 
 void setMqttResponse(uint8_t* pData, size_t length) {
     if(length==6) {
-      sprintf(strMqttStatus, "*%02x%02x%02x%02x", pData[2], pData[3], pData[4], pData[5]);
+      mqttStatus[0] = '*';
+      memcpy(&mqttStatus[1], &pData[2], 4);
     }
 }
 
 void setup() {
 
-  strMqttStatus[0] = 0;
+  mqttStatus[0] = 0;
   bleCmdLen = 0;
 
   Serial.begin(115200);
@@ -107,16 +108,15 @@ byte getNextVal(byte* p) {
 
 void publishMqttStatus()
 {
-  if(strMqttStatus[0] != 0)
+  if(mqttStatus[0] != 0)
   {
-    Serial.print("<MQTT: eq3/status : ");
-    Serial.print(strMqttStatus);
-    if(client.publish("eq3/status", strMqttStatus)) {
+    Serial.print("<MQTT: eq3/status");
+    if(client.publish("eq3/status", mqttStatus, 5)) {
       Serial.println(" - OK");
     } else {
       Serial.println(" - FAILED");
     }
-    strMqttStatus[0] = 0;
+    mqttStatus[0] = 0;
     printMem();
   }
 }
@@ -165,7 +165,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       softReset();
     }
     else if(!strncmp(c, "ping", length)) { 
-      strcpy(strMqttStatus, "pong");
+      strcpy((char*)mqttStatus, "pong");
     }
     else if(!strncmp(c, "t", 1)) { 
       int t = 0;
