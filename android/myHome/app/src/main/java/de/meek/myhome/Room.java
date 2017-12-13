@@ -15,16 +15,22 @@ public class Room {
     public boolean boostActive = false;
     public int percent = 0;
     public int temp = 0;
-    public int buttonId;
+    public int msgCount = 0;
     public boolean valid = false;
-    public Room(Activity activity, int _roomId, int _buttonId) {
+    public IRoom viewRoom;
+    public Room(Activity activity, int _roomId, IRoom _viewRoom) {
         id = _roomId;
-        buttonId = _buttonId;
         SharedPreferences settings = activity.getSharedPreferences(getId(), 0);
         name = settings.getString(Const.INTENT_X_ROOM_NAME, "Name");
         btAddress = settings.getString(Const.INTENT_X_BT_ADDRESS, "112233445566");
+        viewRoom = _viewRoom;
     }
     public String getId() {
         return "" + id;
+    }
+    public void update() {
+        if(viewRoom != null) {
+            viewRoom.update(this);
+        }
     }
 }

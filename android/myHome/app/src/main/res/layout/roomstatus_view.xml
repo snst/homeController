@@ -1,0 +1,58 @@
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="15dp">
+
+        <TextView
+            android:id="@+id/txtRoomStatusMsgCnt"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:textAlignment="center"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/txtRoomStatusName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:textAlignment="textEnd"
+            android:textSize="28sp" />
+
+        <TextView
+            android:id="@+id/txtRoomStatusTemp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1.5"
+            android:textAlignment="center"
+            android:textSize="28sp" />
+
+        <TextView
+            android:id="@+id/txtRoomStatusPercent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1.4"
+            android:textAlignment="textEnd"
+            android:textSize="20sp" />
+        <!--
+        <Button
+            android:id="@+id/sidespinner_view_previous"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_weight="0" />
+
+        <Button
+            android:id="@+id/sidespinner_view_next"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_weight="0"
+            android:elevation="0dp" />
+            -->
+    </LinearLayout>
+</merge>

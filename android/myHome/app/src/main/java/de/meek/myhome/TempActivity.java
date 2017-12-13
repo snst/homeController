@@ -197,6 +197,7 @@ public class TempActivity extends AppCompatActivity {
         int id = intent.getIntExtra(Const.INTENT_X_ROOM_ID, 0);
         room = House.getRoom(id);
         setTitle(room.name);
+        temp = room.temp;
 
         if(temp<Const.TEMP_MIN) {
             temp = Const.TEMP_DEFAULT;
