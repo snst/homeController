@@ -31,7 +31,7 @@ public class RoomSettingsActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         int id = intent.getIntExtra(Const.INTENT_X_ROOM_ID, 0);
-        room = House.getRoom(id);
+        room = ((MyApplication)getApplicationContext()).getHouse().getRoom(id);
 
         txtRoomName.setText( room.name);
         txtBtAddress.setText( room.btAddress);

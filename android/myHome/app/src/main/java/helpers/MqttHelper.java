@@ -62,7 +62,7 @@ public class MqttHelper {
     public void sendCmd(String cmd) {
 
         try {
-            if(cmd != null) {
+            if(cmd != null && isConnected()) {
                 mqttAndroidClient.publish("eq3/mode", cmd.getBytes(), 0, false);
             }
         } catch (MqttException e) {
@@ -72,6 +72,10 @@ public class MqttHelper {
 
     public void setCallback(MqttCallbackExtended callback) {
         mqttAndroidClient.setCallback(callback);
+    }
+
+    public boolean isConnected() {
+        return mqttAndroidClient!=null ? mqttAndroidClient.isConnected() : false;
     }
 
     public void disconnect() {

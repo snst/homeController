@@ -195,7 +195,7 @@ public class TempActivity extends AppCompatActivity {
         Intent intent = getIntent();
 
         int id = intent.getIntExtra(Const.INTENT_X_ROOM_ID, 0);
-        room = House.getRoom(id);
+        room = ((MyApplication)getApplicationContext()).getHouse().getRoom(id);
         setTitle(room.name);
         temp = room.temp;
 

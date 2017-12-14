@@ -14,27 +14,19 @@ import android.widget.TextView;
 
 public class RoomStatus extends LinearLayout implements IRoom {
 
-  //  private Button mPreviousButton;
-  //  private Button mNextButton;
+    public interface IOnClickListener {
+        void onClick(int roomId);
+    }
+
     private TextView txtName;
     private TextView txtTemp;
     private TextView txtPercent;
     private TextView txtMsgCnt;
+    private int roomId;
 
-    public RoomStatus(Context context) {
+    public RoomStatus(Context context, int _roomId) {
         super(context);
-        initializeViews(context);
-    }
-
-    public RoomStatus(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        initializeViews(context);
-    }
-
-    public RoomStatus(Context context,
-                       AttributeSet attrs,
-                       int defStyle) {
-        super(context, attrs, defStyle);
+        roomId = _roomId;
         initializeViews(context);
     }
 
@@ -48,77 +40,29 @@ public class RoomStatus extends LinearLayout implements IRoom {
         LayoutInflater inflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.roomstatus_view, this);
+
         txtName = (TextView)this.findViewById(R.id.txtRoomStatusName);
         txtTemp = (TextView)this.findViewById(R.id.txtRoomStatusTemp);
         txtPercent = (TextView)this.findViewById(R.id.txtRoomStatusPercent);
         txtMsgCnt = (TextView)this.findViewById(R.id.txtRoomStatusMsgCnt);
-    }
 
-
-
-    public void setOnClickListener(View.OnClickListener l) {
-
-        final View v = this;
-        final View.OnClickListener ll = l;
         View.OnClickListener ol = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ll.onClick(v);
+                onRoomClick(roomId);
             }
         };
+
         txtName.setOnClickListener(ol);
         txtTemp.setOnClickListener(ol);
         txtPercent.setOnClickListener(ol);
     }
 
+    public void onRoomClick(int roomId) {}
+
     @Override
     protected void onFinishInflate() {
-
-        // When the controls in the layout are doing being inflated, set
-        // the callbacks for the side arrows.
         super.onFinishInflate();
-
-  /*
-        txtTemp.setOnClickListener(new OnClickListener() {
-            public void onClick(View view) {
-                //showSettings();
-                if(onShowSettingsListener!=null)
-                    onShowSettingsListener.onClick(view);
-            }
-        });
-        txtPercent.setOnClickListener(new OnClickListener() {
-            public void onClick(View view) {
-                //showSettings();
-                if(onShowSettingsListener!=null)
-                    onShowSettingsListener.onClick(view);
-            }
-        });
-*/
-        /*
-        // When the previous button is pressed, select the previous value
-        // in the list.
-        mPreviousButton = (Button) this
-                .findViewById(R.id.sidespinner_view_previous);
-        mPreviousButton
-                .setBackgroundResource(android.R.drawable.ic_dialog_info);
-
-        mPreviousButton.setOnClickListener(new OnClickListener() {
-            public void onClick(View view) {
-            }
-        });
-
-
-        // When the next button is pressed, select the next item in the
-        // list.
-        mNextButton = (Button)this
-                .findViewById(R.id.sidespinner_view_next);
-        mNextButton
-                .setBackgroundResource(android.R.drawable.ic_popup_sync);
-        mNextButton.setOnClickListener(new OnClickListener() {
-            public void onClick(View view) {
-            }
-        });
-*/
     }
 
     @Override
@@ -143,11 +87,5 @@ public class RoomStatus extends LinearLayout implements IRoom {
         txtTemp.setText(temp);
         txtPercent.setText(percent);
         txtMsgCnt.setText("["+room.msgCount+"]");
-        /*
-        txtName.invalidate();
-        txtTemp.invalidate();
-        txtPercent.invalidate();
-        txtMsgCnt.invalidate();
-        this.invalidate();*/
     }
 }

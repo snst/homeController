@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,6 +22,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import helpers.MqttHelper;
@@ -31,18 +33,13 @@ public class MainActivity extends AppCompatActivity {
     MqttHelper mqttHelper = null;
     TextView txtViewMsg = null;
     Handler handler = new Handler();
-    RoomStatus room0 = null;
-    RoomStatus room1 = null;
-    RoomStatus room2 = null;
-    RoomStatus room3 = null;
     Button btnRefresh = null;
-
-
+    ArrayList<RoomStatus> roomStatusList = new ArrayList<RoomStatus>();
     int msgCntStatus = 0;
     int msgCntMode = 0;
 
-    public Room getRoom(int i) {
-        return House.getRoom(i);
+    public House getHouse() {
+        return ((MyApplication)getApplicationContext()).getHouse();
     }
 
     public void sendCmd(String cmd) {
@@ -57,8 +54,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void requestSetTemp(int temp) {
-        sendCmd("t" + Integer.toString(temp));
-        /*
+//        sendCmd("t" + Integer.toString(temp));
+
         final int val = temp;
         handler.removeCallbacksAndMessages(null);
         handler.postDelayed(new Runnable() {
@@ -68,13 +65,12 @@ public class MainActivity extends AppCompatActivity {
                 mqttHelper.sendCmd("t" + Integer.toString(val));
             }
 
-        }, 1000); // 5000ms delay
-        */
+        }, 200); // 5000ms delay
     }
 
     public void refreshAllRooms() {
-        for(int i=0; i<House.getSize(); i++) {
-            getRoom(i).update();
+        for(int i=0; i<getHouse().getSize(); i++) {
+            getHouse().getRoom(i).update();
         }
     }
 
@@ -109,13 +105,6 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(Const.INTENT_X_ROOM_ID, roomId);
         startActivityForResult(intent,Const.ACTIVITY_TEMP);
     }
-/*
-    public void onBtnRoom(View view) {
-
-        String roomTag = (String)view.getTag();
-        int roomId = Integer.parseInt(roomTag);
-        showRoomSettingsActivity(roomId);
-    }*/
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -149,58 +138,58 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent,Const.ACTIVITY_SETTINGS);
     }
 
-    @Override
+   @Override
     public void onResume() {
         super.onResume();
+        requestStatus();
     }
+
+    /*
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Runtime.getRuntime().gc();
+    }
+*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        txtViewMsg = (TextView) findViewById(R.id.txtViewMsg);
-        btnRefresh = (Button) findViewById(R.id.btnRefresh);
         AccountConfig.load(this);
-        room0 = (RoomStatus)findViewById(R.id.roomstatus0);
-        room1 = (RoomStatus)findViewById(R.id.roomstatus1);
-        room2 = (RoomStatus)findViewById(R.id.roomstatus2);
-        room3 = (RoomStatus)findViewById(R.id.roomstatus3);
+        btnRefresh = (Button) findViewById(R.id.btnRefresh);
 
-        View.OnClickListener l = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String s =  (String)view.getTag();
-                if(s!=null) {
-                    int id = Integer.parseInt(s);
-                    showRoomSettingsActivity(id);
+        final LinearLayout lm = (LinearLayout) findViewById(R.id.idLayoutRoomList);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+        //Create four
+        for(int j=0;j<4;j++) {
+            RoomStatus r = new RoomStatus(this, j) {
+                @Override
+                public void onRoomClick(int roomId) {
+                    showRoomSettingsActivity(roomId);
                 }
-            }
-        };
-
-        room0.setOnClickListener(l);
-        room1.setOnClickListener(l);
-        room2.setOnClickListener(l);
-        room3.setOnClickListener(l);
-
-        House.addRoom(new Room(this, 0, room0));
-        House.addRoom(new Room(this, 1, room1));
-        House.addRoom(new Room(this, 2, room2));
-        House.addRoom(new Room(this, 3, room3));
+            };
+            roomStatusList.add(r);
+            lm.addView(r,j);
+            getHouse().addRoom(new Room(this, j, r));
+        }
 
         refreshAllRooms();
-
 
         startMqtt();
     }
 
-    public void redrawView() {
-        /*room0.invalidate();
-        room0.requestLayout();
-        room0.getParent().requestLayout();
-        room0.getParent().getParent().requestLayout();*/
+
+
+    @Override
+    public void onBackPressed() {
+        //Execute your code here
+        this.finish();
+        System.exit(0);
     }
-
-
 
     private void restartMqtt() {
 
@@ -234,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
             public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
                 //Log.w("Debug",mqttMessage.toString());
 
-                Room room = getRoom(0);
+                Room room = getHouse().getRoom(0);
 
                 if(topic.endsWith("/status")) {
 
@@ -254,18 +243,13 @@ public class MainActivity extends AppCompatActivity {
 
                         room.valid = true;
                         room.msgCount++;
-                       // updateRoom(room);
                         room.update();
-                        redrawView();
                     }
                 } else {
                     msgCntMode++;
                 }
-//                txtViewMsg.setText("[" + msgCntMode + "/" + msgCntStatus + "]");
                 String status = ""+msgCntMode;
-           //     txtViewMsg.setText(status);
                 btnRefresh.setText(status);
-
             }
 
             @Override

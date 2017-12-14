@@ -10,7 +10,7 @@
     tools:layout_editor_absoluteY="81dp">
 
     <LinearLayout
-        android:id="@+id/linearLayout"
+        android:id="@+id/idLayoutRoomList"
         android:layout_width="0dp"
         android:layout_height="495dp"
         android:layout_marginBottom="8dp"
@@ -66,38 +66,6 @@
             android:textSize="22sp" />
 -->
 
-        <de.meek.myhome.RoomStatus
-            android:id="@+id/roomstatus0"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:tag="0" />
-
-        <de.meek.myhome.RoomStatus
-            android:id="@+id/roomstatus1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:tag="1" />
-
-        <de.meek.myhome.RoomStatus
-            android:id="@+id/roomstatus2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:tag="2" />
-
-        <de.meek.myhome.RoomStatus
-            android:id="@+id/roomstatus3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:tag="3" />
-
         <Button
             android:id="@+id/btnRefresh"
             android:layout_width="60dp"
@@ -114,7 +82,7 @@
             android:textColor="@android:color/darker_gray"
             android:textSize="12sp"
             tools:text="5" />
-<!--
+        <!--
         <TextView
             android:id="@+id/txtViewMsg"
             android:layout_width="match_parent"
