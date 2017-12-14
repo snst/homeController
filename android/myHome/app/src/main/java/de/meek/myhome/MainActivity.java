@@ -28,14 +28,14 @@ import helpers.MqttHelper;
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
 public class MainActivity extends AppCompatActivity {
 
-    MqttHelper mqttHelper;
-    TextView txtViewMsg;
+    MqttHelper mqttHelper = null;
+    TextView txtViewMsg = null;
     Handler handler = new Handler();
-    RoomStatus room0;
-    RoomStatus room1;
-    RoomStatus room2;
-    RoomStatus room3;
-    Button btnRefresh;
+    RoomStatus room0 = null;
+    RoomStatus room1 = null;
+    RoomStatus room2 = null;
+    RoomStatus room3 = null;
+    Button btnRefresh = null;
 
 
     int msgCntStatus = 0;
@@ -150,6 +150,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -177,32 +182,6 @@ public class MainActivity extends AppCompatActivity {
         room2.setOnClickListener(l);
         room3.setOnClickListener(l);
 
-        /*
-        room0.onShowSettingsListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showRoomSettingsActivity(0);
-            }
-        };
-        room1.onShowSettingsListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showRoomSettingsActivity(1);
-            }
-        };
-        room2.onShowSettingsListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showRoomSettingsActivity(2);
-            }
-        };
-        room3.onShowSettingsListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showRoomSettingsActivity(3);
-            }
-        };*/
-
         House.addRoom(new Room(this, 0, room0));
         House.addRoom(new Room(this, 1, room1));
         House.addRoom(new Room(this, 2, room2));
@@ -213,24 +192,15 @@ public class MainActivity extends AppCompatActivity {
 
         startMqtt();
     }
-/*
-    void updateRoom(Room room) {
-        Button btn = (Button) findViewById(room.buttonId);
-        if(btn != null) {
-            String statusStr = room.name;
-            if(room.valid) {
-                statusStr += "  [";
-                statusStr += room.autoActive ? "A" : "M";
-                if (room.boostActive)
-                    statusStr += "B";
-                statusStr += "]    ";
-                statusStr += Format.tempAndPercentToString(room.temp, room.percent);
-            }
-            btn.setText(statusStr);
-        }
 
-        room.update();
-    }*/
+    public void redrawView() {
+        /*room0.invalidate();
+        room0.requestLayout();
+        room0.getParent().requestLayout();
+        room0.getParent().getParent().requestLayout();*/
+    }
+
+
 
     private void restartMqtt() {
 
@@ -286,6 +256,7 @@ public class MainActivity extends AppCompatActivity {
                         room.msgCount++;
                        // updateRoom(room);
                         room.update();
+                        redrawView();
                     }
                 } else {
                     msgCntMode++;

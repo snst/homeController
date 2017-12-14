@@ -125,15 +125,29 @@ public class RoomStatus extends LinearLayout implements IRoom {
     public void update(Room room) {
 //        txtName.setText( room.name + "   " + Format.tempAndPercentToString(room.temp, room.percent) );
         txtName.setText( room.name + " : ");
-        txtTemp.setText( Format.tempToString(room.temp));
         String mode = "";
-        if(room.autoActive)
-            mode = "A";
-        if(room.boostActive)
-            mode += "B";
-        if(mode.length()>0)
-            mode += ",";
-        txtPercent.setText("("+mode+room.percent+"%)");
+        String temp = "";
+        String percent = "";
+
+        if(room.valid) {
+            temp = Format.tempToString(room.temp);
+            if(room.autoActive)
+                mode = "A";
+            if(room.boostActive)
+                mode += "B";
+            if(mode.length()>0)
+                mode += ",";
+
+            percent = "("+mode+room.percent+"%)";
+        }
+        txtTemp.setText(temp);
+        txtPercent.setText(percent);
         txtMsgCnt.setText("["+room.msgCount+"]");
+        /*
+        txtName.invalidate();
+        txtTemp.invalidate();
+        txtPercent.invalidate();
+        txtMsgCnt.invalidate();
+        this.invalidate();*/
     }
 }
