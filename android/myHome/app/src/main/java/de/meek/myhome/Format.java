@@ -25,16 +25,4 @@ public class Format {
         }
         return strTemp;
     }
-
-    public static long getBTAddress(String str) {
-        long ret = 0;
-        try {
-             if(str.length() == 12) {
-                 ret = Long.parseLong(str, 16);
-            }
-            return ret;
-        } catch(Exception e) {
-            return 0;
-        }
-    }
 }

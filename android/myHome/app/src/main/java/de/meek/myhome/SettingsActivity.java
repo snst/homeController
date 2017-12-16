@@ -25,6 +25,10 @@ public class SettingsActivity extends AppCompatActivity {
         AccountConfig.MQTT_CLIENT_ID = getEditText(R.id.editClientId);
         AccountConfig.MQTT_USERNAME = getEditText(R.id.editUsername);
         AccountConfig.MQTT_PASSWORD = getEditText(R.id.editPassword);
+        int n = Integer.parseInt(getEditText(R.id.editNumberOfRooms));
+        n = Math.min(8, n);
+        n = Math.max(1, n);
+        AccountConfig.NUMBER_OF_ROOMS = n;
 
         AccountConfig.save(this);
         setResult(RESULT_OK);
@@ -41,5 +45,6 @@ public class SettingsActivity extends AppCompatActivity {
         setEditText(R.id.editClientId, AccountConfig.MQTT_CLIENT_ID);
         setEditText(R.id.editUsername, AccountConfig.MQTT_USERNAME);
         setEditText(R.id.editPassword, AccountConfig.MQTT_PASSWORD);
+        setEditText(R.id.editNumberOfRooms, ""+AccountConfig.NUMBER_OF_ROOMS);
     }
 }

@@ -1,16 +1,14 @@
+/**
+ * Copyright (c) 2017 by Stefan Schmidt
+ */
+
 package de.meek.myhome;
 
 import android.content.Context;
-import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-/**
- * Created by stefan on 13.12.2017.
- */
 
 public class RoomStatus extends LinearLayout implements IRoom {
 
@@ -49,16 +47,23 @@ public class RoomStatus extends LinearLayout implements IRoom {
         View.OnClickListener ol = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onRoomClick(roomId);
+                onRoomClickShowSettings(roomId);
             }
         };
 
+        View.OnClickListener ol2 = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onRoomClickRefresh(roomId);
+            }
+        };
         txtName.setOnClickListener(ol);
         txtTemp.setOnClickListener(ol);
-        txtPercent.setOnClickListener(ol);
+        txtPercent.setOnClickListener(ol2);
     }
 
-    public void onRoomClick(int roomId) {}
+    public void onRoomClickShowSettings(int roomId) {}
+    public void onRoomClickRefresh(int roomId) {}
 
     @Override
     protected void onFinishInflate() {
@@ -67,7 +72,6 @@ public class RoomStatus extends LinearLayout implements IRoom {
 
     @Override
     public void update(Room room) {
-//        txtName.setText( room.name + "   " + Format.tempAndPercentToString(room.temp, room.percent) );
         txtName.setText( room.name + " : ");
         String mode = "";
         String temp = "";
@@ -86,6 +90,6 @@ public class RoomStatus extends LinearLayout implements IRoom {
         }
         txtTemp.setText(temp);
         txtPercent.setText(percent);
-        txtMsgCnt.setText("["+room.msgCount+"]");
+        txtMsgCnt.setText("#"+room.msgCount);
     }
 }

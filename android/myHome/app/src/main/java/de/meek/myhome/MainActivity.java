@@ -20,12 +20,8 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-
-import helpers.MqttHelper;
 
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
 public class MainActivity extends AppCompatActivity {
@@ -37,35 +33,52 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<RoomStatus> roomStatusList = new ArrayList<RoomStatus>();
     int msgCntStatus = 0;
     int msgCntMode = 0;
+    Settings settings = null;
 
     public House getHouse() {
         return ((MyApplication)getApplicationContext()).getHouse();
     }
 
-    public void sendCmd(String cmd) {
-        mqttHelper.sendCmd(cmd);
+    public void sendCmd(Cmd cmd) {
+
+        if(cmd.roomId == -1) {
+            cmd.setBtAddress(new BTAddr());
+            mqttHelper.sendCmd(cmd);
+        } else {
+            Room r = getHouse().getRoom(cmd.roomId);
+            if(r != null) {
+                if(r.btAddress.toLong() != 0) {
+                    cmd.setBtAddress(r.btAddress);
+                    mqttHelper.sendCmd(cmd);
+                }
+            }
+        }
     }
 
-    public void requestStatus() {
-        DateFormat dateFormat = new SimpleDateFormat("yyMMddHHmmss");
-        Date date = new Date();
-        String txt = "s" + dateFormat.format(date);
-        mqttHelper.sendCmd(txt);
+    public void requestStatusOfAllRooms() {
+        for(int i=0; i<getHouse().getSize(); i++) {
+            requestStatusOfRoom(i);
+        }
     }
 
-    public void requestSetTemp(int temp) {
+    public void requestStatusOfRoom(int roomId) {
+        sendCmd(new CmdGetStatus(roomId));
+    }
+
+    public void requestSetTemp(int roomId, int temp) {
 //        sendCmd("t" + Integer.toString(temp));
 
         final int val = temp;
+        final int roomId2 = roomId;
         handler.removeCallbacksAndMessages(null);
         handler.postDelayed(new Runnable() {
 
             @Override
             public void run() {
-                mqttHelper.sendCmd("t" + Integer.toString(val));
+                sendCmd(new CmdSetTemp(roomId2, val));
             }
 
-        }, 200); // 5000ms delay
+        }, 200); //delay
     }
 
     public void refreshAllRooms() {
@@ -81,14 +94,16 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == Const.ACTIVITY_TEMP) {
 
-                String cmd = data.getStringExtra(Const.INTENT_NEW_CMD);
-                if(cmd!=null) {
-                    mqttHelper.sendCmd(cmd);
-                }
-
-                int newTemp = data.getIntExtra(Const.INTENT_X_NEW_TEMP, -1);
-                if(newTemp != -1) {
-                    requestSetTemp(newTemp);
+                int cmd = data.getIntExtra(Const.INTENT_NEW_CMD, 0);
+                int roomId = data.getIntExtra(Const.INTENT_ROOM_ID, 0);
+                if(cmd!=0) {
+                    sendCmd(new Cmd(roomId, eCmd.values()[cmd]));
+                } else {
+                    int newTemp = data.getIntExtra(Const.INTENT_NEW_TEMP, -1);
+                    if(newTemp != -1) {
+                        requestSetTemp(roomId, newTemp);
+                        return;
+                    }
                 }
             } else if( requestCode == Const.ACTIVITY_SETTINGS) {
                 restartMqtt();
@@ -97,12 +112,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onBtnRefresh(View view) {
-        requestStatus();
+        requestStatusOfAllRooms();
     }
 
     public void showRoomSettingsActivity(int roomId) {
         Intent intent = new Intent(this, TempActivity.class);
-        intent.putExtra(Const.INTENT_X_ROOM_ID, roomId);
+        intent.putExtra(Const.INTENT_ROOM_ID, roomId);
         startActivityForResult(intent,Const.ACTIVITY_TEMP);
     }
 
@@ -117,13 +132,13 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
         switch(id) {
             case R.id.action_ping:
-                sendCmd(Cmd.PING);
+                sendCmd(new Cmd(-1,eCmd.PING));
                 break;
             case R.id.action_reboot:
-                sendCmd(Cmd.REBOOT);
+                sendCmd(new Cmd(-1,eCmd.REBOOT));
                 break;
             case R.id.action_refresh:
-                requestStatus();
+                requestStatusOfAllRooms();
                 break;
             case R.id.action_main_settings:
                 showSettingsActivity();
@@ -141,22 +156,16 @@ public class MainActivity extends AppCompatActivity {
    @Override
     public void onResume() {
         super.onResume();
-        requestStatus();
+  //      requestStatus();
     }
-
-    /*
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Runtime.getRuntime().gc();
-    }
-*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         AccountConfig.load(this);
+        settings = new Settings(this);
+
         btnRefresh = (Button) findViewById(R.id.btnRefresh);
 
         final LinearLayout lm = (LinearLayout) findViewById(R.id.idLayoutRoomList);
@@ -164,29 +173,29 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
-        //Create four
-        for(int j=0;j<4;j++) {
+        for(int j=0; j<AccountConfig.NUMBER_OF_ROOMS; j++) {
             RoomStatus r = new RoomStatus(this, j) {
                 @Override
-                public void onRoomClick(int roomId) {
+                public void onRoomClickShowSettings(int roomId) {
                     showRoomSettingsActivity(roomId);
+                }
+                public void onRoomClickRefresh(int roomId) {
+                    requestStatusOfRoom(roomId);
                 }
             };
             roomStatusList.add(r);
             lm.addView(r,j);
-            getHouse().addRoom(new Room(this, j, r));
+            Room room = new Room(j, r);
+            settings.loadRoom(room);
+            getHouse().addRoom(room);
         }
 
         refreshAllRooms();
-
         startMqtt();
     }
 
-
-
     @Override
     public void onBackPressed() {
-        //Execute your code here
         this.finish();
         System.exit(0);
     }
@@ -198,11 +207,8 @@ public class MainActivity extends AppCompatActivity {
         startMqtt();
     }
 
-    public void showStatusMqttConnected() {
-        Toast.makeText(this, "MQTT connected", Toast.LENGTH_SHORT).show();
-    }
-    public void showStatusMqttDisconnected() {
-        Toast.makeText(this, "MQTT disconnected", Toast.LENGTH_SHORT).show();
+    public void showShortToast( String str) {
+        Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
     }
 
     private void startMqtt(){
@@ -210,46 +216,50 @@ public class MainActivity extends AppCompatActivity {
         mqttHelper.setCallback(new MqttCallbackExtended() {
             @Override
             public void connectComplete(boolean b, String s) {
-                showStatusMqttConnected();
-                requestStatus();
+                showShortToast("Mqtt connected");
+      //          requestStatus();
             }
 
             @Override
             public void connectionLost(Throwable throwable) {
-                showStatusMqttDisconnected();
+                showShortToast("Mqtt disconnected");
             }
 
             @Override
             public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
-                //Log.w("Debug",mqttMessage.toString());
-
-                Room room = getHouse().getRoom(0);
 
                 if(topic.endsWith("/status")) {
 
                     msgCntStatus++;
 
+                    int i=0;
                     byte[] b = mqttMessage.getPayload();
-                    if(b.length==5 && b[0]=='*') {
+                    if(b.length==(BTAddr.LENGTH+5) && b[i++]=='*') {
+                        BTAddr addr = new BTAddr();
+                        addr.convertFromBytes(b,i);
 
+                        Room room = getHouse().findRoom(addr);
+                        if(room != null) {
+                            i += BTAddr.LENGTH;
 
-                        int status = b[1];
-                        room.percent =  b[2];
-                        // b[3];
-                        room.temp = 5 *  b[4];
-
-                        room.autoActive = (status & 1)==0;
-                        room.boostActive = (status & 4)>0;
-
-                        room.valid = true;
-                        room.msgCount++;
-                        room.update();
+                            int status = b[i++];
+                            room.percent =  b[i++];
+                            i++; // b[3];
+                            room.temp = 5 *  b[i++];
+                            room.autoActive = (status & 1)==0;
+                            room.boostActive = (status & 4)>0;
+                            room.valid = true;
+                            room.msgCount++;
+                            room.lastUpdate = new Date();
+                            room.update();
+                        } else {
+                            showShortToast("Invalid room: " + addr.toString());
+                        }
                     }
                 } else {
                     msgCntMode++;
                 }
-                String status = ""+msgCntMode;
-                btnRefresh.setText(status);
+                btnRefresh.setText("" + msgCntMode);
             }
 
             @Override

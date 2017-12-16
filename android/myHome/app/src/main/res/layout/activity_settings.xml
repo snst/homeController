@@ -74,6 +74,20 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="textPassword" />
+        <TextView
+            android:id="@+id/txtRooms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Number of Rooms" />
+
+        <EditText
+            android:id="@+id/editNumberOfRooms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="number"
+            android:text="4" />
 
         <Button
             android:id="@+id/btnSave"

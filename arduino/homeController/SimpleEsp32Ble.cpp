@@ -1,3 +1,5 @@
+// Copyright 2017 Stefan Schmidt
+
 #include "SimpleEsp32Ble.h"
 
 #define GATTC_TAG "GATTC_DEMO"
@@ -41,6 +43,15 @@ static esp_ble_scan_params_t ble_scan_params = {
     .scan_window            = 0x30
 };*/
 
+void printAddr(char* c, uint8_t* d) {
+ /* Serial.print("+Addr-");
+  Serial.println(c);
+  Serial.println(sizeof(esp_bd_addr_t));
+  for(int i=0;i<sizeof(esp_bd_addr_t);i++)
+    Serial.println(d[i], HEX);
+  Serial.println("---");*/
+}
+
 static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param)
 {
     esp_ble_gattc_cb_param_t *p_data = (esp_ble_gattc_cb_param_t *)param;
@@ -59,7 +70,9 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     case ESP_GATTC_CONNECT_EVT: {
         Serial.print("ESP_GATTC_CONNECT_EVT) ");
         pBLE->gattcProfile[APP_ID].conn_id = p_data->connect.conn_id;
+        Serial.println(p_data->connect.conn_id);
         memcpy(pBLE->gattcProfile[APP_ID].remote_bda, p_data->connect.remote_bda, sizeof(esp_bd_addr_t));
+//    printAddr("c", p_data->connect.remote_bda);
         esp_err_t mtu_ret = esp_ble_gattc_send_mtu_req (gattc_if, p_data->connect.conn_id);
         if(mtu_ret) {
   //          ESP_LOGE(GATTC_TAG, "config MTU error, error code = %x", mtu_ret);
@@ -71,6 +84,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
     case ESP_GATTC_OPEN_EVT: {
         Serial.print("ESP_GATTC_OPEN_EVT) ");
+
         if (param->open.status != ESP_GATT_OK){
        //     ESP_LOGE(GATTC_TAG, "open failed, status %d", p_data->open.status);
             Serial.println("failed");
@@ -328,6 +342,7 @@ pBLE->onConnected();
 
     case ESP_GATTC_WRITE_CHAR_EVT: {
       Serial.print("ESP_GATTC_WRITE_CHAR_EVT) ");
+    printAddr("w", p_data->connect.remote_bda);
       pBLE->isWriting = false;
       pBLE->onWritten(p_data->write.status == ESP_GATT_OK);
       /*
@@ -484,7 +499,7 @@ static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp
 
 bool SimpleBLE::init()
 {
-    Serial.println("+SimpleBLE::init");
+  //  Serial.println("+SimpleBLE::init");
     pBLE = this;
 
     gattcProfile[APP_ID].gattc_cb = gattc_profile_event_handler;
@@ -547,7 +562,7 @@ bool SimpleBLE::init()
       Serial.println("-initBLE8");
     }
 
-    Serial.println("-SimpleBLE::init");
+    Serial.println("SimpleBLE::init: ok");
     setState(disconnected);
 
     vTaskDelay(200/portTICK_PERIOD_MS);
@@ -581,6 +596,7 @@ bool SimpleBLE::write(uint16_t handle, uint8_t* data, uint8_t len, bool response
 
 bool SimpleBLE::connect(BLEAddr& addr) {
     esp_err_t errRc = esp_ble_gattc_open(gattcProfile[APP_ID].gattc_if, addr.addr, true);
+    //printAddr("C", addr.addr);
     Serial.print("SBLE::esp_ble_gattc_open() ");
     Serial.println(errRc == ESP_OK ? "ok" : "failed");
 
@@ -591,6 +607,11 @@ bool SimpleBLE::connect(BLEAddr& addr) {
       setState(disconnected);
       return false;
     }
+}
+
+void SimpleBLE::disconnect() {
+  esp_ble_gattc_close(gattcProfile[APP_ID].gattc_if, gattcProfile[APP_ID].conn_id);
+  setState(disconnecting);  
 }
 
 
@@ -604,5 +625,5 @@ bool SimpleBLE::registerNotify(uint16_t handle) {
 
 SimpleBLE::SimpleBLE() 
 : state(deinit), isWriting(false) {
-    Serial.println("SimpleBLE()");
+ //   Serial.println("SimpleBLE()");
 }

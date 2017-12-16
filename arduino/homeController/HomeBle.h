@@ -1,3 +1,5 @@
+// Copyright 2017 Stefan Schmidt
+
 #ifndef _HOME_BLE_H__
 #define _HOME_BLE_H__
 

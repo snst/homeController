@@ -7,9 +7,13 @@ package de.meek.myhome;
 import android.app.Activity;
 import android.content.SharedPreferences;
 
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Date;
+
 public class Room {
     public String name;
-    public String btAddress;
+    public BTAddr btAddress = new BTAddr();
     public int id;
     public boolean autoActive = false;
     public boolean boostActive = false;
@@ -17,12 +21,11 @@ public class Room {
     public int temp = 0;
     public int msgCount = 0;
     public boolean valid = false;
+    public Date lastUpdate;
     public IRoom viewRoom;
-    public Room(Activity activity, int _roomId, IRoom _viewRoom) {
+    public ArrayList<Integer> presetTemp = new ArrayList<Integer>();
+    public Room(int _roomId, IRoom _viewRoom) {
         id = _roomId;
-        SharedPreferences settings = activity.getSharedPreferences(getId(), 0);
-        name = settings.getString(Const.INTENT_X_ROOM_NAME, "Name");
-        btAddress = settings.getString(Const.INTENT_X_BT_ADDRESS, "112233445566");
         viewRoom = _viewRoom;
     }
     public String getId() {

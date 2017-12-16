@@ -1,3 +1,5 @@
+// Copyright 2017 Stefan Schmidt
+
 #ifndef _hc_bt_h__
 #define _hc_bt_h__
 
@@ -15,6 +17,8 @@
 #include "esp_gatt_defs.h"
 #include "esp_bt_main.h"
 #include "esp_gatt_common_api.h"
+
+#define BTADDR_LEN (sizeof(esp_bd_addr_t))
 
 void setMqttResponse(uint8_t* pData, size_t length);
 
@@ -36,10 +40,34 @@ class BLEAddr
     esp_bd_addr_t addr;
     
     BLEAddr() {}
+    BLEAddr(uint8_t* _addr) {
+      setAddr(_addr);
+    }
 
     BLEAddr(char* strAddr) {
       uint8_t* a = (uint8_t*) addr;
       sscanf(strAddr, "%x:%x:%x:%x:%x:%x", &a[0], &a[1], &a[2], &a[3], &a[4], &a[5]);
+    }
+
+    void print(char* txt) {
+      Serial.print(txt);
+      for(int i=0; i<sizeof(esp_bd_addr_t); i++) {
+        Serial.print(":");
+        Serial.print(((uint8_t*)addr)[i], HEX);
+      }
+      Serial.println("");
+    }
+
+    void setAddr(uint8_t* _addr) {
+      memcpy((uint8_t*)addr, _addr, sizeof(esp_bd_addr_t));
+    }
+
+    bool isSame(BLEAddr & bleAddr) {
+      return !memcmp((uint8_t*)addr, (uint8_t*)bleAddr.addr, sizeof(esp_bd_addr_t));
+    }
+
+    void setAddr(BLEAddr & bleAddr) {
+      memcpy((uint8_t*)addr, bleAddr.addr, sizeof(esp_bd_addr_t));
     }
 };
 
@@ -49,7 +77,7 @@ class BLEAddr
 class SimpleBLE {
 
   public:
-  enum eState { deinit, disconnected, connecting, connected, ready };
+  enum eState { deinit, disconnected, connecting, disconnecting, connected, ready };
   eState state;
   bool isWriting;
   struct gattc_profile_inst gattcProfile[MAX_APP]; 
@@ -89,6 +117,7 @@ class SimpleBLE {
   bool write(uint16_t handle, uint8_t* data, uint8_t len, bool response);
 
   bool connect(BLEAddr& addr);
+  void disconnect();
 
   bool init();
 

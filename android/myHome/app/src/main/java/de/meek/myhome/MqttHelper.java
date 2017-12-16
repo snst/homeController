@@ -1,4 +1,4 @@
-package helpers;
+package de.meek.myhome;
 
 import android.content.Context;
 import android.util.Log;
@@ -15,6 +15,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import de.meek.myhome.AccountConfig;
+import de.meek.myhome.Room;
 
 /**
  * Created by stefan on 02.12.2017.
@@ -59,11 +60,11 @@ public class MqttHelper {
         connect();
     }
 
-    public void sendCmd(String cmd) {
+    public void sendCmd(Cmd cmd) {
 
         try {
             if(cmd != null && isConnected()) {
-                mqttAndroidClient.publish("eq3/mode", cmd.getBytes(), 0, false);
+               mqttAndroidClient.publish("eq3/mode", cmd.buffer, 0, false);
             }
         } catch (MqttException e) {
             e.printStackTrace();

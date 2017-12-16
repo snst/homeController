@@ -7,7 +7,7 @@
     android:layout_gravity="fill_vertical"
     tools:context="de.meek.myhome.MainActivity"
     tools:layout_editor_absoluteX="8dp"
-    tools:layout_editor_absoluteY="81dp">
+    tools:layout_editor_absoluteY="41dp">
 
     <LinearLayout
         android:id="@+id/idLayoutRoomList"
@@ -72,7 +72,7 @@
             android:layout_height="60dp"
             android:layout_gravity="bottom|right"
             android:layout_marginRight="20dp"
-            android:layout_marginTop="90dp"
+            android:layout_marginTop="10dp"
             android:background="@android:drawable/btn_default"
             android:foreground="@android:drawable/ic_popup_sync"
             android:foregroundGravity="center|fill"

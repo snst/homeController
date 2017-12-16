@@ -5,7 +5,6 @@
 package de.meek.myhome;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -30,25 +29,22 @@ public class RoomSettingsActivity extends AppCompatActivity {
         txtBtAddress = (TextView) findViewById(R.id.editBTAddress);
 
         Intent intent = getIntent();
-        int id = intent.getIntExtra(Const.INTENT_X_ROOM_ID, 0);
+        int id = intent.getIntExtra(Const.INTENT_ROOM_ID, 0);
         room = ((MyApplication)getApplicationContext()).getHouse().getRoom(id);
 
         txtRoomName.setText( room.name);
-        txtBtAddress.setText( room.btAddress);
+        txtBtAddress.setText( room.btAddress.toString());
     }
 
     public void onSaveSettings(View view) {
 
         room.name = txtRoomName.getText().toString();
-        room.btAddress = txtBtAddress.getText().toString();
+        if(!room.btAddress.convertFromString(txtBtAddress.getText().toString())) {
+            Toast.makeText(this, "Invalid BT address!", Toast.LENGTH_LONG).show();
+        }
 
-//        long bt = Format.getBTAddress(room.btAddress);
-
-        SharedPreferences settings = getSharedPreferences(room.getId(), 0);
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putString(Const.INTENT_X_ROOM_NAME, room.name);
-        editor.putString(Const.INTENT_X_BT_ADDRESS, room.btAddress);
-        editor.commit();
+        Settings settings = new Settings(this);
+        settings.saveRoom(room);
 
         Intent data = new Intent();
         setResult(RESULT_OK,data);

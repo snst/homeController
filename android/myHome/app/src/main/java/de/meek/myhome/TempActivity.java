@@ -5,7 +5,6 @@
 package de.meek.myhome;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -15,62 +14,66 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 public class TempActivity extends AppCompatActivity {
 
     TextView txtViewTempNew;
     TextView txtViewTempCurrent;
+    TextView txtLastUpdate;
     SeekBar seekBarTemp;
     SeekBar seekBarTempComfort;
-    int roomId;
     Room room = null;
     int temp;
 
-    public void runCmd(String cmd) {
+    public void runCmd(eCmd cmd) {
 
         Intent data = new Intent();
-        data.putExtra(Const.INTENT_NEW_CMD, cmd);
+        data.putExtra(Const.INTENT_NEW_CMD, (int) cmd.getValue());
+        data.putExtra(Const.INTENT_ROOM_ID, room.id);
         setResult(RESULT_OK,data);
         finish();
     }
 
     public void onBtnAuto(View view) {
-        runCmd(Cmd.AUTO);
+        runCmd(eCmd.AUTO);
     }
 
     public void onBtnManual(View view) {
-        runCmd(Cmd.MANUAL);
+        runCmd(eCmd.MANUAL);
     }
 
     public void onBtnOff(View view) {
-        runCmd(Cmd.OFF);
+        runCmd(eCmd.OFF);
     }
 
     public void onBtnOn(View view) {
-        runCmd(Cmd.ON);
+        runCmd(eCmd.ON);
     }
 
     public void onBtnBoostOn(View view) {
-        runCmd(Cmd.BOOST_ON);
+        runCmd(eCmd.BOOST_ON);
     }
 
     public void onBtnBoostOff(View view) {
-        runCmd(Cmd.BOOST_OFF);
+        runCmd(eCmd.BOOST_OFF);
     }
 
     public void onBtnEco(View view) {
-        runCmd(Cmd.ECO);
+        runCmd(eCmd.ECO);
     }
 
     public void onBtnComfort(View view) {
-        runCmd(Cmd.COMFORT);
+        runCmd(eCmd.COMFORT);
     }
 
     public void onBtnTemp(View view) {
         Button btn = (Button) view;
-        temp = (int) btn.getTag(R.id.id_tag_temp);
+        int presetIndex = Integer.parseInt((String)btn.getTag());
+        temp = room.presetTemp.get(presetIndex);
         requestNewTempAndClose(temp);
     }
-
 
     public void onBtnDec(View view) {
         if(temp>Const.TEMP_MIN) {
@@ -89,7 +92,8 @@ public class TempActivity extends AppCompatActivity {
     public void requestNewTempAndClose(int t) {
 
         Intent data = new Intent();
-        data.putExtra(Const.INTENT_X_NEW_TEMP, temp);
+        data.putExtra(Const.INTENT_NEW_TEMP, temp);
+        data.putExtra(Const.INTENT_ROOM_ID, room.id);
         setResult(RESULT_OK,data);
         finish();
     }
@@ -115,24 +119,30 @@ public class TempActivity extends AppCompatActivity {
         return true;
     }
 
-    void setButtonTemp(Button btn, int value) {
+    void updateButtonPresetTemp(int btnId, int value) {
+        Button btn = (Button) findViewById(btnId);
         btn.setText(Format.tempToString(value));
-        btn.setTag(R.id.id_tag_temp, value);
     }
 
-    void saveButtonTemp(int btnId, int value) {
-        Button btn = (Button) findViewById(btnId);
-        setButtonTemp(btn, value);
-        SharedPreferences settings = getSharedPreferences(room.getId(), 0);
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putInt((String)btn.getTag(), value); // save preset temp
-        editor.commit();
+    void updateAllButtonPresetTemps() {
+
+        updateButtonPresetTemp(R.id.btnTemp0, room.presetTemp.get(0));
+        updateButtonPresetTemp(R.id.btnTemp1, room.presetTemp.get(1));
+        updateButtonPresetTemp(R.id.btnTemp2, room.presetTemp.get(2));
+        updateButtonPresetTemp(R.id.btnTemp3, room.presetTemp.get(3));
+    }
+
+    void setNewButtonPresetTemp(int presetId, int value) {
+        room.presetTemp.set(presetId, value);
+        updateAllButtonPresetTemps();
+        Settings settings = new Settings(this);
+        settings.saveRoom(room);
     }
 
     void showRoomSettingsActivity()
     {
         Intent intent = new Intent(this, RoomSettingsActivity.class);
-        intent.putExtra(Const.INTENT_X_ROOM_ID, room.id);
+        intent.putExtra(Const.INTENT_ROOM_ID, room.id);
         startActivityForResult(intent,Const.ACTIVITY_ROOM_SETTINGS);
     }
 
@@ -141,16 +151,16 @@ public class TempActivity extends AppCompatActivity {
         int id = item.getItemId();
         switch(id) {
             case R.id.action_save1:
-                saveButtonTemp(R.id.btnTemp1, temp);
+                setNewButtonPresetTemp(0, temp);
                 break;
             case R.id.action_save2:
-                saveButtonTemp(R.id.btnTemp2, temp);
+                setNewButtonPresetTemp(1, temp);
                 break;
             case R.id.action_save3:
-                saveButtonTemp(R.id.btnTemp3, temp);
+                setNewButtonPresetTemp(2, temp);
                 break;
             case R.id.action_save4:
-                saveButtonTemp(R.id.btnTemp4, temp);
+                setNewButtonPresetTemp(3, temp);
                 break;
             case R.id.action_room_setting:
                 showRoomSettingsActivity();
@@ -159,17 +169,26 @@ public class TempActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    void initButtonTemp(SharedPreferences settings, int btnId, int defaultTemp) {
-        Button btn = (Button) findViewById(btnId);
-        String tag = (String) btn.getTag();
-        setButtonTemp(btn, settings.getInt(tag, defaultTemp));
-    }
 
     void showCurrentState() {
-        String str = room.autoActive ? "Auto" : "Manual";
-        if(room.boostActive) str += " + Boost";
-        str += "    " + Format.tempAndPercentToString(temp, room.percent);
+        String lastUpdate = "#";
+        String str = "?";
+        if(room != null) {
+            str = room.autoActive ? "Auto" : "Manual";
+            if (room.boostActive) str += " + Boost";
+            str += "    " + Format.tempAndPercentToString(temp, room.percent);
+            lastUpdate += room.msgCount;
+            lastUpdate += ": ";
+            if(room.lastUpdate != null) {
+                DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss  dd.MM.yyyy");
+                lastUpdate += dateFormat.format(room.lastUpdate);
+            } else {
+                lastUpdate += "-";
+            }
+        }
         txtViewTempCurrent.setText(str);
+        txtViewTempNew.setText(Format.tempToString(temp));
+        txtLastUpdate.setText(lastUpdate);
     }
 
 
@@ -187,6 +206,7 @@ public class TempActivity extends AppCompatActivity {
         setContentView(R.layout.activity_temp);
         txtViewTempNew = (TextView) findViewById(R.id.txtViewTempNew);
         txtViewTempCurrent = (TextView) findViewById(R.id.txtViewTempCurrent);
+        txtLastUpdate = (TextView) findViewById(R.id.txtLastUpdate);
         seekBarTemp = (SeekBar) findViewById(R.id.seekBarTemp);
         seekBarTempComfort = (SeekBar) findViewById(R.id.seekBarTempComfort);
         seekBarTemp.setMax((Const.TEMP_MAX - Const.TEMP_MIN) / Const.TEMP_STEP);
@@ -194,7 +214,7 @@ public class TempActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
 
-        int id = intent.getIntExtra(Const.INTENT_X_ROOM_ID, 0);
+        int id = intent.getIntExtra(Const.INTENT_ROOM_ID, 0);
         room = ((MyApplication)getApplicationContext()).getHouse().getRoom(id);
         setTitle(room.name);
         temp = room.temp;
@@ -204,12 +224,7 @@ public class TempActivity extends AppCompatActivity {
         }
 
         showCurrentState();
-
-        SharedPreferences settings = getSharedPreferences(room.getId(), 0);
-        initButtonTemp(settings, R.id.btnTemp1, 180);
-        initButtonTemp(settings, R.id.btnTemp2, 190);
-        initButtonTemp(settings, R.id.btnTemp3, 200);
-        initButtonTemp(settings, R.id.btnTemp4, 210);
+        updateAllButtonPresetTemps();
 
         seekBarTemp.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override

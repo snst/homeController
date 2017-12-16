@@ -1,3 +1,5 @@
+// Copyright 2017 Stefan Schmidt
+
 #include "HomeBle.h"
 
 HomeBLE::HomeBLE() {

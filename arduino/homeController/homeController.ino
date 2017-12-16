@@ -1,36 +1,41 @@
-
 // Copyright 2017 Stefan Schmidt
 
 #include <WiFi.h>
-//#include "BLEDevice.h"
 #include <PubSubClient.h>
-#include "homeController_cfg.h"
 #include "SimpleEsp32Ble.h"
 #include "HomeBle.h"
+#include "HomeConfig.h"
 
-static uint8_t mqttStatus[5];
+
+enum eCmd {
+    NONE = 0,
+    PING,
+    BOOST_ON,
+    BOOST_OFF,
+    ON,
+    OFF,
+    ECO,
+    COMFORT,
+    AUTO,
+    MANUAL,
+    REBOOT,
+    SETTEMP,
+    GETSTATUS
+};
+
+static uint8_t mqttStatus[11];
 static uint8_t bleCmd[7];
 static uint8_t bleCmdLen;
 
 HomeBLE* ble;
-BLEAddr bleAddr("00:1a:22:0c:5e:15");
+BLEAddr bleAddrConnect; //("00:1a:22:0c:5e:15");
+BLEAddr bleAddrCmd;
+HomeConfig config;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-/*
-static BLEUUID serviceUUID("3e135142-654f-9090-134a-a6ff5bb77046");
-static BLEUUID cmdUUID("3fa4585a-ce4a-3bad-db4b-b8df8179ea09");
-static BLEUUID notificationUUID("d0e8434d-cd29-0996-af41-6c90f4e0eb2a");
-static BLEAddress *pBLEServerAddress;
-static BLERemoteCharacteristic* pBLERemoteCharacteristic;
-static BLERemoteCharacteristic* pBLENotificationCharacteristic;
-static BLEClient* pBLEClient;
-static BLERemoteService* pBLERemoteService;
-*/
-
 void(* softReset) (void) = 0;//declare reset function at address 0
-
 
 void printMem()
 {
@@ -42,10 +47,14 @@ void printMem()
 
 void setMqttResponse(uint8_t* pData, size_t length) {
     if(length==6) {
-      mqttStatus[0] = '*';
-      memcpy(&mqttStatus[1], &pData[2], 4);
+      int i = 0;
+      mqttStatus[i++] = '*';
+      memcpy(&mqttStatus[i], bleAddrConnect.addr, sizeof(esp_bd_addr_t));
+      i+=6;
+      memcpy(&mqttStatus[i], &pData[2], 4);
     }
 }
+
 
 void setup() {
 
@@ -55,13 +64,16 @@ void setup() {
   Serial.begin(115200);
   printMem();
 
+  config.loadSettings();
+  config.userInput(2000);
+
   ble = new HomeBLE();
   ble->init();
 
-  client.setServer(MQTT_SERVER, MQTT_PORT);
+  client.setServer(config.mqtt_server.c_str(), atoi(config.mqtt_port.c_str()));
   client.setCallback(callback);
 
-  WiFi.begin(WLAN_SSID, WLAN_PASSWORD);
+  WiFi.begin(config.wlan_ssid.c_str(), config.wlan_pw.c_str());
   printMem();
 }
 
@@ -87,7 +99,7 @@ void connectMQTT()
 {
   while (!client.connected()) {
     Serial.print("Connecting to MQTT.. ");
-    if (client.connect("ESP32Client", MQTT_USER, MQTT_PASSWORD )) {
+    if (client.connect("ESP32Client", config.mqtt_user.c_str(), config.mqtt_pw.c_str() )) {
       Serial.println("connected!");  
       client.subscribe("eq3/mode");
     } else {
@@ -98,20 +110,12 @@ void connectMQTT()
   }
 }
 
-byte getNextVal(byte* p) {
-  byte i = 0;
-  i = p[0] - '0';
-  i *= 10;
-  i += p[i] - '0';
-  return i;
-}
-
 void publishMqttStatus()
 {
   if(mqttStatus[0] != 0)
   {
     Serial.print("<MQTT: eq3/status");
-    if(client.publish("eq3/status", mqttStatus, 5)) {
+    if(client.publish("eq3/status", mqttStatus, 6+5)) {
       Serial.println(" - OK");
     } else {
       Serial.println(" - FAILED");
@@ -121,11 +125,12 @@ void publishMqttStatus()
   }
 }
 
+
 void callback(char* topic, byte* payload, unsigned int length) {
  
   bleCmdLen = 0;
 
-  Serial.print(">MQTT: ");
+  Serial.print("\n>MQTT: ");
   Serial.print(topic);
 
   Serial.print(" : ");
@@ -135,59 +140,92 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   Serial.println("");
   
-  if(!strcmp(topic, "eq3/mode") && length >= 1) {
-    char* c = (char*)payload;
-    if(!strncmp(c, "on", length)) {
-      bleCmd[0] = 0x41; bleCmd[1] = 0x3c; bleCmdLen = 2;
-    }
-    else if(!strncmp(c, "off", length)) {
-      bleCmd[0] = 0x41; bleCmd[1] = 0x09; bleCmdLen = 2;
-    }
-    else if(!strncmp(c, "manual", length)) { 
-      bleCmd[0] = 0x40; bleCmd[1] = 0x40;  bleCmdLen = 2;
-    }
-    else if(!strncmp(c, "auto", length)) {
-      bleCmd[0] = 0x40; bleCmd[1] = 0x00; bleCmdLen = 2;
-    }
-    else if(!strncmp(c, "booston", length)) {
-      bleCmd[0] = 0x45; bleCmd[1] = 0xff; bleCmdLen = 2;
-    }
-    else if(!strncmp(c, "boostoff", length)) {
-      bleCmd[0] = 0x45; bleCmd[1] = 0x00; bleCmdLen = 2;
-    }
-    else if(!strncmp(c, "eco", length)) {
-      bleCmd[0] = 0x44; bleCmdLen = 1;
-    }
-    else if(!strncmp(c, "comfort", length)) {
-      bleCmd[0] = 0x43; bleCmdLen = 1;
-    }
-    else if(!strncmp(c, "reset", length)) { 
-      softReset();
-    }
-    else if(!strncmp(c, "ping", length)) { 
-      strcpy((char*)mqttStatus, "pong");
-    }
-    else if(!strncmp(c, "t", 1)) { 
-      int t = 0;
-      if(length>=2) t = payload[1] - '0';
-      if(length>=3) { t *=  10; t += ( payload[2] - '0' ); }
-      if(length>=4) { t *=  10; t += ( payload[3] - '0' ); }
+  if(!strcmp(topic, "eq3/mode") && (length > BTADDR_LEN)) {
 
-      bleCmd[0] = 0x41; 
-      bleCmd[1] = (uint8_t) ((t * 2) / 10);
-      bleCmdLen = 2;
+    if(payload[0] == length) {
+      payload++;
+      length--;
+      bleAddrCmd.setAddr(payload);
+      bleAddrCmd.print("Remote BLE");
+      
+      payload += BTADDR_LEN;
+      length -= BTADDR_LEN;
+      eCmd cmd = (eCmd) *payload;
+      payload++;
+      length--;
+      Serial.print("Cmd=");
+      Serial.print(cmd);
+      Serial.print(" : ");
+      switch(cmd) {
+        case NONE: {
+          Serial.println("NONE");
+        } break;
+        case PING: {
+          strcpy((char*)mqttStatus, "pong");
+          Serial.println("BOOST PING");
+        } break;
+        case BOOST_ON: {
+          bleCmd[0] = 0x45; bleCmd[1] = 0xff; bleCmdLen = 2;
+          Serial.println("BOOST ON");
+        } break;
+        case BOOST_OFF: {
+          bleCmd[0] = 0x45; bleCmd[1] = 0x00; bleCmdLen = 2;
+          Serial.println("BOOST OFF");
+        } break;
+        case ON: {
+          bleCmd[0] = 0x41; bleCmd[1] = 0x3c; bleCmdLen = 2;
+          Serial.println("ON");
+        } break;
+        case OFF: {
+          bleCmd[0] = 0x41; bleCmd[1] = 0x09; bleCmdLen = 2;
+          Serial.println("OFF");
+        } break;
+        case ECO: {
+          bleCmd[0] = 0x44; bleCmdLen = 1;
+          Serial.println("ECO");
+        } break;
+        case COMFORT: {
+          bleCmd[0] = 0x43; bleCmdLen = 1;
+          Serial.println("COMFORT");
+        } break;
+        case AUTO: {
+          bleCmd[0] = 0x40; bleCmd[1] = 0x00; bleCmdLen = 2;
+          Serial.println("AUTO");
+        } break;
+        case MANUAL: {
+          bleCmd[0] = 0x40; bleCmd[1] = 0x40;  bleCmdLen = 2;
+          Serial.println("MANUAL");
+        } break;
+        case REBOOT: {
+          Serial.println("REBOOT");
+          softReset();
+        } break;
+        case SETTEMP: {
+          Serial.print("SETTEMP: ");
+          if(length==1) {
+            bleCmd[0] = 0x41; 
+            bleCmd[1] = (uint8_t) *payload;
+            bleCmdLen = 2;
+            Serial.println(bleCmd[1]);
+          } else {
+            Serial.println("PACKET");
+          }
+        } break;
+        case GETSTATUS: {
+          Serial.println("GETSTATUS");
+          if(length==6) {
+            bleCmd[0] = 3;
+            bleCmdLen = 7;
+            memcpy(&bleCmd[1], payload, 6);
+          } else {
+            Serial.println("PACKET");
+          }
+        } break;
+      }
+      
+    } else {
+      Serial.println("corrupt packet");
     }
-    else if(!strncmp(c, "s", 1) && length==13) { 
-      bleCmd[0] = 3;
-      bleCmd[1] = getNextVal(payload+1); // year
-      bleCmd[2] = getNextVal(payload+3); // month
-      bleCmd[3] = getNextVal(payload+5); // day
-      bleCmd[4] = getNextVal(payload+7); // hour
-      bleCmd[5] = getNextVal(payload+9); // minute
-      bleCmd[6] = getNextVal(payload+11); // second
-      bleCmdLen = 7;
-    }
-
     printMem();
   }
 }
@@ -203,8 +241,21 @@ void loop() {
 
   if(bleCmdLen > 0)
   {
+    if(bleAddrConnect.isSame(bleAddrCmd)) {
+//      bleAddrCmd.print("Same target addr");
+    }
+    else {
+      bleAddrCmd.print("New target addr");
+      if(!ble->isState(SimpleBLE::disconnected)) {
+        bleAddrConnect.print("Disconnect target");
+        ble->disconnect();
+      }
+      bleAddrConnect.setAddr(bleAddrCmd);
+    }
+    
     if(ble->isState(SimpleBLE::disconnected)) {
-      ble->connect(bleAddr);
+      bleAddrConnect.print("Connect to target");
+      ble->connect(bleAddrConnect);
     }
 
     if(ble->canWrite()) {
