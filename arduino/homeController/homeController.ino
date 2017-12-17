@@ -24,12 +24,9 @@ enum eCmd {
 };
 
 static uint8_t mqttStatus[12];
-static uint8_t bleCmd[7];
-static uint8_t bleCmdLen;
 
 HomeBLE* ble;
-BLEAddr bleAddrConnect; //("00:1a:22:0c:5e:15");
-BLEAddr bleAddrCmd;
+//BLEAddr bleAddrConnect; //("00:1a:22:0c:5e:15");
 HomeConfig config;
 
 WiFiClient espClient;
@@ -45,12 +42,12 @@ void printMem()
   Serial.println(xPortGetMinimumEverFreeHeapSize());
 }
 
-void setMqttResponseStatus(uint8_t* pData, size_t length) {
+void setMqttResponseStatus(BLEAddr* addr, uint8_t* pData, size_t length) {
     if(length==6) {
       int i = 0;
       mqttStatus[i++] = '*';
       mqttStatus[i++] = 2 + sizeof(esp_bd_addr_t) + 4;
-      memcpy(&mqttStatus[i], bleAddrConnect.addr, sizeof(esp_bd_addr_t));
+      memcpy(&mqttStatus[i], addr->addr, sizeof(esp_bd_addr_t));
       i += sizeof(esp_bd_addr_t);
       memcpy(&mqttStatus[i], &pData[2], 4);
     }
@@ -65,7 +62,6 @@ void setMqttResponsePong() {
 void setup() {
 
   mqttStatus[0] = 0;
-  bleCmdLen = 0;
 
   Serial.begin(115200);
   printMem();
@@ -137,12 +133,9 @@ void publishMqttStatus()
 
 void callback(char* topic, byte* payload, unsigned int length) {
  
-  bleCmdLen = 0;
-
   Serial.print("\n>MQTT: ");
   Serial.print(topic);
-
-  Serial.print(" : ");
+  Serial.print(">>");
   /*
   for (int i = 0; i < length; i++) {
     Serial.print(payload[i], HEX);
@@ -152,11 +145,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
   */
   if(!strcmp(topic, config.mqtt_topic_request.c_str()) && (length >= 2) && (payload[1]==length)) {
 
+      BLEAddr bleAddr;
+      uint8_t bleCmd[7];
+      uint8_t bleCmdLen = 0;
+
       eCmd cmd = (eCmd) payload[0];
       payload += 2;
       length -= 2;
-      bleAddrCmd.setAddr(payload);
-      bleAddrCmd.print("BLE");
+      bleAddr.setAddr(payload);
+      bleAddr.print("BLE");
       payload += BTADDR_LEN;
       length -= BTADDR_LEN;
       Serial.print(" : ");
@@ -223,11 +220,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
             bleCmdLen = 7;
             memcpy(&bleCmd[1], payload, 6);
           } else {
-            Serial.println("PACKET");
+            Serial.println("ERR");
           }
         } break;
+        default: {
+          Serial.println("Invalid cmd");
+        }
       }
-      
+
+      if(ble->isReady()) {
+        ble->writeCmd(bleAddr, bleCmd, bleCmdLen);
+      } else {
+        Serial.println("Drop request, BLE not ready");
+      }
     } else {
       Serial.println("corrupt packet");
     }
@@ -242,31 +247,7 @@ void loop() {
   
   client.loop();
 
-  if(bleCmdLen > 0)
-  {
-    if(bleAddrConnect.isSame(bleAddrCmd)) {
-//      bleAddrCmd.print("Same target addr");
-    }
-    else {
-      bleAddrCmd.print("New target addr");
-      if(!ble->isState(SimpleBLE::disconnected)) {
-        bleAddrConnect.print("Disconnect target");
-        ble->disconnect();
-      }
-      bleAddrConnect.setAddr(bleAddrCmd);
-    }
-    
-    if(ble->isState(SimpleBLE::disconnected)) {
-      bleAddrConnect.print("Connect to target");
-      ble->connect(bleAddrConnect);
-    }
-
-    if(ble->canWrite()) {
-      if( ble->write(0x411, bleCmd, bleCmdLen, true) ) {
-        bleCmdLen = 0;
-      }
-    }
-  }
+  ble->execute();
 
   publishMqttStatus();  
 
