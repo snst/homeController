@@ -23,7 +23,7 @@ enum eCmd {
     GETSTATUS
 };
 
-static uint8_t mqttStatus[11];
+static uint8_t mqttStatus[12];
 static uint8_t bleCmd[7];
 static uint8_t bleCmdLen;
 
@@ -45,14 +45,20 @@ void printMem()
   Serial.println(xPortGetMinimumEverFreeHeapSize());
 }
 
-void setMqttResponse(uint8_t* pData, size_t length) {
+void setMqttResponseStatus(uint8_t* pData, size_t length) {
     if(length==6) {
       int i = 0;
       mqttStatus[i++] = '*';
+      mqttStatus[i++] = 2 + sizeof(esp_bd_addr_t) + 4;
       memcpy(&mqttStatus[i], bleAddrConnect.addr, sizeof(esp_bd_addr_t));
-      i+=6;
+      i += sizeof(esp_bd_addr_t);
       memcpy(&mqttStatus[i], &pData[2], 4);
     }
+}
+
+void setMqttResponsePong() {
+  mqttStatus[0] = '!';
+  mqttStatus[1] = 2;  
 }
 
 
@@ -100,8 +106,9 @@ void connectMQTT()
   while (!client.connected()) {
     Serial.print("Connecting to MQTT.. ");
     if (client.connect("ESP32Client", config.mqtt_user.c_str(), config.mqtt_pw.c_str() )) {
-      Serial.println("connected!");  
-      client.subscribe("eq3/mode");
+      Serial.print("connected! Subscripe to ");
+      Serial.println(config.mqtt_topic_request.c_str());  
+      client.subscribe(config.mqtt_topic_request.c_str());
     } else {
       Serial.print("failed with state ");
       Serial.println(client.state());
@@ -114,14 +121,16 @@ void publishMqttStatus()
 {
   if(mqttStatus[0] != 0)
   {
-    Serial.print("<MQTT: eq3/status");
-    if(client.publish("eq3/status", mqttStatus, 6+5)) {
+    Serial.print("<MQTT: ");
+    Serial.print(config.mqtt_topic_status.c_str());
+    if(client.publish(config.mqtt_topic_status.c_str(), mqttStatus, mqttStatus[1])) {
       Serial.println(" - OK");
     } else {
       Serial.println(" - FAILED");
     }
-    mqttStatus[0] = 0;
-    printMem();
+    mqttStatus[0] = 0; // cmd
+    mqttStatus[1] = 0; // len
+//    printMem();
   }
 }
 
@@ -134,35 +143,31 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print(topic);
 
   Serial.print(" : ");
+  /*
   for (int i = 0; i < length; i++) {
     Serial.print(payload[i], HEX);
     Serial.print(", ");
   }
   Serial.println("");
-  
-  if(!strcmp(topic, "eq3/mode") && (length > BTADDR_LEN)) {
+  */
+  if(!strcmp(topic, config.mqtt_topic_request.c_str()) && (length >= 2) && (payload[1]==length)) {
 
-    if(payload[0] == length) {
-      payload++;
-      length--;
+      eCmd cmd = (eCmd) payload[0];
+      payload += 2;
+      length -= 2;
       bleAddrCmd.setAddr(payload);
-      bleAddrCmd.print("Remote BLE");
-      
+      bleAddrCmd.print("BLE");
       payload += BTADDR_LEN;
       length -= BTADDR_LEN;
-      eCmd cmd = (eCmd) *payload;
-      payload++;
-      length--;
-      Serial.print("Cmd=");
-      Serial.print(cmd);
       Serial.print(" : ");
       switch(cmd) {
         case NONE: {
           Serial.println("NONE");
         } break;
         case PING: {
-          strcpy((char*)mqttStatus, "pong");
-          Serial.println("BOOST PING");
+          setMqttResponsePong();
+          Serial.println("PING");
+          printMem();
         } break;
         case BOOST_ON: {
           bleCmd[0] = 0x45; bleCmd[1] = 0xff; bleCmdLen = 2;
@@ -226,8 +231,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
     } else {
       Serial.println("corrupt packet");
     }
-    printMem();
-  }
 }
 
 

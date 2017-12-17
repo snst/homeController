@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item
+   <!-- <item
         android:id="@+id/action_refresh"
-        android:title="Refresh" />
+        android:title="Refresh" />-->
     <item
         android:id="@+id/action_ping"
         android:title="Ping" />
@@ -13,4 +13,7 @@
     <item
         android:id="@+id/action_main_settings"
         android:title="Settings" />
+    <item
+        android:id="@+id/action_main_version"
+        android:title="v0.1" />
 </menu>

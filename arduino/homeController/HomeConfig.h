@@ -12,6 +12,7 @@
 #define PREF_MQTT_PORT "mqtt_port"
 #define PREF_MQTT_USER "mqtt_user"
 #define PREF_MQTT_PW "mqtt_pw"
+#define PREF_MQTT_TOPIC "mqtt_topic"
 
 class HomeConfig {
 
@@ -25,6 +26,9 @@ class HomeConfig {
     String mqtt_port;
     String mqtt_user;
     String mqtt_pw;
+    String mqtt_topic;
+    String mqtt_topic_status;
+    String mqtt_topic_request;
   
   
   boolean getInput(char* str, const char* old, char* input) {
@@ -82,6 +86,7 @@ class HomeConfig {
     updatePerfData(PREF_MQTT_PORT, mqtt_port.c_str());
     updatePerfData(PREF_MQTT_USER, mqtt_user.c_str());
     updatePerfData(PREF_MQTT_PW, mqtt_pw.c_str());
+    updatePerfData(PREF_MQTT_TOPIC, mqtt_topic.c_str());
     Serial.println("Saving..");
     preferences.end();
     Serial.println("Do reset!");
@@ -98,13 +103,17 @@ class HomeConfig {
     loadPrefData(PREF_MQTT_PORT, mqtt_port);
     loadPrefData(PREF_MQTT_USER, mqtt_user);
     loadPrefData(PREF_MQTT_PW, mqtt_pw);
+    loadPrefData(PREF_MQTT_TOPIC, mqtt_topic);
     preferences.end();
+
+    mqtt_topic_status = mqtt_topic + "/" + "stat";
+    mqtt_topic_request = mqtt_topic + "/" + "req";
     Serial.println("");
   }
 
 
   void userInput(int ms) {
-    Serial.println("Press return for config");
+    Serial.println("Press return for config\n");
   
     delay(ms);
     while(Serial.available() > 0) {

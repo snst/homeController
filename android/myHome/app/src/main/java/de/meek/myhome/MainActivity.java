@@ -13,7 +13,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -27,13 +26,13 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
 
     MqttHelper mqttHelper = null;
-    TextView txtViewMsg = null;
+//    TextView txtViewMsg = null;
     Handler handler = new Handler();
     Button btnRefresh = null;
-    ArrayList<RoomStatus> roomStatusList = new ArrayList<RoomStatus>();
+    ArrayList<RoomStatusWidgetStatusWidget> roomStatusList = new ArrayList<RoomStatusWidgetStatusWidget>();
     int msgCntStatus = 0;
     int msgCntMode = 0;
-    Settings settings = null;
+    RoomSettings roomSettings = null;
 
     public House getHouse() {
         return ((MyApplication)getApplicationContext()).getHouse();
@@ -42,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
     public void sendCmd(Cmd cmd) {
 
         if(cmd.roomId == -1) {
-            cmd.setBtAddress(new BTAddr());
             mqttHelper.sendCmd(cmd);
         } else {
             Room r = getHouse().getRoom(cmd.roomId);
@@ -66,25 +64,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void requestSetTemp(int roomId, int temp) {
-//        sendCmd("t" + Integer.toString(temp));
-
-        final int val = temp;
-        final int roomId2 = roomId;
+        final int finalTemp = temp;
+        final int finalRoom = roomId;
         handler.removeCallbacksAndMessages(null);
         handler.postDelayed(new Runnable() {
 
             @Override
             public void run() {
-                sendCmd(new CmdSetTemp(roomId2, val));
+                sendCmd(new CmdSetTemp(finalRoom, finalTemp));
             }
-
         }, 200); //delay
     }
 
     public void refreshAllRooms() {
-        for(int i=0; i<getHouse().getSize(); i++) {
-            getHouse().getRoom(i).update();
+        for (Room room : getHouse().getRoomList()) {
+            room.update();
         }
+//        for(int i=0; i<getHouse().getSize(); i++) {
+  //          getHouse().getRoom(i).update();
+    //    }
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -116,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showRoomSettingsActivity(int roomId) {
-        Intent intent = new Intent(this, TempActivity.class);
+        Intent intent = new Intent(this, RoomActivity.class);
         intent.putExtra(Const.INTENT_ROOM_ID, roomId);
         startActivityForResult(intent,Const.ACTIVITY_TEMP);
     }
@@ -137,9 +135,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_reboot:
                 sendCmd(new Cmd(-1,eCmd.REBOOT));
                 break;
-            case R.id.action_refresh:
+            /*case R.id.action_refresh:
                 requestStatusOfAllRooms();
-                break;
+                break;*/
             case R.id.action_main_settings:
                 showSettingsActivity();
                 break;
@@ -149,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     void showSettingsActivity() {
-        Intent intent = new Intent(this, SettingsActivity.class);
+        Intent intent = new Intent(this, MainSettingsActivity.class);
         startActivityForResult(intent,Const.ACTIVITY_SETTINGS);
     }
 
@@ -164,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         AccountConfig.load(this);
-        settings = new Settings(this);
+        roomSettings = new RoomSettings(this);
 
         btnRefresh = (Button) findViewById(R.id.btnRefresh);
 
@@ -174,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
         for(int j=0; j<AccountConfig.NUMBER_OF_ROOMS; j++) {
-            RoomStatus r = new RoomStatus(this, j) {
+            RoomStatusWidgetStatusWidget r = new RoomStatusWidgetStatusWidget(this, j) {
                 @Override
                 public void onRoomClickShowSettings(int roomId) {
                     showRoomSettingsActivity(roomId);
@@ -186,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
             roomStatusList.add(r);
             lm.addView(r,j);
             Room room = new Room(j, r);
-            settings.loadRoom(room);
+            roomSettings.loadRoom(room);
             getHouse().addRoom(room);
         }
 
@@ -217,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void connectComplete(boolean b, String s) {
                 showShortToast("Mqtt connected");
-      //          requestStatus();
+                requestStatusOfAllRooms();
             }
 
             @Override
@@ -228,34 +226,50 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
 
-                if(topic.endsWith("/status")) {
+                if(topic.compareTo(AccountConfig.MQTT_TOPIC_STATUS)==0) {
 
                     msgCntStatus++;
 
                     int i=0;
                     byte[] b = mqttMessage.getPayload();
-                    if(b.length==(BTAddr.LENGTH+5) && b[i++]=='*') {
-                        BTAddr addr = new BTAddr();
-                        addr.convertFromBytes(b,i);
+                    // CMD, LEN, BTADDR, PARAM
+                    if(b != null && b.length>=2 && b[1]==b.length) {
+                        i += 2;
+                        switch((char)b[0]) {
+                            case '*': {
+                                if(b.length==(2 + BTAddr.LENGTH + 4)) {
+                                    BTAddr addr = new BTAddr();
+                                    addr.convertFromBytes(b,i);
+                                    i += BTAddr.LENGTH;
 
-                        Room room = getHouse().findRoom(addr);
-                        if(room != null) {
-                            i += BTAddr.LENGTH;
+                                    Room room = getHouse().findRoom(addr);
+                                    if(room != null) {
 
-                            int status = b[i++];
-                            room.percent =  b[i++];
-                            i++; // b[3];
-                            room.temp = 5 *  b[i++];
-                            room.autoActive = (status & 1)==0;
-                            room.boostActive = (status & 4)>0;
-                            room.valid = true;
-                            room.msgCount++;
-                            room.lastUpdate = new Date();
-                            room.update();
-                        } else {
-                            showShortToast("Invalid room: " + addr.toString());
+                                        int status = b[i++];
+                                        room.percent =  b[i++];
+                                        i++; // b[3];
+                                        room.temp = 5 *  b[i++];
+                                        room.autoActive = (status & 1)==0;
+                                        room.boostActive = (status & 4)>0;
+                                        room.valid = true;
+                                        room.msgCount++;
+                                        room.lastUpdate = new Date();
+                                        room.update();
+                                    } else {
+                                        showShortToast("Invalid roomId: " + addr.toString());
+                                    }
+                                }
+                            } break;
+                            case '!': {
+                                showShortToast("Pong!");
+                            } break;
                         }
+
                     }
+                    else {
+                        showShortToast("Invalid status packet");
+                    }
+
                 } else {
                     msgCntMode++;
                 }

@@ -14,9 +14,6 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import de.meek.myhome.AccountConfig;
-import de.meek.myhome.Room;
-
 /**
  * Created by stefan on 02.12.2017.
  */
@@ -27,7 +24,7 @@ public class MqttHelper {
     final String serverUri = AccountConfig.MQTT_SERVER_URI;
 
     final String clientId = AccountConfig.MQTT_CLIENT_ID;
-    final String subscriptionTopic = AccountConfig.MQTT_SUBSCRIPTION_TOPIC;
+    final String subscriptionTopic = AccountConfig.MQTT_TOPIC_SUBSCRIPTION;
 
     final String username = AccountConfig.MQTT_USERNAME;
     final String password = AccountConfig.MQTT_PASSWORD;
@@ -64,7 +61,7 @@ public class MqttHelper {
 
         try {
             if(cmd != null && isConnected()) {
-               mqttAndroidClient.publish("eq3/mode", cmd.buffer, 0, false);
+               mqttAndroidClient.publish(AccountConfig.MQTT_TOPIC_REQUEST, cmd.getBuffer(), 0, false);
             }
         } catch (MqttException e) {
             e.printStackTrace();

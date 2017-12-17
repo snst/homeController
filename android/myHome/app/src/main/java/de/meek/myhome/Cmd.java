@@ -11,8 +11,8 @@ public class Cmd {
 
     protected eCmd cmd = eCmd.NONE;
     protected byte[] param = null;
-    protected byte[] buffer = null;
-    public int roomId = -1;
+    protected int roomId = -1;
+    protected BTAddr addr = null;
 
     public Cmd(int roomId, eCmd cmd) {
         this.cmd = cmd;
@@ -24,25 +24,32 @@ public class Cmd {
     }
 
     public void setBtAddress(BTAddr addr) {
+        this.addr = addr;
+    }
 
+    public byte[] getBuffer() {
+        byte[] buffer = null;
         try {
-            int len = 2 + BTAddr.LENGTH;
+            int len = 2;
+            if (addr != null) {
+                len += BTAddr.LENGTH;
+            }
             if (param != null) {
                 len += param.length;
             }
-
+            // CMD, LEN, BTAddr, Param
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            out.write((byte) len);
-            out.write(addr.toByte());
             out.write((byte) cmd.getValue());
+            out.write((byte) len);
+            if (addr != null) {
+                out.write(addr.toByte());
+            }
             if(param!=null) {
                 out.write(param);
             }
-
             buffer = out.toByteArray();
-        } catch (Exception e) {
-
-        }
+        } catch (Exception e) { }
+        return buffer;
     }
 }
 

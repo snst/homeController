@@ -13,11 +13,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-public class TempActivity extends AppCompatActivity {
+public class RoomActivity extends AppCompatActivity {
 
     TextView txtViewTempNew;
     TextView txtViewTempCurrent;
@@ -34,14 +35,6 @@ public class TempActivity extends AppCompatActivity {
         data.putExtra(Const.INTENT_ROOM_ID, room.id);
         setResult(RESULT_OK,data);
         finish();
-    }
-
-    public void onBtnAuto(View view) {
-        runCmd(eCmd.AUTO);
-    }
-
-    public void onBtnManual(View view) {
-        runCmd(eCmd.MANUAL);
     }
 
     public void onBtnOff(View view) {
@@ -135,8 +128,9 @@ public class TempActivity extends AppCompatActivity {
     void setNewButtonPresetTemp(int presetId, int value) {
         room.presetTemp.set(presetId, value);
         updateAllButtonPresetTemps();
-        Settings settings = new Settings(this);
-        settings.saveRoom(room);
+        RoomSettings roomSettings = new RoomSettings(this);
+        roomSettings.saveRoom(room);
+        Toast.makeText(this, "Saved preset temperature.", Toast.LENGTH_SHORT).show();
     }
 
     void showRoomSettingsActivity()
@@ -146,21 +140,38 @@ public class TempActivity extends AppCompatActivity {
         startActivityForResult(intent,Const.ACTIVITY_ROOM_SETTINGS);
     }
 
+    void registerButtonPresetLongClick(int btnId, int presetIndex) {
+        Button btn = (Button) findViewById(btnId);
+        btn.setTag(presetIndex);
+
+        btn.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                setNewButtonPresetTemp((int)v.getTag(), temp);
+                return true;
+            }
+        });
+
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Button btn = (Button) view;
+                int presetIndex = (int)btn.getTag();
+                temp = room.presetTemp.get(presetIndex);
+                requestNewTempAndClose(temp);
+            }
+        });
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch(id) {
-            case R.id.action_save1:
-                setNewButtonPresetTemp(0, temp);
+            case R.id.action_room_auto:
+                runCmd(eCmd.AUTO);
                 break;
-            case R.id.action_save2:
-                setNewButtonPresetTemp(1, temp);
-                break;
-            case R.id.action_save3:
-                setNewButtonPresetTemp(2, temp);
-                break;
-            case R.id.action_save4:
-                setNewButtonPresetTemp(3, temp);
+            case R.id.action_room_manual:
+                runCmd(eCmd.MANUAL);
                 break;
             case R.id.action_room_setting:
                 showRoomSettingsActivity();
@@ -203,7 +214,7 @@ public class TempActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_temp);
+        setContentView(R.layout.activity_room);
         txtViewTempNew = (TextView) findViewById(R.id.txtViewTempNew);
         txtViewTempCurrent = (TextView) findViewById(R.id.txtViewTempCurrent);
         txtLastUpdate = (TextView) findViewById(R.id.txtLastUpdate);
@@ -222,6 +233,11 @@ public class TempActivity extends AppCompatActivity {
         if(temp<Const.TEMP_MIN) {
             temp = Const.TEMP_DEFAULT;
         }
+
+        registerButtonPresetLongClick(R.id.btnTemp0, 0);
+        registerButtonPresetLongClick(R.id.btnTemp1, 1);
+        registerButtonPresetLongClick(R.id.btnTemp2, 2);
+        registerButtonPresetLongClick(R.id.btnTemp3, 3);
 
         showCurrentState();
         updateAllButtonPresetTemps();

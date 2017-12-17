@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="de.meek.myhome.TempActivity"
+    tools:context="de.meek.myhome.RoomActivity"
     tools:layout_editor_absoluteY="81dp">
 
     <LinearLayout
@@ -47,43 +47,59 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/btnEco"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="onBtnEco"
-                android:text="Eco" />
 
             <Button
                 android:id="@+id/btnComfort"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_weight="1"
                 android:onClick="onBtnComfort"
                 android:text="comfort" />
+            <Button
+                android:id="@+id/btnBootOn"
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:onClick="onBtnBoostOn"
+                android:text="boost on" />
+
+            <Button
+                android:id="@+id/btnOn"
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:onClick="onBtnOn"
+                android:text="On" />
+
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
+            <Button
+                android:id="@+id/btnEco"
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:onClick="onBtnEco"
+                android:text="Eco" />
+
+            <Button
+                android:id="@+id/btnBoostOff"
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:onClick="onBtnBoostOff"
+                android:text="boost off" />
 
             <Button
                 android:id="@+id/btnOff"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_weight="1"
                 android:onClick="onBtnOff"
                 android:text="off" />
-
-            <Button
-                android:id="@+id/btnOn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="onBtnOn"
-                android:text="On" />
         </LinearLayout>
 
         <LinearLayout
@@ -94,37 +110,29 @@
             <Button
                 android:id="@+id/btnTemp0"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_weight="1"
-                android:onClick="onBtnTemp"
-                android:tag="0"
                 android:text="-" />
 
             <Button
                 android:id="@+id/btnTemp1"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_weight="1"
-                android:onClick="onBtnTemp"
-                android:tag="1"
                 android:text="-" />
 
             <Button
                 android:id="@+id/btnTemp2"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_weight="1"
-                android:onClick="onBtnTemp"
-                android:tag="2"
                 android:text="-" />
 
             <Button
                 android:id="@+id/btnTemp3"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_weight="1"
-                android:onClick="onBtnTemp"
-                android:tag="3"
                 android:text="-" />
         </LinearLayout>
 
@@ -153,7 +161,7 @@
             <Button
                 android:id="@+id/btnDec"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_weight="1"
                 android:onClick="onBtnDec"
                 android:text="-" />
@@ -161,7 +169,7 @@
             <Button
                 android:id="@+id/btnSetTemp"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_weight="1"
                 android:onClick="onBtnSetTemp"
                 android:text="set" />
@@ -169,55 +177,10 @@
             <Button
                 android:id="@+id/btnInc"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_weight="1"
                 android:onClick="onBtnInc"
                 android:text="+" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnManual"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="onBtnManual"
-                android:text="manual" />
-
-            <Button
-                android:id="@+id/btnAuto"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="onBtnAuto"
-                android:text="auto" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnBoostOff"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="onBtnBoostOff"
-                android:text="boost off" />
-
-            <Button
-                android:id="@+id/btnBootOn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="onBtnBoostOn"
-                android:text="boost on" />
 
         </LinearLayout>
 

@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class RoomStatus extends LinearLayout implements IRoom {
+public class RoomStatusWidgetStatusWidget extends LinearLayout implements IRoomStatusWidget {
 
     public interface IOnClickListener {
         void onClick(int roomId);
@@ -22,7 +22,7 @@ public class RoomStatus extends LinearLayout implements IRoom {
     private TextView txtMsgCnt;
     private int roomId;
 
-    public RoomStatus(Context context, int _roomId) {
+    public RoomStatusWidgetStatusWidget(Context context, int _roomId) {
         super(context);
         roomId = _roomId;
         initializeViews(context);

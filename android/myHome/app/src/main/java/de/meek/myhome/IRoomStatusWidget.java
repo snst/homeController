@@ -4,6 +4,6 @@
 
 package de.meek.myhome;
 
-public interface IRoom {
+public interface IRoomStatusWidget {
     public void update(Room room);
 }

@@ -4,10 +4,6 @@
 
 package de.meek.myhome;
 
-import android.app.Activity;
-import android.content.SharedPreferences;
-
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -22,9 +18,9 @@ public class Room {
     public int msgCount = 0;
     public boolean valid = false;
     public Date lastUpdate;
-    public IRoom viewRoom;
+    public IRoomStatusWidget viewRoom;
     public ArrayList<Integer> presetTemp = new ArrayList<Integer>();
-    public Room(int _roomId, IRoom _viewRoom) {
+    public Room(int _roomId, IRoomStatusWidget _viewRoom) {
         id = _roomId;
         viewRoom = _viewRoom;
     }

@@ -23,7 +23,7 @@ public class RoomSettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_room_settings);
-        setTitle("Room Settings");
+        setTitle("Room RoomSettings");
 
         txtRoomName = (TextView) findViewById(R.id.editRoomName);
         txtBtAddress = (TextView) findViewById(R.id.editBTAddress);
@@ -43,8 +43,8 @@ public class RoomSettingsActivity extends AppCompatActivity {
             Toast.makeText(this, "Invalid BT address!", Toast.LENGTH_LONG).show();
         }
 
-        Settings settings = new Settings(this);
-        settings.saveRoom(room);
+        RoomSettings roomSettings = new RoomSettings(this);
+        roomSettings.saveRoom(room);
 
         Intent data = new Intent();
         setResult(RESULT_OK,data);

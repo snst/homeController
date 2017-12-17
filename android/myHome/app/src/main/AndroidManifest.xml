@@ -24,9 +24,9 @@
 
         <service android:name="org.eclipse.paho.android.service.MqttService" />
 
-        <activity android:name=".TempActivity" />
+        <activity android:name=".RoomActivity" />
         <activity android:name=".RoomSettingsActivity" />
-        <activity android:name=".SettingsActivity"></activity>
+        <activity android:name=".MainSettingsActivity"></activity>
     </application>
 
 </manifest>

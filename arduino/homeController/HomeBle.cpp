@@ -10,7 +10,7 @@ HomeBLE::~HomeBLE() {
 
 void HomeBLE::onReceiveNotify(uint8_t* pData, uint8_t len) {
     SimpleBLE::onReceiveNotify(pData, len);
-    setMqttResponse(pData, len);
+    setMqttResponseStatus(pData, len);
 }
 
 

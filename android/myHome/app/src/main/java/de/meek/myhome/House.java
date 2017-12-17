@@ -4,6 +4,7 @@
 
 package de.meek.myhome;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class House {
@@ -32,5 +33,9 @@ public class House {
             }
         }
         return null;
+    }
+
+    public ArrayList<Room> getRoomList() {
+        return rooms;
     }
 }

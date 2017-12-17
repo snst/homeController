@@ -7,7 +7,7 @@ package de.meek.myhome;
 import android.app.Activity;
 import android.content.SharedPreferences;
 
-public class Settings {
+public class RoomSettings {
     Activity activity;
 
     private static final String ROOM_NAME = "room_name";
@@ -15,7 +15,7 @@ public class Settings {
     private static final String ROOM_PRESET_TEMP = "room_ptemp";
 
 
-    public Settings(Activity _activity) {
+    public RoomSettings(Activity _activity) {
         activity = _activity;
     }
 

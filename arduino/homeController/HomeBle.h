@@ -5,7 +5,7 @@
 
 #include "SimpleEsp32Ble.h"
 
-void setMqttResponse(uint8_t* pData, size_t length);
+void setMqttResponseStatus(uint8_t* pData, size_t length);
 
 class HomeBLE : public SimpleBLE 
 {

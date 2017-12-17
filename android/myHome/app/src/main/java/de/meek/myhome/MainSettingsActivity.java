@@ -4,13 +4,12 @@
 
 package de.meek.myhome;
 
-import android.media.audiofx.AcousticEchoCanceler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
-public class SettingsActivity extends AppCompatActivity {
+public class MainSettingsActivity extends AppCompatActivity {
 
     private String getEditText(int id) {
         return ((TextView) findViewById(id)).getText().toString();
@@ -25,6 +24,7 @@ public class SettingsActivity extends AppCompatActivity {
         AccountConfig.MQTT_CLIENT_ID = getEditText(R.id.editClientId);
         AccountConfig.MQTT_USERNAME = getEditText(R.id.editUsername);
         AccountConfig.MQTT_PASSWORD = getEditText(R.id.editPassword);
+        AccountConfig.MQTT_TOPIC = getEditText(R.id.editMqttTopic);
         int n = Integer.parseInt(getEditText(R.id.editNumberOfRooms));
         n = Math.min(8, n);
         n = Math.max(1, n);
@@ -38,13 +38,14 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_settings);
-        setTitle("Settings");
+        setContentView(R.layout.activity_main_settings);
+        setTitle("RoomSettings");
 
         setEditText(R.id.editServer, AccountConfig.MQTT_SERVER_URI);
         setEditText(R.id.editClientId, AccountConfig.MQTT_CLIENT_ID);
         setEditText(R.id.editUsername, AccountConfig.MQTT_USERNAME);
         setEditText(R.id.editPassword, AccountConfig.MQTT_PASSWORD);
+        setEditText(R.id.editMqttTopic, AccountConfig.MQTT_TOPIC);
         setEditText(R.id.editNumberOfRooms, ""+AccountConfig.NUMBER_OF_ROOMS);
     }
 }
