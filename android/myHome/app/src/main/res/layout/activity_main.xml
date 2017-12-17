@@ -68,11 +68,11 @@
 
         <Button
             android:id="@+id/btnRefresh"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:layout_gravity="bottom|right"
             android:layout_marginRight="20dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="40dp"
             android:background="@android:drawable/btn_default"
             android:foreground="@android:drawable/ic_popup_sync"
             android:foregroundGravity="center|fill"

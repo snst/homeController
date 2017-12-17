@@ -87,6 +87,10 @@ class SimpleBLE {
   SimpleBLE();
   virtual ~SimpleBLE() {}
 
+  virtual void onConnectFailed() {
+    Serial.println("SimpleBLE::onConnectFailed()");
+  }
+
   virtual void onDisconnected() {
     Serial.println("SimpleBLE::disconnected()");
   }
@@ -129,9 +133,9 @@ class SimpleBLE {
 
   void setState(eState _state) {
     state = _state;
-    if(state < connected) {
+  //  if(state < connected) {
       isWriting = false;
-    }
+  //  }
   }
 
   bool canWrite() {

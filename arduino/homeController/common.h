@@ -6,4 +6,40 @@
 #define MQTT_CMD_SIZE 15
 #define BLE_CMD_SIZE 7
 
+
+enum eCmd {
+    NONE = 0,
+    PING,
+    BOOST_ON,
+    BOOST_OFF,
+    ON,
+    OFF,
+    ECO,
+    COMFORT,
+    AUTO,
+    MANUAL,
+    REBOOT,
+    SETTEMP,
+    GETSTATUS
+};
+
+enum eResponse {
+  PONG = 1,
+  STATE = 2,
+  CONNECTION = 3
+};
+
+enum eConnectionState {
+  UNKOWN = 0,
+  CONNECTING = 1,
+  CONNECTED = 2,
+  DISCONNECTED = 3,
+  NORESPONSE = 4
+};
+
+class BLEAddr;
+void setMqttResponseStatus(BLEAddr* addr, uint8_t* pData, size_t length);
+void setMqttResponseConnection(BLEAddr* addr, eConnectionState state);
+
+
 #endif

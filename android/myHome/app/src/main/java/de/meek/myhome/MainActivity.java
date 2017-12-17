@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
 //    TextView txtViewMsg = null;
     Handler handler = new Handler();
     Button btnRefresh = null;
-    ArrayList<RoomStatusWidgetStatusWidget> roomStatusList = new ArrayList<RoomStatusWidgetStatusWidget>();
+    ArrayList<RoomStatusWidget> roomStatusList = new ArrayList<RoomStatusWidget>();
     int msgCntStatus = 0;
     int msgCntMode = 0;
     RoomSettings roomSettings = null;
@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
         for(int j=0; j<AccountConfig.NUMBER_OF_ROOMS; j++) {
-            RoomStatusWidgetStatusWidget r = new RoomStatusWidgetStatusWidget(this, j) {
+            RoomStatusWidget r = new RoomStatusWidget(this, j) {
                 @Override
                 public void onRoomClickShowSettings(int roomId) {
                     showRoomSettingsActivity(roomId);
@@ -235,8 +235,9 @@ public class MainActivity extends AppCompatActivity {
                     // CMD, LEN, BTADDR, PARAM
                     if(b != null && b.length>=2 && b[1]==b.length) {
                         i += 2;
-                        switch((char)b[0]) {
-                            case '*': {
+                        eResponse r = eResponse.values()[b[0]];
+                        switch(r) {
+                            case STATE: {
                                 if(b.length==(2 + BTAddr.LENGTH + 4)) {
                                     BTAddr addr = new BTAddr();
                                     addr.convertFromBytes(b,i);
@@ -254,14 +255,28 @@ public class MainActivity extends AppCompatActivity {
                                         room.valid = true;
                                         room.msgCount++;
                                         room.lastUpdate = new Date();
+                                        room.connectionState = eConnectionState.CONNECTED;
                                         room.update();
                                     } else {
                                         showShortToast("Invalid roomId: " + addr.toString());
                                     }
                                 }
                             } break;
-                            case '!': {
+                            case PONG: {
                                 showShortToast("Pong!");
+                            } break;
+                            case CONNECTION: {
+                                if(b.length==(2 + BTAddr.LENGTH + 1)) {
+                                    BTAddr addr = new BTAddr();
+                                    addr.convertFromBytes(b, i);
+                                    i += BTAddr.LENGTH;
+
+                                    Room room = getHouse().findRoom(addr);
+                                    if (room != null) {
+                                        room.connectionState = eConnectionState.values()[b[i]];
+                                        room.update();
+                                    }
+                                }
                             } break;
                         }
 

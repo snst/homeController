@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class RoomStatusWidgetStatusWidget extends LinearLayout implements IRoomStatusWidget {
+public class RoomStatusWidget extends LinearLayout implements IRoomStatusWidget {
 
     public interface IOnClickListener {
         void onClick(int roomId);
@@ -22,7 +22,7 @@ public class RoomStatusWidgetStatusWidget extends LinearLayout implements IRoomS
     private TextView txtMsgCnt;
     private int roomId;
 
-    public RoomStatusWidgetStatusWidget(Context context, int _roomId) {
+    public RoomStatusWidget(Context context, int _roomId) {
         super(context);
         roomId = _roomId;
         initializeViews(context);
@@ -90,6 +90,21 @@ public class RoomStatusWidgetStatusWidget extends LinearLayout implements IRoomS
         }
         txtTemp.setText(temp);
         txtPercent.setText(percent);
-        txtMsgCnt.setText("#"+room.msgCount);
+        String status = "?";
+        switch(room.connectionState) {
+            case CONNECTED:
+                status = "C";
+                break;
+            case CONNECTING:
+                status = "c";
+                break;
+            case DISCONNECTED:
+                status = "d";
+                break;
+            case NORESPONSE:
+                status = "r";
+                break;
+        }
+        txtMsgCnt.setText(status + "#"+room.msgCount);
     }
 }

@@ -4,8 +4,8 @@
 #define _HOME_BLE_H__
 
 #include "SimpleEsp32Ble.h"
-class BLEAddr;
-void setMqttResponseStatus(BLEAddr* addr, uint8_t* pData, size_t length);
+#include "common.h"
+
 
 class HomeBLE : public SimpleBLE 
 {
@@ -21,6 +21,9 @@ class HomeBLE : public SimpleBLE
     virtual void onConnected();
     virtual void onWritten(bool success);
     virtual void onDisconnected();
+    virtual void onConnectFailed();
+    bool connect(BLEAddr& addr);
+    void disconnect();
     void execute();
     bool isReady();
     void writeCmd(BLEAddr& addr, uint8_t* cmd, uint8_t cmdLen);

@@ -8,21 +8,6 @@
 #include "HomeConfig.h"
 #include "CmdQueue.h"
 
-enum eCmd {
-    NONE = 0,
-    PING,
-    BOOST_ON,
-    BOOST_OFF,
-    ON,
-    OFF,
-    ECO,
-    COMFORT,
-    AUTO,
-    MANUAL,
-    REBOOT,
-    SETTEMP,
-    GETSTATUS
-};
 
 static uint8_t mqttStatus[12];
 
@@ -47,17 +32,25 @@ void printMem()
 void setMqttResponseStatus(BLEAddr* addr, uint8_t* pData, size_t length) {
     if(length==6) {
       int i = 0;
-      mqttStatus[i++] = '*';
+      mqttStatus[i++] = (byte)eResponse::STATE;
       mqttStatus[i++] = 2 + sizeof(esp_bd_addr_t) + 4;
       memcpy(&mqttStatus[i], addr->addr, sizeof(esp_bd_addr_t));
       i += sizeof(esp_bd_addr_t);
       memcpy(&mqttStatus[i], &pData[2], 4);
+      addr->print("Mqtt status from", true);
     }
 }
 
 void setMqttResponsePong() {
-  mqttStatus[0] = '!';
+  mqttStatus[0] = (byte)eResponse::PONG;
   mqttStatus[1] = 2;  
+}
+
+void setMqttResponseConnection(BLEAddr* addr, eConnectionState state) {
+    mqttStatus[0] = (byte)eResponse::CONNECTION;
+    mqttStatus[1] = 3 + sizeof(esp_bd_addr_t);
+    memcpy(&mqttStatus[2], addr->addr, sizeof(esp_bd_addr_t));
+    mqttStatus[8] = (byte)state;
 }
 
 
@@ -104,7 +97,7 @@ void connectMQTT()
   while (!client.connected()) {
     Serial.print("Connecting to MQTT.. ");
     if (client.connect("ESP32Client", config.mqtt_user.c_str(), config.mqtt_pw.c_str() )) {
-      Serial.print("connected! Subscripe to ");
+      Serial.print("connected!\nSubscripe to ");
       Serial.println(config.mqtt_topic_request.c_str());  
       client.subscribe(config.mqtt_topic_request.c_str());
     } else {
@@ -165,6 +158,7 @@ void nextCmd() {
   if(!ble->isReady() || !queue.getCmd(payload)) {
     return;
   }
+  
   Serial.print("RunCmd: ");
   eCmd cmd = (eCmd) payload[0];
   uint8_t length = payload[1];
@@ -183,7 +177,7 @@ void nextCmd() {
       setMqttResponsePong();
       Serial.println("PING");
       printMem();
-    } break;
+    } return; // don't execute BT command
     case BOOST_ON: {
       bleCmd[0] = 0x45; bleCmd[1] = 0xff; bleCmdLen = 2;
       Serial.println("BOOST ON");
