@@ -36,9 +36,9 @@ void HomeBLE::writeCmd(BLEAddr& addr, uint8_t* cmd, uint8_t cmdLen) {
 //      bleAddrCmd.print("Same target addr");
   }
   else {
-    addr.print("New target addr");
+    addr.print("New target addr", true);
     if(!isState(SimpleBLE::disconnected)) {
-      bleAddr.print("Disconnect target");
+      bleAddr.print("Disconnect target", true);
       disconnect();
     }
     bleAddr.setAddr(addr);
@@ -58,7 +58,7 @@ void HomeBLE::execute() {
   if(bleCmdLen > 0)
   {
     if(isState(SimpleBLE::disconnected)) {
-      bleAddr.print("Connect to target");
+      bleAddr.print("Connect to target", true);
       connect(bleAddr);
     }
 

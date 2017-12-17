@@ -1,7 +1,7 @@
 // Copyright 2017 Stefan Schmidt
 
-#ifndef _hc_bt_h__
-#define _hc_bt_h__
+#ifndef _SIMPLEESP32BLE_H__
+#define _SIMPLEESP32BLE_H__
 
 #include "Arduino.h"
 #include <stdint.h>
@@ -49,13 +49,15 @@ class BLEAddr
       sscanf(strAddr, "%x:%x:%x:%x:%x:%x", &a[0], &a[1], &a[2], &a[3], &a[4], &a[5]);
     }
 
-    void print(char* txt) {
+    void print(char* txt, bool linebreak) {
       Serial.print(txt);
       for(int i=0; i<sizeof(esp_bd_addr_t); i++) {
         Serial.print(":");
         Serial.print(((uint8_t*)addr)[i], HEX);
       }
-      Serial.println("");
+      if(linebreak) {
+        Serial.println("");
+      }
     }
 
     void setAddr(uint8_t* _addr) {
