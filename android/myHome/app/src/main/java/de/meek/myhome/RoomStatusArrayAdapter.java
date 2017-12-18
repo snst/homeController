@@ -54,7 +54,7 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
         }
         txtTemp.setText(temp);
         txtPercent.setText(percent);
-        String status = "?";
+        String status = " ";
         switch(room.connectionState) {
             case CONNECTED:
                 status = "C";

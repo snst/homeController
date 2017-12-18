@@ -303,6 +303,7 @@ public class MainActivity extends AppCompatActivity {
                     msgCntMode++;
                 }
                 btnRefresh.setText("" + msgCntMode);
+                setTitle("myHome #" + msgCntMode);
             }
 
             @Override
