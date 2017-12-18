@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
 //    ArrayList<RoomStatusWidget> roomStatusList = new ArrayList<RoomStatusWidget>();
     int msgCntStatus = 0;
     int msgCntMode = 0;
+    int touchPositionX = 0;
     RoomSettings roomSettings = null;
     RoomStatusArrayAdapter adapter = null;
 
@@ -188,7 +190,12 @@ public class MainActivity extends AppCompatActivity {
         {
             @Override
             public void onItemClick(AdapterView<?> adapter, View v, int position, long arg3) {
-                requestStatusOfRoom(position);
+
+                if(touchPositionX < v.getWidth()*2/3 ) {
+                    showRoomSettingsActivity(position);
+                } else {
+                    requestStatusOfRoom(position);
+                }
             }
         });
 
@@ -197,6 +204,13 @@ public class MainActivity extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> adapter, View v, int position, long id) {
                 showRoomSettingsActivity(position);
                 return true;
+            }
+        });
+
+        listView.setOnTouchListener(new View.OnTouchListener() {
+            public boolean onTouch(View view, MotionEvent event) {
+                touchPositionX = (int)event.getX();
+                return false;
             }
         });
 
