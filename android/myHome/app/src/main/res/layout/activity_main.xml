@@ -9,8 +9,8 @@
     tools:layout_editor_absoluteX="8dp"
     tools:layout_editor_absoluteY="41dp">
 
-    <LinearLayout
-        android:id="@+id/idLayoutRoomList"
+    <ListView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/listViewRooms"
         android:layout_width="0dp"
         android:layout_height="495dp"
         android:layout_marginBottom="8dp"
@@ -22,79 +22,24 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+    </ListView>
 
-        <!--
-        <Button
-            android:id="@+id/btnRoom1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:onClick="onBtnRoom"
-            android:tag="0"
-            android:text="Living"
-            android:textSize="22sp" />
-
-        <Button
-            android:id="@+id/btnRoom2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:onClick="onBtnRoom"
-            android:tag="1"
-            android:text="Bed"
-            android:textSize="22sp" />
-
-        <Button
-            android:id="@+id/btnRoom3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:onClick="onBtnRoom"
-            android:tag="2"
-            android:text="Bath"
-            android:textSize="22sp" />
-
-        <Button
-            android:id="@+id/btnRoom4"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:keyboardNavigationCluster="false"
-            android:onClick="onBtnRoom"
-            android:tag="3"
-            android:text="Kitchen"
-            android:textSize="22sp" />
--->
-
-        <Button
-            android:id="@+id/btnRefresh"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_gravity="bottom|right"
-            android:layout_marginRight="20dp"
-            android:layout_marginTop="40dp"
-            android:background="@android:drawable/btn_default"
-            android:foreground="@android:drawable/ic_popup_sync"
-            android:foregroundGravity="center|fill"
-            android:onClick="onBtnRefresh"
-            android:textAlignment="center"
-            android:textAllCaps="false"
-            android:textColor="@android:color/darker_gray"
-            android:textSize="12sp"
-            tools:text="5" />
-        <!--
-        <TextView
-            android:id="@+id/txtViewMsg"
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:layout_gravity="bottom"
-            android:layout_marginBottom="20dp"
-            android:foregroundGravity="bottom"
-            android:text=""
-            android:textAlignment="textEnd" />
--->
-
-    </LinearLayout>
-
+    <Button
+        android:id="@+id/btnRefresh"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="bottom|right"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="40dp"
+        android:background="@android:drawable/btn_default"
+        android:foreground="@android:drawable/ic_popup_sync"
+        android:foregroundGravity="center|fill"
+        android:onClick="onBtnRefresh"
+        android:textAlignment="center"
+        android:textAllCaps="false"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="12sp"
+        android:visibility="invisible"
+        tools:text="5" />
 
 </android.support.constraint.ConstraintLayout>

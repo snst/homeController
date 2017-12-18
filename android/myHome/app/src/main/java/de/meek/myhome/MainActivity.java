@@ -11,15 +11,15 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import java.util.ArrayList;
 import java.util.Date;
 
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
@@ -29,10 +29,12 @@ public class MainActivity extends AppCompatActivity {
 //    TextView txtViewMsg = null;
     Handler handler = new Handler();
     Button btnRefresh = null;
-    ArrayList<RoomStatusWidget> roomStatusList = new ArrayList<RoomStatusWidget>();
+    ListView listView = null;
+//    ArrayList<RoomStatusWidget> roomStatusList = new ArrayList<RoomStatusWidget>();
     int msgCntStatus = 0;
     int msgCntMode = 0;
     RoomSettings roomSettings = null;
+    RoomStatusArrayAdapter adapter = null;
 
     public House getHouse() {
         return ((MyApplication)getApplicationContext()).getHouse();
@@ -76,10 +78,12 @@ public class MainActivity extends AppCompatActivity {
         }, 200); //delay
     }
 
-    public void refreshAllRooms() {
+    public void updateAllRooms() {
+        adapter.notifyDataSetChanged();
+        /*
         for (Room room : getHouse().getRoomList()) {
             room.update();
-        }
+        }*/
 //        for(int i=0; i<getHouse().getSize(); i++) {
   //          getHouse().getRoom(i).update();
     //    }
@@ -87,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        refreshAllRooms();
+        updateAllRooms();
 
         if (resultCode == RESULT_OK) {
             if (requestCode == Const.ACTIVITY_TEMP) {
@@ -157,38 +161,46 @@ public class MainActivity extends AppCompatActivity {
   //      requestStatus();
     }
 
+    void updateRoom(Room room) {
+     //   listView.deferNotifyDataSetChanged();
+        adapter.notifyDataSetChanged();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         AccountConfig.load(this);
         roomSettings = new RoomSettings(this);
-
         btnRefresh = (Button) findViewById(R.id.btnRefresh);
-
-        final LinearLayout lm = (LinearLayout) findViewById(R.id.idLayoutRoomList);
-
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        listView = (ListView) findViewById(R.id.listViewRooms);
 
         for(int j=0; j<AccountConfig.NUMBER_OF_ROOMS; j++) {
-            RoomStatusWidget r = new RoomStatusWidget(this, j) {
-                @Override
-                public void onRoomClickShowSettings(int roomId) {
-                    showRoomSettingsActivity(roomId);
-                }
-                public void onRoomClickRefresh(int roomId) {
-                    requestStatusOfRoom(roomId);
-                }
-            };
-            roomStatusList.add(r);
-            lm.addView(r,j);
-            Room room = new Room(j, r);
+//            RoomStatusWidget r = new RoomStatusWidget(this, j);
+//            roomStatusList.add(r);
+            Room room = new Room(j);
             roomSettings.loadRoom(room);
             getHouse().addRoom(room);
         }
+        adapter = new RoomStatusArrayAdapter(this, getHouse().getRoomList());
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> adapter, View v, int position, long arg3) {
+                requestStatusOfRoom(position);
+            }
+        });
 
-        refreshAllRooms();
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapter, View v, int position, long id) {
+                showRoomSettingsActivity(position);
+                return true;
+            }
+        });
+
+        updateAllRooms();
         startMqtt();
     }
 
@@ -256,7 +268,8 @@ public class MainActivity extends AppCompatActivity {
                                         room.msgCount++;
                                         room.lastUpdate = new Date();
                                         room.connectionState = eConnectionState.CONNECTED;
-                                        room.update();
+                                        //room.update();
+                                        updateRoom(room);
                                     } else {
                                         showShortToast("Invalid roomId: " + addr.toString());
                                     }
@@ -274,7 +287,8 @@ public class MainActivity extends AppCompatActivity {
                                     Room room = getHouse().findRoom(addr);
                                     if (room != null) {
                                         room.connectionState = eConnectionState.values()[b[i]];
-                                        room.update();
+                                        //room.update();
+                                        updateRoom(room);
                                     }
                                 }
                             } break;

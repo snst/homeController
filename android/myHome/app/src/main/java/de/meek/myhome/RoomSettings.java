@@ -23,7 +23,7 @@ public class RoomSettings {
             SharedPreferences settings = activity.getSharedPreferences(room.getId(), 0);
             room.name = settings.getString(ROOM_NAME, "Name");
         try {
-            room.btAddress.convertFromLong(settings.getLong(ROOM_BT_ADDR, 0x112233445566l));
+            room.btAddress.convertFromLong(settings.getLong(ROOM_BT_ADDR, 0x0l));
         } catch (Exception e) {
             room.btAddress.convertFromLong(0);
         }

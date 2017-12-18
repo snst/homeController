@@ -26,7 +26,7 @@ public class MainSettingsActivity extends AppCompatActivity {
         AccountConfig.MQTT_PASSWORD = getEditText(R.id.editPassword);
         AccountConfig.MQTT_TOPIC = getEditText(R.id.editMqttTopic);
         int n = Integer.parseInt(getEditText(R.id.editNumberOfRooms));
-        n = Math.min(8, n);
+        n = Math.min(20, n);
         n = Math.max(1, n);
         AccountConfig.NUMBER_OF_ROOMS = n;
 

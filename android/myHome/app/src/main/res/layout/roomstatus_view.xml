@@ -38,18 +38,4 @@
             android:layout_weight="1.4"
             android:textAlignment="textEnd"
             android:textSize="20sp" />
-        <!--
-        <Button
-            android:id="@+id/sidespinner_view_previous"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_weight="0" />
-
-        <Button
-            android:id="@+id/sidespinner_view_next"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_weight="0"
-            android:elevation="0dp" />
-            -->
     </LinearLayout>

@@ -213,7 +213,7 @@ void nextCmd() {
     case REBOOT: {
       Serial.println("REBOOT");
       softReset();
-    } break;
+    } return;
     case SETTEMP: {
       Serial.print("SETTEMP: ");
       if(length==1) {

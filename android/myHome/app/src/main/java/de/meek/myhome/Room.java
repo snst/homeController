@@ -19,18 +19,11 @@ public class Room {
     public boolean valid = false;
     public eConnectionState connectionState = eConnectionState.UNKOWN;
     public Date lastUpdate;
-    public IRoomStatusWidget viewRoom;
     public ArrayList<Integer> presetTemp = new ArrayList<Integer>();
-    public Room(int _roomId, IRoomStatusWidget _viewRoom) {
+    public Room(int _roomId) {
         id = _roomId;
-        viewRoom = _viewRoom;
     }
     public String getId() {
         return "" + id;
-    }
-    public void update() {
-        if(viewRoom != null) {
-            viewRoom.update(this);
-        }
     }
 }
