@@ -55,22 +55,28 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
         txtTemp.setText(temp);
         txtPercent.setText(percent);
         String status = " ";
+        int c = R.color.RoomDisconnected;
         switch(room.connectionState) {
             case CONNECTED:
                 status = "C";
+                c = R.color.RoomConnected;
                 break;
             case CONNECTING:
                 status = "c";
+                c = R.color.RoomConnecting;
                 break;
             case DISCONNECTED:
                 status = "d";
+                c = R.color.RoomDisconnected;
                 break;
             case NORESPONSE:
                 status = "r";
+                c = R.color.RoomFailed;
                 break;
         }
-        txtMsgCnt.setText(status + "#"+room.msgCount);
-
+//        txtMsgCnt.setText(status + "#"+room.msgCount);
+        txtMsgCnt.setText("#"+room.msgCount);
+        rowView.setBackgroundColor(rowView.getResources().getColor(c));
         return rowView;
     }
 }

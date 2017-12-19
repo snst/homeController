@@ -14,7 +14,6 @@
         android:layout_width="0dp"
         android:layout_height="495dp"
         android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
         android:layout_marginTop="8dp"
         android:gravity="top|fill_vertical"
         android:orientation="vertical"
@@ -29,7 +28,7 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:layout_gravity="bottom|right"
-        android:layout_marginRight="20dp"
+
         android:layout_marginTop="40dp"
         android:background="@android:drawable/btn_default"
         android:foreground="@android:drawable/ic_popup_sync"

@@ -6,27 +6,30 @@ package de.meek.myhome;
 
 
 public enum eCmd {
-    NONE(0),
-    PING(1),
-    BOOST_ON(2),
-    BOOST_OFF(3),
-    ON(4),
-    OFF(5),
-    ECO(6),
-    COMFORT(7),
-    AUTO(8),
-    MANUAL(9),
-    REBOOT(10),
-    SETTEMP(11),
-    GETSTATUS(12);
+    NONE(0, "none"),
+    PING(1, "ping"),
+    BOOST_ON(2, "boost on"),
+    BOOST_OFF(3, "boost off"),
+    ON(4, "on"),
+    OFF(5, "off"),
+    ECO(6, "eco"),
+    COMFORT(7, "comfort"),
+    AUTO(8, "auto"),
+    MANUAL(9, "manual"),
+    REBOOT(10, "reboot"),
+    SETTEMP(11, "settemp"),
+    GETSTATUS(12, "getstatus");
 
     private byte value;
+    private String name;
 
-    private eCmd(int value) {
+    private eCmd(int value, String name) {
         this.value = (byte)value;
+        this.name = name;
     }
     public byte getValue() {
         return value;
     }
+    public String toString() { return name; }
 }
 

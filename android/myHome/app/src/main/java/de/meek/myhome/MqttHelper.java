@@ -30,6 +30,11 @@ public class MqttHelper {
     final String password = AccountConfig.MQTT_PASSWORD;
     Context _context;
 
+    protected Logger getLogger() {
+        MyApplication app = (MyApplication)_context;
+        return app.getLogger();
+    }
+
     public MqttHelper(Context context){
         _context = context;
         mqttAndroidClient = new MqttAndroidClient(context, serverUri, clientId);
@@ -41,7 +46,6 @@ public class MqttHelper {
 
             @Override
             public void connectionLost(Throwable throwable) {
-
             }
 
             @Override
@@ -61,6 +65,7 @@ public class MqttHelper {
 
         try {
             if(cmd != null && isConnected()) {
+                getLogger().add("<mqtt: " +  cmd.cmd.toString(), cmd.addr);
                mqttAndroidClient.publish(AccountConfig.MQTT_TOPIC_REQUEST, cmd.getBuffer(), 0, false);
             }
         } catch (MqttException e) {
@@ -78,6 +83,7 @@ public class MqttHelper {
 
     public void disconnect() {
         try {
+            getLogger().add("mqtt: disconnect");
             mqttAndroidClient.disconnect();
         } catch (MqttException e) {
             e.printStackTrace();
@@ -85,6 +91,7 @@ public class MqttHelper {
     }
 
     private void connect(){
+        getLogger().add("mqtt: connect");
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setAutomaticReconnect(true);
         mqttConnectOptions.setCleanSession(false);
@@ -127,11 +134,13 @@ public class MqttHelper {
             mqttAndroidClient.subscribe(subscriptionTopic, 0, null, new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
+                    getLogger().add("mqtt: subscribe ok");
                     Log.w("Mqtt","Subscribed!");
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    getLogger().add("mqtt: subscribe failed");
                     Log.w("Mqtt", "Subscribed fail!");
                 }
             });

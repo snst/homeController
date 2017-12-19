@@ -9,5 +9,12 @@ import android.app.Application;
 public class MyApplication extends Application {
 
     protected House house = new House();
-    public House getHouse() { return house; }
+    public House getHouse() {
+        return house;
+    }
+
+    protected Logger logger = new Logger();
+    public Logger getLogger() {
+        return logger;
+    }
 }
