@@ -15,6 +15,7 @@ class CmdQueue {
     uint8_t count;
     uint8_t *data;//[QUEUE_LEN][MQTT_CMD_SIZE];
     uint8_t ri;
+    void clear();
   
   public:
     CmdQueue();

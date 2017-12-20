@@ -9,7 +9,7 @@
 #include "CmdQueue.h"
 #include "MqttHandler.h"
 
-HomeBLE* ble;
+HomeBLE ble;
 HomeConfig config;
 CmdQueue queue;
 
@@ -34,8 +34,8 @@ void setup() {
   config.loadSettings();
   config.userInput(2000);
 
-  ble = new HomeBLE();
-  ble->init();
+//  ble = new HomeBLE();
+  ble.init();
 
   mqtt.setTopicStatus(config.mqtt_topic_status.c_str());
   mqtt.setTopicRequest(config.mqtt_topic_request.c_str());
@@ -75,9 +75,7 @@ void loop() {
   
   queue.execute();
 
-  ble->execute();
+  ble.execute();
 
-//  mqtt.publishStatus();  
-
-  vTaskDelay(200/portTICK_PERIOD_MS);
+  vTaskDelay(20/portTICK_PERIOD_MS);
 }

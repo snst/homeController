@@ -141,6 +141,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_reboot:
                 sendCmd(new Cmd(-1,eCmd.REBOOT));
                 break;
+            case R.id.action_abort:
+                sendCmd(new Cmd(-1,eCmd.ABORT));
+                break;
             case R.id.action_log:
                 showLogActivity();
                 break;

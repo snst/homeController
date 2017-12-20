@@ -92,8 +92,7 @@ void MqttHandler::callback(char* topic, byte* payload, unsigned int length) {
   Serial.print(length);
   Serial.println(")");
 //  if(!strcmp(topic, topicRequest) && (length >= 2) && (payload[1]==length) && (length<=MQTT_CMD_SIZE)) {
-  if((length >= 2) && (payload[1]==length) && (length<=MQTT_CMD_SIZE)) {
-    Serial.println("before add");
+  if((length >= 2) && (payload[1] == length) && (length <= MQTT_CMD_SIZE)) {
     queue.addCmd(payload);
   } else {
     Serial.println("corrupt packet");

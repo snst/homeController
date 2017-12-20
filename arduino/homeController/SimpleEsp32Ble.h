@@ -107,7 +107,5 @@ class SimpleBLE {
 
 };
 
-void setBLE(SimpleBLE* pSimpleBLE);
-
 
 #endif

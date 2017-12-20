@@ -24,7 +24,8 @@ enum eCmd {
     MANUAL,
     REBOOT,
     SETTEMP,
-    GETSTATUS
+    GETSTATUS,
+    ABORT
 };
 
 enum eResponse {

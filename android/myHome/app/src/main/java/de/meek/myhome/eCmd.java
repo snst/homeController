@@ -18,7 +18,8 @@ public enum eCmd {
     MANUAL(9, "manual"),
     REBOOT(10, "reboot"),
     SETTEMP(11, "settemp"),
-    GETSTATUS(12, "getstatus");
+    GETSTATUS(12, "getstatus"),
+    ABORT(13, "abort");
 
     private byte value;
     private String name;

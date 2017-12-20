@@ -4,16 +4,21 @@
 #include "HomeBLE.h"
 #include "MqttHandler.h"
 
-extern HomeBLE* ble;
+extern HomeBLE ble;
 extern MqttHandler mqtt;
 
-CmdQueue::CmdQueue()
-: count(0), ri(0) { 
-  data = (uint8_t *)malloc(MQTT_CMD_SIZE*QUEUE_LEN);
-  memset(data, 0, MQTT_CMD_SIZE*QUEUE_LEN);
+CmdQueue::CmdQueue() { 
+  data = (uint8_t *)malloc(QUEUE_LEN*MQTT_CMD_SIZE);
+  clear();
 }
     
 CmdQueue::~CmdQueue() { 
+}
+
+void CmdQueue::clear() {
+  count = 0;
+  memset(data, 0, MQTT_CMD_SIZE*QUEUE_LEN);
+  ri = 0;
 }
 
 bool CmdQueue::addCmd(uint8_t *cmd) {
@@ -26,10 +31,14 @@ bool CmdQueue::addCmd(uint8_t *cmd) {
     if(data[i*MQTT_CMD_SIZE+1] == 0) {
       memcpy(&data[i*MQTT_CMD_SIZE], cmd, cmd[1]);
       count++;
-      Serial.print("Queue::addCmd(), i=");
+      Serial.print("Queue::addCmd(");
+      Serial.print(data[i*MQTT_CMD_SIZE]);
+      Serial.print("/");
+      Serial.print(data[i*MQTT_CMD_SIZE+1]);
+      Serial.print("), i=");
       Serial.print(i);
       Serial.print(", cnt=");
-      Serial.println(count);
+      Serial.print(count);
       return true;
     }
   }
@@ -65,7 +74,7 @@ void CmdQueue::execute() {
   uint8_t bleCmd[BLE_CMD_SIZE];
   uint8_t bleCmdLen = 0;
 
-  if(!ble->isReady() || !getCmd(payload)) {
+  if(!ble.isReady() || !getCmd(payload)) {
     return;
   }
   
@@ -126,7 +135,6 @@ void CmdQueue::execute() {
       Serial.println("REBOOT");
       softReset();
     } break;
-    
     case SETTEMP: {
       Serial.print("SETTEMP: ");
       if(length==1) {
@@ -148,12 +156,15 @@ void CmdQueue::execute() {
         Serial.println("ERR");
       }
     } break;
+    case ABORT: {
+      Serial.println("ABORT");
+      clear();
+    } break;
     default: {
       Serial.println("Invalid cmd");
     }
   }
 
-  ble->writeCmd(bleAddr, bleCmd, bleCmdLen);
-  
+  ble.writeCmd(bleAddr, bleCmd, bleCmdLen);
 }
 
