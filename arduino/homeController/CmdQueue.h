@@ -8,12 +8,12 @@
 #include "common.h"
 
 
-#define QUEUE_LEN 5
+#define QUEUE_LEN 20
 
 class CmdQueue {
   protected:
     uint8_t count;
-    uint8_t data[QUEUE_LEN][MQTT_CMD_SIZE];
+    uint8_t *data;//[QUEUE_LEN][MQTT_CMD_SIZE];
     uint8_t ri;
   
   public:
