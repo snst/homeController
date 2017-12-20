@@ -5,6 +5,7 @@
 
 #include "SimpleEsp32Ble.h"
 #include "common.h"
+#include "BTAddr.h"
 
 
 class HomeBLE : public SimpleBLE 
@@ -12,7 +13,7 @@ class HomeBLE : public SimpleBLE
   protected:
     uint8_t bleCmd[7];
     uint8_t bleCmdLen;
-    BLEAddr bleAddr;
+    BTAddr bleAddr;
 
   public:
     HomeBLE();
@@ -22,11 +23,11 @@ class HomeBLE : public SimpleBLE
     virtual void onWritten(bool success);
     virtual void onDisconnected();
     virtual void onConnectFailed();
-    bool connect(BLEAddr& addr);
+    bool connect(BTAddr& addr);
     void disconnect();
     void execute();
     bool isReady();
-    void writeCmd(BLEAddr& addr, uint8_t* cmd, uint8_t cmdLen);
+    void writeCmd(BTAddr& addr, uint8_t* cmd, uint8_t cmdLen);
 };
 
 #endif

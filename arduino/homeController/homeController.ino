@@ -7,17 +7,15 @@
 #include "HomeBle.h"
 #include "HomeConfig.h"
 #include "CmdQueue.h"
-
-
-static uint8_t mqttStatus[12];
+#include "MqttHandler.h"
 
 HomeBLE* ble;
-//BLEAddr bleAddrConnect; //("00:1a:22:0c:5e:15");
 HomeConfig config;
 CmdQueue queue;
 
-WiFiClient espClient;
-PubSubClient client(espClient);
+WiFiClient wifi;
+PubSubClient client(wifi);
+MqttHandler mqtt(client);
 
 void(* softReset) (void) = 0;//declare reset function at address 0
 
@@ -29,35 +27,8 @@ void printMem()
   Serial.println(xPortGetMinimumEverFreeHeapSize());
 }
 
-void setMqttResponseStatus(BLEAddr* addr, uint8_t* pData, size_t length) {
-    if(length==6) {
-      int i = 0;
-      mqttStatus[i++] = (byte)eResponse::STATE;
-      mqttStatus[i++] = 2 + sizeof(esp_bd_addr_t) + 4;
-      memcpy(&mqttStatus[i], addr->addr, sizeof(esp_bd_addr_t));
-      i += sizeof(esp_bd_addr_t);
-      memcpy(&mqttStatus[i], &pData[2], 4);
-      addr->print("Mqtt status from", true);
-    }
-}
-
-void setMqttResponsePong() {
-  mqttStatus[0] = (byte)eResponse::PONG;
-  mqttStatus[1] = 2;  
-}
-
-void setMqttResponseConnection(BLEAddr* addr, eConnectionState state) {
-    mqttStatus[0] = (byte)eResponse::CONNECTION;
-    mqttStatus[1] = 3 + sizeof(esp_bd_addr_t);
-    memcpy(&mqttStatus[2], addr->addr, sizeof(esp_bd_addr_t));
-    mqttStatus[8] = (byte)state;
-}
-
 
 void setup() {
-
-  mqttStatus[0] = 0;
-
   Serial.begin(115200);
   printMem();
 
@@ -67,9 +38,11 @@ void setup() {
   ble = new HomeBLE();
   ble->init();
 
-  client.setServer(config.mqtt_server.c_str(), atoi(config.mqtt_port.c_str()));
-  client.setCallback(callback);
-
+  mqtt.setTopicStatus(config.mqtt_topic_status.c_str());
+  mqtt.setTopicRequest(config.mqtt_topic_request.c_str());
+  mqtt.setServer(config.mqtt_server.c_str(), atoi(config.mqtt_port.c_str()));
+  mqtt.setUser(config.mqtt_user.c_str(), config.mqtt_pw.c_str());
+  
   WiFi.begin(config.wlan_ssid.c_str(), config.wlan_pw.c_str());
   printMem();
 }
@@ -92,66 +65,12 @@ void connectWLAN()
   }
 }
 
-void connectMQTT()
-{
-  while (!client.connected()) {
-    Serial.print("Connecting to MQTT.. ");
-    if (client.connect("ESP32Client", config.mqtt_user.c_str(), config.mqtt_pw.c_str() )) {
-      Serial.print("connected!\nSubscripe to ");
-      Serial.println(config.mqtt_topic_request.c_str());  
-      client.subscribe(config.mqtt_topic_request.c_str());
-    } else {
-      Serial.print("failed with state ");
-      Serial.println(client.state());
-      delay(2000);
-    }
-  }
-}
-
-void publishMqttStatus()
-{
-  if(mqttStatus[0] != 0)
-  {
-    Serial.print("<MQTT: ");
-    Serial.print(config.mqtt_topic_status.c_str());
-    if(client.publish(config.mqtt_topic_status.c_str(), mqttStatus, mqttStatus[1])) {
-      Serial.println(" - OK");
-    } else {
-      Serial.println(" - FAILED");
-    }
-    mqttStatus[0] = 0; // cmd
-    mqttStatus[1] = 0; // len
-//    printMem();
-  }
-}
-
-
-void callback(char* topic, byte* payload, unsigned int length) {
- 
-  Serial.print("\n>MQTT: ");
-  Serial.print(topic);
-  Serial.print(", len(");
-  Serial.print(length);
-  Serial.println(")");
-  /*
-  for (int i = 0; i < length; i++) {
-    Serial.print(payload[i], HEX);
-    Serial.print(", ");
-  }
-  Serial.println("");
-  */
-  if(!strcmp(topic, config.mqtt_topic_request.c_str()) && (length >= 2) && (payload[1]==length) && (length<=MQTT_CMD_SIZE)) {
-    queue.addCmd(payload);
-  } else {
-    Serial.println("corrupt packet");
-  }
-}
 
 void nextCmd() {
 
   uint8_t buffer[MQTT_CMD_SIZE];
   uint8_t* payload = buffer; // CMD(1), LEN(1), BTADDR(6), PARAM(1)
-  BLEAddr bleAddr;
+  BTAddr bleAddr;
   uint8_t bleCmd[BLE_CMD_SIZE];
   uint8_t bleCmdLen = 0;
 
@@ -174,7 +93,7 @@ void nextCmd() {
       Serial.println("NONE");
     } break;
     case PING: {
-      setMqttResponsePong();
+      mqtt.sendResponsePong();
       Serial.println("PING");
       printMem();
     } return; // don't execute BT command
@@ -247,15 +166,15 @@ void loop() {
 
   connectWLAN();
 
-  connectMQTT();
-  
-  client.loop();
+  mqtt.connect();
 
+  mqtt.execute();
+  
   nextCmd();
 
   ble->execute();
 
-  publishMqttStatus();  
+  mqtt.publishStatus();  
 
   vTaskDelay(200/portTICK_PERIOD_MS);
 }

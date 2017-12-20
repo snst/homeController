@@ -2,6 +2,9 @@
 
 #include "HomeBle.h"
 #include "common.h"
+#include "MqttHandler.h"
+
+extern MqttHandler mqtt;
 
 HomeBLE::HomeBLE()
 : bleCmdLen(0) {
@@ -12,35 +15,35 @@ HomeBLE::~HomeBLE() {
 
 void HomeBLE::onReceiveNotify(uint8_t* pData, uint8_t len) {
     SimpleBLE::onReceiveNotify(pData, len);
-    setMqttResponseStatus(&bleAddr, pData, len);
+    mqtt.sendResponseStatus(&bleAddr, pData, len);
 }
 
 void HomeBLE::onDisconnected() {
   SimpleBLE::onDisconnected();
-  setMqttResponseConnection(&bleAddr, eConnectionState::DISCONNECTED);
+  mqtt.sendResponseConnection(&bleAddr, eConnectionState::DISCONNECTED);
 }
 
 void HomeBLE::onConnectFailed() {
   SimpleBLE::onConnectFailed();
-  setMqttResponseConnection(&bleAddr, eConnectionState::NORESPONSE);
+  mqtt.sendResponseConnection(&bleAddr, eConnectionState::NORESPONSE);
   bleCmdLen = 0; // clear current command
 }
 
 
 void HomeBLE::onConnected() {
   SimpleBLE::onConnected();
-  setMqttResponseConnection(&bleAddr, eConnectionState::CONNECTED);
+  mqtt.sendResponseConnection(&bleAddr, eConnectionState::CONNECTED);
   registerNotify(0x421);
   setState(ready);
 }
 
-bool HomeBLE::connect(BLEAddr& addr) {
-  setMqttResponseConnection(&bleAddr, eConnectionState::CONNECTING);
+bool HomeBLE::connect(BTAddr& addr) {
+  mqtt.sendResponseConnection(&bleAddr, eConnectionState::CONNECTING);
   return SimpleBLE::connect(addr);
 }
 
 void HomeBLE::disconnect() {
-  setMqttResponseConnection(&bleAddr, eConnectionState::DISCONNECTED);
+  mqtt.sendResponseConnection(&bleAddr, eConnectionState::DISCONNECTED);
   SimpleBLE::disconnect();
 }
 
@@ -48,7 +51,7 @@ bool HomeBLE::isReady() {
   return bleCmdLen == 0;
 }
 
-void HomeBLE::writeCmd(BLEAddr& addr, uint8_t* cmd, uint8_t cmdLen) {
+void HomeBLE::writeCmd(BTAddr& addr, uint8_t* cmd, uint8_t cmdLen) {
 
   if(bleAddr.isSame(addr)) {
 //      bleAddrCmd.print("Same target addr");

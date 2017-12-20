@@ -373,7 +373,7 @@ bool SimpleBLE::write(uint16_t handle, uint8_t* data, uint8_t len, bool response
     }
 }
 
-bool SimpleBLE::connect(BLEAddr& addr) {
+bool SimpleBLE::connect(BTAddr& addr) {
     esp_err_t errRc = esp_ble_gattc_open(gattcProfile[APP_ID].gattc_if, addr.addr, true);
     //printAddr("C", addr.addr);
     addr.print("SimpleBLE::esp_ble_gattc_open(",false);

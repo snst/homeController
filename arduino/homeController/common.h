@@ -6,6 +6,8 @@
 #define MQTT_CMD_SIZE 15
 #define BLE_CMD_SIZE 7
 
+#define BT_ADDR_SIZE 6
+
 
 enum eCmd {
     NONE = 0,

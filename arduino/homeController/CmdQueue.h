@@ -21,6 +21,7 @@ class CmdQueue {
     ~CmdQueue() { }
 
     bool addCmd(uint8_t *cmd) {
+      Serial.println("cmd:add");
       if(count>=QUEUE_LEN) {
         Serial.println("Queue::addCmd() FULL");
         return false;
