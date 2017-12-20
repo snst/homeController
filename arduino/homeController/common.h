@@ -8,6 +8,8 @@
 
 #define BT_ADDR_SIZE 6
 
+static void(* softReset) (void) = 0;//declare reset function at address 0
+
 
 enum eCmd {
     NONE = 0,

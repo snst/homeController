@@ -76,6 +76,7 @@ void MqttHandler::publishStatus()
 
 void MqttHandler::execute() {
     client.loop();
+    publishStatus();
 }
 
 
@@ -98,6 +99,7 @@ void MqttHandler::callback(char* topic, byte* payload, unsigned int length) {
     Serial.println("corrupt packet");
   }
 }
+
 
 void MqttHandler::setTopicStatus(const char *topic) {
   topicStatus = topic;
