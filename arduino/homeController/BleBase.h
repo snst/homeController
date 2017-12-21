@@ -1,7 +1,7 @@
 // Copyright 2017 Stefan Schmidt
 
-#ifndef _SIMPLEESP32BLE_H__
-#define _SIMPLEESP32BLE_H__
+#ifndef _BLEBASE_H__
+#define _BLEBASE_H__
 
 #include "Arduino.h"
 #include <stdint.h>
@@ -39,46 +39,48 @@ struct gattc_profile_inst {
 #define APP_ID 0
 #define MAX_APP 1
 
-class SimpleBLE {
+class BleBase {
 
   public:
   enum eState { deinit, disconnected, connecting, disconnecting, connected, ready };
   eState state;
   bool isWriting;
+  BTAddr bleAddrNew;
+  BTAddr bleAddrConnected;
   struct gattc_profile_inst gattcProfile[MAX_APP]; 
   
-  SimpleBLE();
-  virtual ~SimpleBLE() {}
+  BleBase();
+  virtual ~BleBase() {}
 
-  virtual void onConnectFailed() {
-    Serial.println("SimpleBLE::onConnectFailed()");
+  virtual void onConnectFailed(BTAddr &addr) {
+    addr.print("BleBase::onConnectFailed()", true);
   }
 
-  virtual void onDisconnected() {
-    Serial.println("SimpleBLE::disconnected()");
+  virtual void onDisconnected(BTAddr &addr) {
+    addr.print("BleBase::disconnected()", true);
   }
 
-  virtual void onConnected() {
-    Serial.println("SimpleBLE::onConnected()");
+  virtual void onConnected(BTAddr &addr) {
+    addr.print("BleBase::onConnected()", true);
   }
 
-  virtual void onReceiveNotify(uint8_t* pData, uint8_t len) {
-    Serial.print("SimpleBLE::onReceiveNotify() len=");
+  virtual void onReceiveNotify(BTAddr &addr, uint8_t* pData, uint8_t len) {
+    Serial.print("BleBase::onReceiveNotify() len=");
     Serial.println(len);
   }
 
-  virtual void onReceiveIndicate(uint8_t* pData, uint8_t len) {
-    Serial.print("SimpleBLE::onReceiveIndicate() len=");
+  virtual void onReceiveIndicate(BTAddr &addr, uint8_t* pData, uint8_t len) {
+    Serial.print("BleBase::onReceiveIndicate() len=");
     Serial.println(len);
   }
 
   virtual void onServiceFound() {
-    Serial.println("SimpleBLE::onServiceFound()");
+    Serial.println("BleBase::onServiceFound()");
   }
 
   virtual void onWritten(bool success) {
-    Serial.print("SimpleBLE::onWritten() ");
-    Serial.println(success ? "ok" : "failed");
+//    Serial.print("BleBase::onWritten() ");
+//    Serial.println(success ? "ok" : "failed");
   }
 
   bool registerNotify(uint16_t handle);

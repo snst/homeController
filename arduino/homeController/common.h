@@ -3,12 +3,15 @@
 #ifndef _COMMON_H__
 #define _COMMON_H__
 
-#define MQTT_CMD_SIZE 15
+#include "BTAddr.h"
+
 #define BLE_CMD_SIZE 7
 
-#define BT_ADDR_SIZE 6
+#define BT_CMD_QUEUE_LEN 20
+#define MQTT_CMD_SIZE 15
 
-static void(* softReset) (void) = 0;//declare reset function at address 0
+#define MQTT_RESPONSE_SIZE 12
+#define MQTT_RESPONSE_QUEUE_LEN 20
 
 
 enum eCmd {
@@ -41,6 +44,13 @@ enum eConnectionState {
   DISCONNECTED = 3,
   NORESPONSE = 4
 };
+
+typedef struct {
+  uint8_t data[BLE_CMD_SIZE];
+  uint8_t len;
+  BTAddr addr;
+} tBleCmd;
+
 
 class BLEAddr;
 void setMqttResponseStatus(BLEAddr* addr, uint8_t* pData, size_t length);

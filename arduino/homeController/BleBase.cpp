@@ -1,6 +1,6 @@
 // Copyright 2017 Stefan Schmidt
 
-#include "SimpleEsp32Ble.h"
+#include "BleBase.h"
 
 #define GATTC_TAG "GATTC_DEMO"
 //#define REMOTE_SERVICE_UUID        0x7046
@@ -17,7 +17,7 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
 static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
 
-static SimpleBLE* pBLE = nullptr;
+static BleBase* pBLE = nullptr;
 
 void printAddr(char* c, uint8_t* d) {
  /* Serial.print("+Addr-");
@@ -53,11 +53,11 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
         Serial.print("#ESP_GATTC_OPEN_EVT ");
         if (param->open.status != ESP_GATT_OK){
             Serial.println("failed");
-            pBLE->setState(SimpleBLE::disconnected);
-            pBLE->onConnectFailed();
+            pBLE->setState(BleBase::disconnected);
+            pBLE->onConnectFailed(pBLE->bleAddrNew);
         } else {
             Serial.println("ok");
-//            pBLE->setState(SimpleBLE::connected);
+//            pBLE->setState(BleBase::connected);
 //            pBLE->onConnected();
         }
     } break;
@@ -68,8 +68,9 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
             Serial.println("failed");
         } else {
           Serial.println("ok");
-          pBLE->setState(SimpleBLE::connected);
-          pBLE->onConnected();
+          pBLE->setState(BleBase::connected);
+          pBLE->bleAddrConnected = pBLE->bleAddrNew;
+          pBLE->onConnected(pBLE->bleAddrConnected);
         }        
     } break;
 
@@ -95,7 +96,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
             Serial.println("failed");
         } else {
             Serial.println("ok");
-            pBLE->setState(SimpleBLE::ready);
+            pBLE->setState(BleBase::ready);
             pBLE->onServiceFound();
         }
     } break;
@@ -108,10 +109,10 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
      //   Serial.print("ESP_GATTC_NOTIFY_EVT) ");
         if (p_data->notify.is_notify) {
        //   Serial.println("notify");
-          pBLE->onReceiveNotify(p_data->notify.value, p_data->notify.value_len);
+          pBLE->onReceiveNotify(pBLE->bleAddrConnected, p_data->notify.value, p_data->notify.value_len);
         } else {
           Serial.println("#ESP_GATTC_NOTIFY_EVT indicate ???");
-          pBLE->onReceiveIndicate(p_data->notify.value, p_data->notify.value_len);
+          pBLE->onReceiveIndicate(pBLE->bleAddrConnected, p_data->notify.value, p_data->notify.value_len);
         }
         //Serial.println(p_data->notify.value_len, HEX);
         //for(int i=0;i<p_data->notify.value_len; i++)
@@ -133,15 +134,13 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     } break;
 
     case ESP_GATTC_DISCONNECT_EVT: {
-        Serial.println("ESP_GATTC_DISCONNECT_EVT)");
-//        Serial.println(p_data->disconnect.reason, HEX);
-//if(!p_data) Serial.println("PDATA NULL IN DISCONNECT");
-//Serial.println(p_data->disconnect.conn_id);
-//        if(p_data->disconnect.conn_id != 0) {
-          pBLE->setState(SimpleBLE::disconnected);
-          pBLE->onDisconnected();
-//        }
-    } break;
+      Serial.println("ESP_GATTC_DISCONNECT_EVT)");
+      if (pBLE->state >= BleBase::connected) {
+        pBLE->setState(BleBase::disconnected);
+        pBLE->onDisconnected(pBLE->bleAddrConnected);
+      }
+      pBLE->setState(BleBase::disconnected);
+  } break;
 
     default:
       Serial.println("#gattc_profile_event_handler:default)");
@@ -276,9 +275,9 @@ static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp
     } while (0);
 }
 
-bool SimpleBLE::init()
+bool BleBase::init()
 {
-  //  Serial.println("+SimpleBLE::init");
+  //  Serial.println("+BleBase::init");
     pBLE = this;
 
     gattcProfile[APP_ID].gattc_cb = gattc_profile_event_handler;
@@ -341,15 +340,15 @@ bool SimpleBLE::init()
       Serial.println("-initBLE8");
     }
 
-    Serial.println("SimpleBLE::init: ok");
+    Serial.println("BleBase::init: ok");
     setState(disconnected);
 
     vTaskDelay(200/portTICK_PERIOD_MS);
     return true;
 }
 
-bool SimpleBLE::write(uint16_t handle, uint8_t* data, uint8_t len, bool response) {
-    Serial.print("SimpleBLE::write(handle=0x");
+bool BleBase::write(uint16_t handle, uint8_t* data, uint8_t len, bool response) {
+    Serial.print("BleBase::write(handle=0x");
     Serial.print(handle, HEX);
     Serial.print(", len=");
     Serial.print(len);
@@ -373,10 +372,11 @@ bool SimpleBLE::write(uint16_t handle, uint8_t* data, uint8_t len, bool response
     }
 }
 
-bool SimpleBLE::connect(BTAddr& addr) {
-    esp_err_t errRc = esp_ble_gattc_open(gattcProfile[APP_ID].gattc_if, addr.addr, true);
+bool BleBase::connect(BTAddr& addr) {
+    bleAddrNew = addr;
+    esp_err_t errRc = esp_ble_gattc_open(gattcProfile[APP_ID].gattc_if, bleAddrNew.addr, true);
     //printAddr("C", addr.addr);
-    addr.print("SimpleBLE::esp_ble_gattc_open(",false);
+    bleAddrNew.print("BleBase::connect(",false);
     Serial.println(errRc == ESP_OK ? ") ok" : ") failed");
 
     if(errRc == ESP_OK) {
@@ -388,21 +388,21 @@ bool SimpleBLE::connect(BTAddr& addr) {
     }
 }
 
-void SimpleBLE::disconnect() {
+void BleBase::disconnect() {
   setState(disconnecting);  
   esp_ble_gattc_close(gattcProfile[APP_ID].gattc_if, gattcProfile[APP_ID].conn_id);
 }
 
 
-bool SimpleBLE::registerNotify(uint16_t handle) {
-    Serial.print("SimpleBLE::registerNotify() handle=0x");
+bool BleBase::registerNotify(uint16_t handle) {
+    Serial.print("BleBase::registerNotify() handle=0x");
     Serial.println(handle, HEX);
     esp_ble_gattc_register_for_notify (pBLE->gattcProfile[APP_ID].gattc_if, pBLE->gattcProfile[APP_ID].remote_bda, handle);
     return true;
 }
 
 
-SimpleBLE::SimpleBLE() 
+BleBase::BleBase() 
 : state(deinit), isWriting(false) {
- //   Serial.println("SimpleBLE()");
+ //   Serial.println("BleBase()");
 }

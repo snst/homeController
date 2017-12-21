@@ -3,19 +3,18 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "common.h"
-#include "SimpleEsp32Ble.h"
-#include "HomeBle.h"
+#include "BleBase.h"
+#include "BleHandler.h"
 #include "HomeConfig.h"
-#include "CmdQueue.h"
 #include "MqttHandler.h"
 
-HomeBLE ble;
+BleHandler ble;
 HomeConfig config;
-CmdQueue queue;
-
 WiFiClient wifi;
 PubSubClient client(wifi);
 MqttHandler mqtt(client);
+
+void(* softReset) (void) = 0;//declare reset function at address 0
 
 
 void printMem()
@@ -34,7 +33,6 @@ void setup() {
   config.loadSettings();
   config.userInput(2000);
 
-//  ble = new HomeBLE();
   ble.init();
 
   mqtt.setTopicStatus(config.mqtt_topic_status.c_str());
@@ -73,8 +71,6 @@ void loop() {
 
   mqtt.execute();
   
-  queue.execute();
-
   ble.execute();
 
   vTaskDelay(20/portTICK_PERIOD_MS);
