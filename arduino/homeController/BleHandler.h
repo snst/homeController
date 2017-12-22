@@ -29,6 +29,7 @@ class BleHandler : public BleBase
   
   protected:
     xQueueHandle queue;
+    SemaphoreHandle_t queueMutex;
 };
 
 #endif

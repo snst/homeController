@@ -8,7 +8,6 @@
 
 #define PROFILE_NUM      1
 #define INVALID_HANDLE   0
-#define CONN_MUTEX_MAX_DELAY 1000
 
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
@@ -396,7 +395,7 @@ int BleBase::getConnIndex(BTAddr &addr) {
 
 void BleBase::setConnState(BTAddr &addr, eState state, uint16_t connId) {
 
-  xSemaphoreTake(connStateMutex, CONN_MUTEX_MAX_DELAY);
+  xSemaphoreTake(connStateMutex, MUTEX_MAX_DELAY);
   int i = getConnIndex(addr);
   if (i >= 0) {
     if (!connState[i].addr.isValid()) {
@@ -421,7 +420,7 @@ void BleBase::setConnState(BTAddr &addr, eState state, uint16_t connId) {
 
 BleBase::eState BleBase::getConnState(BTAddr &addr) {
 
-  xSemaphoreTake(connStateMutex, CONN_MUTEX_MAX_DELAY);
+  xSemaphoreTake(connStateMutex, MUTEX_MAX_DELAY);
   eState ret = disconnected;
   int i = getConnIndex(addr);
 
@@ -441,7 +440,7 @@ BleBase::eState BleBase::getConnState(BTAddr &addr) {
 
 uint16_t BleBase::getConnId(BTAddr &addr) {
   
-  xSemaphoreTake(connStateMutex, CONN_MUTEX_MAX_DELAY);
+  xSemaphoreTake(connStateMutex, MUTEX_MAX_DELAY);
   int i = getConnIndex(addr);
   uint16_t connId = 0;
 

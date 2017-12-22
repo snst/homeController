@@ -27,6 +27,7 @@ public:
   
 protected:
   xQueueHandle queue;
+  SemaphoreHandle_t queueMutex;
   PubSubClient &client;
   const char *topicStatus;
   const char *topicRequest;

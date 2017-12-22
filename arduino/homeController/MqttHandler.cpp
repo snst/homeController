@@ -12,12 +12,15 @@ void(* softReset2) (void) = 0;//declare reset function at address 0
 
 MqttHandler::MqttHandler(PubSubClient &c)
 : client(c) {
+  queueMutex = xSemaphoreCreateMutex();
   queue = xQueueCreate(MQTT_RESPONSE_QUEUE_LEN, MQTT_RESPONSE_SIZE);
   client.setCallback(MqttHandler::callback);
 }
 
 void MqttHandler::addResponse(uint8_t *msg) {
+  xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
   xQueueSendToBack(queue, msg, 0);
+  xSemaphoreGive(queueMutex);
 /*  Serial.print("MqttHandler::addResponse(");
   Serial.print(msg[0]);
   Serial.println(")");*/
@@ -25,7 +28,10 @@ void MqttHandler::addResponse(uint8_t *msg) {
 
 
 bool MqttHandler::get(uint8_t *msg) {
+  xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
   bool ret = (pdPASS == xQueueReceive(queue, msg, 0));
+  xSemaphoreGive(queueMutex);
+
  /* if (ret) {
     Serial.print("MqttHandler::get(");
     Serial.print(msg[0]);

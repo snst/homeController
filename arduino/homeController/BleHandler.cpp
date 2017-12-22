@@ -7,6 +7,7 @@
 extern MqttHandler mqtt;
 
 BleHandler::BleHandler() {
+  queueMutex = xSemaphoreCreateMutex();
   queue = xQueueCreate(BT_CMD_QUEUE_LEN, sizeof(tBleCmd));
 }
     
@@ -96,7 +97,9 @@ void BleHandler::execute() {
 
 
 bool BleHandler::getCmd(tBleCmd *cmd) {
+  xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
   bool ret = (pdPASS == xQueueReceive(queue, cmd, 0));
+  xSemaphoreGive(queueMutex);
   /*if (ret) {
     cmd->addr.print("BleHandler::getCmd() : ", false);
     Serial.print("  cmd[");
@@ -110,7 +113,9 @@ bool BleHandler::getCmd(tBleCmd *cmd) {
 
 
 bool BleHandler::peekCmd(tBleCmd *cmd) {
+  xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
   bool ret = (pdPASS == xQueuePeek(queue, cmd, 0));
+  xSemaphoreGive(queueMutex);
   if (ret) {
 //    cmd->addr.print("BleHandler::peekCmd() : ", true);
   }
@@ -119,14 +124,21 @@ bool BleHandler::peekCmd(tBleCmd *cmd) {
 
 
 void BleHandler::addCmd(tBleCmd *cmd) {
+  xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
   xQueueSendToBack(queue, cmd, 0);
+  xSemaphoreGive(queueMutex);
 }
 
 bool BleHandler::hasCmd() {
-	return uxQueueMessagesWaiting(queue) > 0;
+  xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
+  bool ret = uxQueueMessagesWaiting(queue) > 0;
+  xSemaphoreGive(queueMutex);
+	return ret;
 }
 
 void BleHandler::clear() {
+  xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
   xQueueReset(queue);
+  xSemaphoreGive(queueMutex);
 }
 

@@ -15,6 +15,7 @@
 
 #define CONNID_INVALID 0xFFFF
 
+#define MUTEX_MAX_DELAY 1000
 
 enum eCmd {
     NONE = 0,

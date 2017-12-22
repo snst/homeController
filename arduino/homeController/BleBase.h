@@ -31,21 +31,18 @@ void setMqttResponse(uint8_t* pData, size_t length);
 class BleBase {
 
   public:
-  enum eState { disconnected=0, connecting, disconnecting, connected }; //, ready };
+  enum eState { disconnected=0, connecting, disconnecting, connected };
   bool isWriting;
-//  struct gattc_profile_inst gattcProfile[MAX_APP]; 
   esp_gattc_cb_t a_gattc_cb;
   uint16_t a_gattc_if;
 
   typedef struct {
-//    uint64_t addr;
     BTAddr addr;
     eState state;
     uint16_t connId;
   } tConnState;
 
   tConnState connState[MAX_CONNECTIONS];
-
   SemaphoreHandle_t connStateMutex;
   
   BleBase();
