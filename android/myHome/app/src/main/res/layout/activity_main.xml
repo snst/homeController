@@ -23,22 +23,4 @@
         app:layout_constraintTop_toTopOf="parent">
     </ListView>
 
-    <Button
-        android:id="@+id/btnRefresh"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_gravity="bottom|right"
-
-        android:layout_marginTop="40dp"
-        android:background="@android:drawable/btn_default"
-        android:foreground="@android:drawable/ic_popup_sync"
-        android:foregroundGravity="center|fill"
-        android:onClick="onBtnRefresh"
-        android:textAlignment="center"
-        android:textAllCaps="false"
-        android:textColor="@android:color/darker_gray"
-        android:textSize="12sp"
-        android:visibility="invisible"
-        tools:text="5" />
-
 </android.support.constraint.ConstraintLayout>

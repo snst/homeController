@@ -28,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
 
     MqttHelper mqttHelper = null;
     Handler handler = new Handler();
-    Button btnRefresh = null;
     ListView listView = null;
     int msgCntStatus = 0;
     int msgCntMode = 0;
@@ -115,9 +114,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void onBtnRefresh(View view) {
-        requestStatusOfAllRooms();
-    }
 
     public void showRoomSettingsActivity(int roomId) {
         Intent intent = new Intent(this, RoomActivity.class);
@@ -143,6 +139,9 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.action_abort:
                 sendCmd(new Cmd(-1,eCmd.ABORT));
+                break;
+            case R.id.action_refresh_all:
+                requestStatusOfAllRooms();
                 break;
             case R.id.action_log:
                 showLogActivity();
@@ -180,7 +179,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         AccountConfig.load(this);
         roomSettings = new RoomSettings(this);
-        btnRefresh = (Button) findViewById(R.id.btnRefresh);
         listView = (ListView) findViewById(R.id.listViewRooms);
 
         for(int j=0; j<AccountConfig.NUMBER_OF_ROOMS; j++) {
@@ -247,7 +245,14 @@ public class MainActivity extends AppCompatActivity {
 
                 getLogger().add("mqtt connected");
                 showShortToast("Mqtt connected");
-                requestStatusOfAllRooms();
+
+                handler.postDelayed(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        requestStatusOfAllRooms();
+                    }
+                }, 1000); //delay
             }
 
             @Override
@@ -330,7 +335,6 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     msgCntMode++;
                 }
-                btnRefresh.setText("" + msgCntMode);
                 setTitle("myHome #" + msgCntMode);
             }
 

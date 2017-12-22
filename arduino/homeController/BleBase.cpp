@@ -49,6 +49,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
     case ESP_GATTC_CFG_MTU_EVT: {
         Serial.println("#ESP_GATTC_CFG_MTU_EVT ");
+        
   /*      if (param->cfg_mtu.status != ESP_GATT_OK){
             Serial.println("failed");
         } else {
@@ -216,7 +217,7 @@ static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp
         if (param->reg.status == ESP_GATT_OK) {
             Serial.println(" ok");
             if(param->reg.app_id<MAX_APP) {
-                pBLE->gattcProfile[param->reg.app_id].gattc_if = gattc_if;
+                pBLE->a_gattc_if = gattc_if;
             }
         } else {
             Serial.println(" failed");
@@ -231,9 +232,9 @@ static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp
         int idx;
         for (idx = 0; idx < MAX_APP; idx++) {
             if (gattc_if == ESP_GATT_IF_NONE || // ESP_GATT_IF_NONE, not specify a certain gatt_if, need to call every profile cb function 
-                    gattc_if == pBLE->gattcProfile[idx].gattc_if) {
-                if (pBLE->gattcProfile[idx].gattc_cb) {
-                    pBLE->gattcProfile[idx].gattc_cb(event, gattc_if, param);
+                    gattc_if == pBLE->a_gattc_if) {
+                if (pBLE->a_gattc_cb) {
+                    pBLE->a_gattc_cb(event, gattc_if, param);
                 }
             }
         }
@@ -245,8 +246,8 @@ bool BleBase::init()
   //  Serial.println("+BleBase::init");
     pBLE = this;
 
-    gattcProfile[APP_ID].gattc_cb = gattc_profile_event_handler;
-    gattcProfile[APP_ID].gattc_if = ESP_GATT_IF_NONE;
+    a_gattc_cb = gattc_profile_event_handler;
+    a_gattc_if = ESP_GATT_IF_NONE;
     
     // Initialize NVS.
     esp_err_t ret = nvs_flash_init();
@@ -321,7 +322,7 @@ bool BleBase::write(BTAddr &addr, uint16_t handle, uint8_t* data, uint8_t len, b
     uint16_t connId = getConnId(addr);
 
     esp_err_t errRc = ::esp_ble_gattc_write_char(
-        pBLE->gattcProfile[APP_ID].gattc_if,
+        pBLE->a_gattc_if,
         connId,
         handle,
         len,
@@ -342,7 +343,7 @@ bool BleBase::write(BTAddr &addr, uint16_t handle, uint8_t* data, uint8_t len, b
 bool BleBase::connect(BTAddr& addr) {
     addr.print("BleBase::connect()",true);
     setConnState(addr, connecting, CONNID_INVALID);
-    esp_err_t errRc = esp_ble_gattc_open(gattcProfile[APP_ID].gattc_if, addr.addr, true);
+    esp_err_t errRc = esp_ble_gattc_open(a_gattc_if, addr.addr, true);
 //    Serial.println(errRc == ESP_OK ? ") ok" : ") failed");
 
     if(errRc == ESP_OK) {
@@ -364,7 +365,7 @@ void BleBase::disconnect() {
 bool BleBase::registerNotify(BTAddr &addr, uint16_t handle) {
     Serial.print("BleBase::registerNotify() handle=0x");
     Serial.println(handle, HEX);
-    esp_ble_gattc_register_for_notify (pBLE->gattcProfile[APP_ID].gattc_if, addr.addr, handle);
+    esp_ble_gattc_register_for_notify (pBLE->a_gattc_if, addr.addr, handle);
     return true;
 }
 

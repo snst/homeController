@@ -66,12 +66,16 @@ void connectWLAN()
 void loop() {
 
   connectWLAN();
+  taskYIELD();
 
   mqtt.connect();
+  taskYIELD();
 
   mqtt.execute();
+  taskYIELD();
   
   ble.execute();
+  taskYIELD();
 
   vTaskDelay(20/portTICK_PERIOD_MS);
 }

@@ -24,18 +24,6 @@
 void setMqttResponse(uint8_t* pData, size_t length);
 
 
-struct gattc_profile_inst {
-    esp_gattc_cb_t gattc_cb;
-    uint16_t gattc_if;
-//    uint16_t app_id;
-//    uint16_t conn_id;
-//    uint16_t service_start_handle;
-//    uint16_t service_end_handle;
-//    uint16_t char_handle;
-//    esp_bd_addr_t remote_bda;
-};
-
-
 #define APP_ID 0
 #define MAX_APP 1
 #define MAX_CONNECTIONS 15
@@ -45,7 +33,9 @@ class BleBase {
   public:
   enum eState { disconnected=0, connecting, disconnecting, connected }; //, ready };
   bool isWriting;
-  struct gattc_profile_inst gattcProfile[MAX_APP]; 
+//  struct gattc_profile_inst gattcProfile[MAX_APP]; 
+  esp_gattc_cb_t a_gattc_cb;
+  uint16_t a_gattc_if;
 
   typedef struct {
 //    uint64_t addr;
