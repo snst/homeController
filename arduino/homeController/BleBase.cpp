@@ -26,11 +26,9 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     } break;
 
     case ESP_GATTC_CONNECT_EVT: {
+        esp_err_t mtu_ret = esp_ble_gattc_send_mtu_req (gattc_if, p_data->connect.conn_id);
         BTAddr a(p_data->connect.remote_bda);
         a.print("#ESP_GATTC_CONNECT_EVT ", true);
-//        pBLE->gattcProfile[APP_ID].conn_id = p_data->connect.conn_id;
-//        memcpy(pBLE->gattcProfile[APP_ID].remote_bda, p_data->connect.remote_bda, sizeof(esp_bd_addr_t));
-        esp_err_t mtu_ret = esp_ble_gattc_send_mtu_req (gattc_if, p_data->connect.conn_id);
         pBLE->setConnState(a, BleBase::connected, p_data->connect.conn_id);
         pBLE->onConnected(a);
     } break;
@@ -380,15 +378,14 @@ BleBase::BleBase()
 
 int BleBase::getConnIndex(BTAddr &addr) {
   
-  uint64_t a = addr.toUint64();
   for (int i=0; i<MAX_CONNECTIONS; i++) {
-    if(connState[i].addr == a) {
+    if(addr.isSame(connState[i].addr)) {
       return i;
     }
   }  
 
   for (int i=0; i<MAX_CONNECTIONS; i++) {
-    if(connState[i].addr == 0) {
+    if(!connState[i].addr.isValid()) {
       return i;
     }
   }  
@@ -401,8 +398,8 @@ void BleBase::setConnState(BTAddr &addr, eState state, uint16_t connId) {
   xSemaphoreTake(connStateMutex, CONN_MUTEX_MAX_DELAY);
   int i = getConnIndex(addr);
   if (i >= 0) {
-    if (connState[i].addr == 0) {
-      connState[i].addr = addr.toUint64();
+    if (!connState[i].addr.isValid()) {
+      connState[i].addr = addr;
     }
     connState[i].state = state;
 

@@ -43,12 +43,13 @@ struct gattc_profile_inst {
 class BleBase {
 
   public:
-  enum eState { disconnected=0, connecting, disconnecting, connected, ready };
+  enum eState { disconnected=0, connecting, disconnecting, connected }; //, ready };
   bool isWriting;
   struct gattc_profile_inst gattcProfile[MAX_APP]; 
 
   typedef struct {
-    uint64_t addr;
+//    uint64_t addr;
+    BTAddr addr;
     eState state;
     uint16_t connId;
   } tConnState;

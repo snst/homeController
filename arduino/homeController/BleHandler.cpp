@@ -38,7 +38,7 @@ void BleHandler::onConnected(BTAddr &addr) {
   registerNotify(addr, 0x421);
   BleBase::onConnected(addr);
   mqtt.sendResponseConnection(addr, eConnectionState::CONNECTED);
-  setConnState(addr, ready, CONNID_INVALID);
+//  setConnState(addr, ready, CONNID_INVALID);
 }
 
 bool BleHandler::connect(BTAddr& addr) {
@@ -65,11 +65,12 @@ void BleHandler::execute() {
 
     if(getConnState(cmd.addr) < BleBase::connecting) {
   	  connect(cmd.addr);
+      cmd.addr.print("Readd cmd", true);
       addCmd(&cmd);
 	    return;
 	  } 
 
-    if(isConnState(cmd.addr, BleBase::ready)) {
+    if(isConnState(cmd.addr, BleBase::connected)) {
     
       //if(canWrite()) 
       {

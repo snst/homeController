@@ -33,6 +33,7 @@ class BTAddr
       return *this;
     }
 
+/*
     uint64_t toUint64() {
       uint8_t* a = (uint8_t*) addr;
       uint64_t ret = a[0] | (a[1]<<8) | (a[2]<<16) | (a[3]<<24) | (a[4]<<32) | (a[5]<<40);
@@ -40,7 +41,7 @@ class BTAddr
 //      Serial.println((uint32_t)  (ret&0xFFFFFFFF));
       return ret;
     }
-
+*/
     bool isValid() {
       uint8_t* a = (uint8_t*) addr;
 //      print("isValid ", true);
