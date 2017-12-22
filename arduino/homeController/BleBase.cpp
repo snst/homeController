@@ -1,17 +1,14 @@
 // Copyright 2017 Stefan Schmidt
 
 #include "BleBase.h"
+#include "common.h"
+
 
 #define GATTC_TAG "GATTC_DEMO"
-//#define REMOTE_SERVICE_UUID        0x7046
-//#define REMOTE_NOTIFY_CHAR_UUID_CMD    0xea09
-//#define REMOTE_NOTIFY_CHAR_UUID_PERLY    0xeb2a
 
 #define PROFILE_NUM      1
 #define INVALID_HANDLE   0
-
-//static esp_gattc_char_elem_t *char_elem_result   = NULL;
-//static esp_gattc_descr_elem_t *descr_elem_result = NULL;
+#define CONN_MUTEX_MAX_DELAY 1000
 
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
@@ -19,19 +16,9 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
 static BleBase* pBLE = nullptr;
 
-void printAddr(char* c, uint8_t* d) {
- /* Serial.print("+Addr-");
-  Serial.println(c);
-  Serial.println(sizeof(esp_bd_addr_t));
-  for(int i=0;i<sizeof(esp_bd_addr_t);i++)
-    Serial.println(d[i], HEX);
-  Serial.println("---");*/
-}
-
 static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param)
 {
     esp_ble_gattc_cb_param_t *p_data = (esp_ble_gattc_cb_param_t *)param;
-    //Serial.print("SBLE::gattc_profile_event_handler(");
 
     switch (event) {
     case ESP_GATTC_REG_EVT: {
@@ -39,66 +26,54 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     } break;
 
     case ESP_GATTC_CONNECT_EVT: {
-        Serial.print("#ESP_GATTC_CONNECT_EVT");
-        pBLE->gattcProfile[APP_ID].conn_id = p_data->connect.conn_id;
-        Serial.println(p_data->connect.conn_id);
-        memcpy(pBLE->gattcProfile[APP_ID].remote_bda, p_data->connect.remote_bda, sizeof(esp_bd_addr_t));
+        BTAddr a(p_data->connect.remote_bda);
+        a.print("#ESP_GATTC_CONNECT_EVT ", true);
+//        pBLE->gattcProfile[APP_ID].conn_id = p_data->connect.conn_id;
+//        memcpy(pBLE->gattcProfile[APP_ID].remote_bda, p_data->connect.remote_bda, sizeof(esp_bd_addr_t));
         esp_err_t mtu_ret = esp_ble_gattc_send_mtu_req (gattc_if, p_data->connect.conn_id);
-        if (mtu_ret){
-            Serial.println("Failed: esp_ble_gattc_send_mtu_req");
-        }
+        pBLE->setConnState(a, BleBase::connected, p_data->connect.conn_id);
+        pBLE->onConnected(a);
     } break;
 
     case ESP_GATTC_OPEN_EVT: {
-        Serial.print("#ESP_GATTC_OPEN_EVT ");
+        BTAddr a(p_data->open.remote_bda);
+        a.print("#ESP_GATTC_OPEN_EVT ", false);
+        Serial.println( (param->open.status == ESP_GATT_OK) ? " OK" : "FAILED");
+
         if (param->open.status != ESP_GATT_OK){
-            Serial.println("failed");
-            pBLE->setState(BleBase::disconnected);
-            pBLE->onConnectFailed(pBLE->bleAddrNew);
+            pBLE->setConnState(a, BleBase::disconnected, CONNID_INVALID);
+            pBLE->onConnectFailed(a);
         } else {
-            Serial.println("ok");
 //            pBLE->setState(BleBase::connected);
 //            pBLE->onConnected();
         }
     } break;
 
     case ESP_GATTC_CFG_MTU_EVT: {
-        Serial.print("#ESP_GATTC_CFG_MTU_EVT ");
-        if (param->cfg_mtu.status != ESP_GATT_OK){
+        Serial.println("#ESP_GATTC_CFG_MTU_EVT ");
+  /*      if (param->cfg_mtu.status != ESP_GATT_OK){
             Serial.println("failed");
         } else {
-          Serial.println("ok");
+//          Serial.println("ok");
           pBLE->setState(BleBase::connected);
           pBLE->bleAddrConnected = pBLE->bleAddrNew;
           pBLE->onConnected(pBLE->bleAddrConnected);
-        }        
+        }        */
     } break;
 
     case ESP_GATTC_SEARCH_RES_EVT: {
         Serial.print("#ESP_GATTC_SEARCH_RES_EVT) srvc_id=0x");
-        /*
-        esp_gatt_srvc_id_t *srvc_id =(esp_gatt_srvc_id_t *)&p_data->search_res.srvc_id;
-       // Serial.println(srvc_id->id.uuid.len);
-        Serial.println(srvc_id->id.uuid.uuid.uuid16, HEX);
-//        if (srvc_id->id.uuid.len == ESP_UUID_LEN_16 && srvc_id->id.uuid.uuid.uuid16 == REMOTE_SERVICE_UUID) {
-        if ( srvc_id->id.uuid.uuid.uuid16 == REMOTE_SERVICE_UUID) {
-            Serial.println("service found");
-            get_server = true;
-            pBLE->gattcProfile[APP_ID].service_start_handle = p_data->search_res.start_handle;
-            pBLE->gattcProfile[APP_ID].service_end_handle = p_data->search_res.end_handle;
-    //        ESP_LOGI(GATTC_TAG, "UUID16: %x", srvc_id->id.uuid.uuid.uuid16);
-        }*/
     } break;
 
     case ESP_GATTC_SEARCH_CMPL_EVT: {
-        Serial.print("#ESP_GATTC_SEARCH_CMPL_EVT ");
-        if (p_data->search_cmpl.status != ESP_GATT_OK) {
+        Serial.println("#ESP_GATTC_SEARCH_CMPL_EVT ");
+    /*    if (p_data->search_cmpl.status != ESP_GATT_OK) {
             Serial.println("failed");
         } else {
             Serial.println("ok");
             pBLE->setState(BleBase::ready);
             pBLE->onServiceFound();
-        }
+        }*/
     } break;
 
     case ESP_GATTC_REG_FOR_NOTIFY_EVT: {
@@ -106,17 +81,11 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     } break;
 
     case ESP_GATTC_NOTIFY_EVT: {
-     //   Serial.print("ESP_GATTC_NOTIFY_EVT) ");
-        if (p_data->notify.is_notify) {
-       //   Serial.println("notify");
-          pBLE->onReceiveNotify(pBLE->bleAddrConnected, p_data->notify.value, p_data->notify.value_len);
-        } else {
-          Serial.println("#ESP_GATTC_NOTIFY_EVT indicate ???");
-          pBLE->onReceiveIndicate(pBLE->bleAddrConnected, p_data->notify.value, p_data->notify.value_len);
-        }
-        //Serial.println(p_data->notify.value_len, HEX);
-        //for(int i=0;i<p_data->notify.value_len; i++)
-        //Serial.println(p_data->notify.value[i],  HEX);
+      BTAddr a(p_data->notify.remote_bda);
+      a.print("#ESP_GATTC_NOTIFY_EVT ", true);
+      if (p_data->notify.is_notify) {
+        pBLE->onReceiveData(a, p_data->notify.value, p_data->notify.value_len);
+      }
     } break;
 
     case ESP_GATTC_WRITE_DESCR_EVT: {
@@ -134,12 +103,10 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     } break;
 
     case ESP_GATTC_DISCONNECT_EVT: {
-      Serial.println("ESP_GATTC_DISCONNECT_EVT)");
-      if (pBLE->state >= BleBase::connected) {
-        pBLE->setState(BleBase::disconnected);
-        pBLE->onDisconnected(pBLE->bleAddrConnected);
-      }
-      pBLE->setState(BleBase::disconnected);
+      BTAddr a(p_data->disconnect.remote_bda);
+      a.print("#ESP_GATTC_DISCONNECT_EVT ", true);
+      pBLE->setConnState(a, BleBase::disconnected, CONNID_INVALID);
+      pBLE->onDisconnected(a);
   } break;
 
     default:
@@ -341,21 +308,23 @@ bool BleBase::init()
     }
 
     Serial.println("BleBase::init: ok");
-    setState(disconnected);
+//    setState(disconnected);
 
     vTaskDelay(200/portTICK_PERIOD_MS);
     return true;
 }
 
-bool BleBase::write(uint16_t handle, uint8_t* data, uint8_t len, bool response) {
+bool BleBase::write(BTAddr &addr, uint16_t handle, uint8_t* data, uint8_t len, bool response) {
     Serial.print("BleBase::write(handle=0x");
     Serial.print(handle, HEX);
     Serial.print(", len=");
     Serial.print(len);
 
+    uint16_t connId = getConnId(addr);
+
     esp_err_t errRc = ::esp_ble_gattc_write_char(
         pBLE->gattcProfile[APP_ID].gattc_if,
-        pBLE->gattcProfile[APP_ID].conn_id,
+        connId,
         handle,
         len,
         data,
@@ -373,36 +342,126 @@ bool BleBase::write(uint16_t handle, uint8_t* data, uint8_t len, bool response) 
 }
 
 bool BleBase::connect(BTAddr& addr) {
-    bleAddrNew = addr;
-    esp_err_t errRc = esp_ble_gattc_open(gattcProfile[APP_ID].gattc_if, bleAddrNew.addr, true);
-    //printAddr("C", addr.addr);
-    bleAddrNew.print("BleBase::connect(",false);
-    Serial.println(errRc == ESP_OK ? ") ok" : ") failed");
+    addr.print("BleBase::connect()",true);
+    setConnState(addr, connecting, CONNID_INVALID);
+    esp_err_t errRc = esp_ble_gattc_open(gattcProfile[APP_ID].gattc_if, addr.addr, true);
+//    Serial.println(errRc == ESP_OK ? ") ok" : ") failed");
 
     if(errRc == ESP_OK) {
-        setState(connecting);
-        return true;
+//      setConnState(addr, connecting, CONNID_INVALID);
+      return true;
     } else {
-      setState(disconnected);
+      setConnState(addr, disconnected, CONNID_INVALID);
       return false;
     }
 }
 
 void BleBase::disconnect() {
-  setState(disconnecting);  
-  esp_ble_gattc_close(gattcProfile[APP_ID].gattc_if, gattcProfile[APP_ID].conn_id);
+  Serial.println("BleBase::disconnect() TODO");
+ // setConnState(disconnecting);  
+ // esp_ble_gattc_close(gattcProfile[APP_ID].gattc_if, gattcProfile[APP_ID].conn_id);
 }
 
 
-bool BleBase::registerNotify(uint16_t handle) {
+bool BleBase::registerNotify(BTAddr &addr, uint16_t handle) {
     Serial.print("BleBase::registerNotify() handle=0x");
     Serial.println(handle, HEX);
-    esp_ble_gattc_register_for_notify (pBLE->gattcProfile[APP_ID].gattc_if, pBLE->gattcProfile[APP_ID].remote_bda, handle);
+    esp_ble_gattc_register_for_notify (pBLE->gattcProfile[APP_ID].gattc_if, addr.addr, handle);
     return true;
 }
 
 
 BleBase::BleBase() 
-: state(deinit), isWriting(false) {
+: isWriting(false) {
+  connStateMutex = xSemaphoreCreateMutex();
+  memset(&connState, 0, sizeof(connState));
  //   Serial.println("BleBase()");
 }
+
+int BleBase::getConnIndex(BTAddr &addr) {
+  
+  uint64_t a = addr.toUint64();
+  for (int i=0; i<MAX_CONNECTIONS; i++) {
+    if(connState[i].addr == a) {
+      return i;
+    }
+  }  
+
+  for (int i=0; i<MAX_CONNECTIONS; i++) {
+    if(connState[i].addr == 0) {
+      return i;
+    }
+  }  
+  
+  return -1;
+}
+
+void BleBase::setConnState(BTAddr &addr, eState state, uint16_t connId) {
+
+  xSemaphoreTake(connStateMutex, CONN_MUTEX_MAX_DELAY);
+  int i = getConnIndex(addr);
+  if (i >= 0) {
+    if (connState[i].addr == 0) {
+      connState[i].addr = addr.toUint64();
+    }
+    connState[i].state = state;
+
+    if (connId != CONNID_INVALID) {
+      connState[i].connId = connId;
+    }
+  }
+  xSemaphoreGive(connStateMutex);
+
+  addr.print("setConnState: ", false);
+  Serial.print(", state=");
+  Serial.print(state);
+  Serial.print(", connId=0x");
+  Serial.print(connId, HEX);
+  Serial.print(", i=");
+  Serial.println(i);
+}
+
+BleBase::eState BleBase::getConnState(BTAddr &addr) {
+
+  xSemaphoreTake(connStateMutex, CONN_MUTEX_MAX_DELAY);
+  eState ret = disconnected;
+  int i = getConnIndex(addr);
+
+  if (i >= 0) {
+    ret = connState[i].state;
+  }
+  xSemaphoreGive(connStateMutex);
+/*
+  addr.print("getConnState: ", false);
+  Serial.print(", state=");
+  Serial.print(ret);
+  Serial.print(", i=");
+  Serial.println(i);
+*/
+  return ret;
+}
+
+uint16_t BleBase::getConnId(BTAddr &addr) {
+  
+  xSemaphoreTake(connStateMutex, CONN_MUTEX_MAX_DELAY);
+  int i = getConnIndex(addr);
+  uint16_t connId = 0;
+
+  if (i > 0) {
+    connId = connState[i].connId;
+  }
+
+  xSemaphoreGive(connStateMutex);
+  
+  addr.print("getConnId: ", false);
+  Serial.print(", connId=0x");
+  Serial.print(connId, HEX);
+  Serial.print(", i=");
+  Serial.println(i);
+  return connId;
+}
+
+bool BleBase::isConnState(BTAddr &addr, eState state) {
+  return getConnState(addr) == state;
+}
+

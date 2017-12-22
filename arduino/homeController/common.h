@@ -13,6 +13,8 @@
 #define MQTT_RESPONSE_SIZE 12
 #define MQTT_RESPONSE_QUEUE_LEN 20
 
+#define CONNID_INVALID 0xFFFF
+
 
 enum eCmd {
     NONE = 0,

@@ -13,7 +13,7 @@ class BleHandler : public BleBase
   public:
     BleHandler();
     virtual ~BleHandler();
-    virtual void onReceiveNotify(BTAddr &addr, uint8_t *pData, uint8_t len);
+    virtual void onReceiveData(BTAddr &addr, uint8_t *pData, uint8_t len);
     virtual void onConnected(BTAddr &addr);
     virtual void onWritten(bool success);
     virtual void onDisconnected(BTAddr &addr);

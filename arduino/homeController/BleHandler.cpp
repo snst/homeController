@@ -13,8 +13,8 @@ BleHandler::BleHandler() {
 BleHandler::~BleHandler() {
 }
 
-void BleHandler::onReceiveNotify(BTAddr &addr, uint8_t* pData, uint8_t len) {
-    BleBase::onReceiveNotify(addr, pData, len);
+void BleHandler::onReceiveData(BTAddr &addr, uint8_t* pData, uint8_t len) {
+    BleBase::onReceiveData(addr, pData, len);
     mqtt.sendResponseStatus(addr, pData, len);
 }
 
@@ -24,6 +24,7 @@ void BleHandler::onDisconnected(BTAddr &addr) {
 }
 
 void BleHandler::onConnectFailed(BTAddr &addr) {
+  Serial.println("BleHandler::onConnectFailed");
   BleBase::onConnectFailed(addr);
   tBleCmd cmd;
   if(getCmd(&cmd)) {
@@ -34,10 +35,10 @@ void BleHandler::onConnectFailed(BTAddr &addr) {
 
 
 void BleHandler::onConnected(BTAddr &addr) {
+  registerNotify(addr, 0x421);
   BleBase::onConnected(addr);
   mqtt.sendResponseConnection(addr, eConnectionState::CONNECTED);
-  registerNotify(0x421);
-  setState(ready);
+  setConnState(addr, ready, CONNID_INVALID);
 }
 
 bool BleHandler::connect(BTAddr& addr) {
@@ -47,7 +48,7 @@ bool BleHandler::connect(BTAddr& addr) {
 
 
 void BleHandler::disconnect() {
-  mqtt.sendResponseConnection(bleAddrConnected, eConnectionState::DISCONNECTED);
+//  mqtt.sendResponseConnection(bleAddrConnected, eConnectionState::DISCONNECTED);
   BleBase::disconnect();
 }
 
@@ -60,28 +61,19 @@ void BleHandler::onWritten(bool success) {
 void BleHandler::execute() {
 
   tBleCmd cmd;
-  if(peekCmd(&cmd)) {
+  if(getCmd(&cmd)) {
 
-    if(isState(BleBase::disconnected)) {
+    if(getConnState(cmd.addr) < BleBase::connecting) {
   	  connect(cmd.addr);
+      addCmd(&cmd);
 	    return;
 	  } 
 
-    if(isState(BleBase::ready)) {
+    if(isConnState(cmd.addr, BleBase::ready)) {
     
-      if(!bleAddrConnected.isSame(cmd.addr)) {
-        Serial.println("BleHandler::execute() New BleAddr, disconnect!");
-        disconnect();
-        return;
-      }
-  
-      if(canWrite()) {
-      
-        tBleCmd cmd;
-        if(getCmd(&cmd)) {
-        
-          if( write(0x411, cmd.data, cmd.len, true) ) {
-          }
+      //if(canWrite()) 
+      {
+        if( write(cmd.addr, 0x411, cmd.data, cmd.len, true) ) {
         }
       }
     }

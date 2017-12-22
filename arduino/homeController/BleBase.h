@@ -27,30 +27,45 @@ void setMqttResponse(uint8_t* pData, size_t length);
 struct gattc_profile_inst {
     esp_gattc_cb_t gattc_cb;
     uint16_t gattc_if;
-    uint16_t app_id;
-    uint16_t conn_id;
-    uint16_t service_start_handle;
-    uint16_t service_end_handle;
-    uint16_t char_handle;
-    esp_bd_addr_t remote_bda;
+//    uint16_t app_id;
+//    uint16_t conn_id;
+//    uint16_t service_start_handle;
+//    uint16_t service_end_handle;
+//    uint16_t char_handle;
+//    esp_bd_addr_t remote_bda;
 };
 
 
 #define APP_ID 0
 #define MAX_APP 1
+#define MAX_CONNECTIONS 15
 
 class BleBase {
 
   public:
-  enum eState { deinit, disconnected, connecting, disconnecting, connected, ready };
-  eState state;
+  enum eState { disconnected=0, connecting, disconnecting, connected, ready };
   bool isWriting;
-  BTAddr bleAddrNew;
-  BTAddr bleAddrConnected;
   struct gattc_profile_inst gattcProfile[MAX_APP]; 
+
+  typedef struct {
+    uint64_t addr;
+    eState state;
+    uint16_t connId;
+  } tConnState;
+
+  tConnState connState[MAX_CONNECTIONS];
+
+  SemaphoreHandle_t connStateMutex;
   
   BleBase();
   virtual ~BleBase() {}
+
+  int getConnIndex(BTAddr &addr);
+  void setConnState(BTAddr &addr, eState state, uint16_t connId);
+  eState getConnState(BTAddr &addr);
+  uint16_t getConnId(BTAddr &addr);
+  
+  bool isConnState(BTAddr &addr, eState state);
 
   virtual void onConnectFailed(BTAddr &addr) {
     addr.print("BleBase::onConnectFailed()", true);
@@ -64,13 +79,8 @@ class BleBase {
     addr.print("BleBase::onConnected()", true);
   }
 
-  virtual void onReceiveNotify(BTAddr &addr, uint8_t* pData, uint8_t len) {
-    Serial.print("BleBase::onReceiveNotify() len=");
-    Serial.println(len);
-  }
-
-  virtual void onReceiveIndicate(BTAddr &addr, uint8_t* pData, uint8_t len) {
-    Serial.print("BleBase::onReceiveIndicate() len=");
+  virtual void onReceiveData(BTAddr &addr, uint8_t* pData, uint8_t len) {
+    Serial.print("BleBase::onReceiveData() len=");
     Serial.println(len);
   }
 
@@ -83,15 +93,16 @@ class BleBase {
 //    Serial.println(success ? "ok" : "failed");
   }
 
-  bool registerNotify(uint16_t handle);
+  bool registerNotify(BTAddr &addr, uint16_t handle);
 
-  bool write(uint16_t handle, uint8_t* data, uint8_t len, bool response);
+  bool write(BTAddr &addr, uint16_t handle, uint8_t* data, uint8_t len, bool response);
 
   bool connect(BTAddr& addr);
   void disconnect();
 
   bool init();
 
+/*
   bool isState(eState _state) {
     return state == _state;
   }
@@ -102,9 +113,11 @@ class BleBase {
       isWriting = false;
   //  }
   }
+*/
 
   bool canWrite() {
-    return state==ready && !isWriting;
+    return true;
+ //   return state==ready && !isWriting;
   }
 
 };
