@@ -27,10 +27,10 @@ void BleHandler::onDisconnected(BTAddr &addr) {
 void BleHandler::onConnectFailed(BTAddr &addr) {
   Serial.println("BleHandler::onConnectFailed");
   BleBase::onConnectFailed(addr);
-  tBleCmd cmd;
+ /* tBleCmd cmd;
   if(getCmd(&cmd)) {
     cmd.addr.print("REMOVEIT", true);    
-  }
+  }*/
   mqtt.sendResponseConnection(addr, eConnectionState::NORESPONSE);
 }
 
