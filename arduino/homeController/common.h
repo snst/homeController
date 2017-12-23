@@ -58,6 +58,16 @@ typedef struct {
   BTAddr addr;
 } tBleCmd;
 
-
+static void dump(const char *str, const uint8_t *data, uint8_t len) {
+  Serial.print(str);
+  Serial.print("(");
+  Serial.print(len);
+  Serial.print("): ");
+  for(uint8_t i=0; i<len; i++) {
+    Serial.print(data[i], HEX);
+    Serial.print(", ");
+  }
+  Serial.println("");
+}
 
 #endif

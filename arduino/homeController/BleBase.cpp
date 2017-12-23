@@ -27,14 +27,14 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     case ESP_GATTC_CONNECT_EVT: {
         esp_err_t mtu_ret = esp_ble_gattc_send_mtu_req (gattc_if, p_data->connect.conn_id);
         BTAddr a(p_data->connect.remote_bda);
-        a.print("#ESP_GATTC_CONNECT_EVT ", true);
+        a.println("#ESP_GATTC_CONNECT_EVT ");
         pBLE->setConnState(a, BleBase::connected, p_data->connect.conn_id);
         pBLE->onConnected(a);
     } break;
 
     case ESP_GATTC_OPEN_EVT: {
         BTAddr a(p_data->open.remote_bda);
-        a.print("#ESP_GATTC_OPEN_EVT ", false);
+        a.print("#ESP_GATTC_OPEN_EVT ");
         Serial.println( (param->open.status == ESP_GATT_OK) ? " OK" : " FAILED");
 
         if (param->open.status != ESP_GATT_OK){
@@ -80,7 +80,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
     case ESP_GATTC_NOTIFY_EVT: {
       BTAddr a(p_data->notify.remote_bda);
-      a.print("#ESP_GATTC_NOTIFY_EVT ", true);
+      a.println("#ESP_GATTC_NOTIFY_EVT ");
       if (p_data->notify.is_notify) {
         pBLE->onReceiveData(a, p_data->notify.value, p_data->notify.value_len);
       }
@@ -95,13 +95,12 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     } break;
     case ESP_GATTC_WRITE_CHAR_EVT: {
       //Serial.print("ESP_GATTC_WRITE_CHAR_EVT) ");
-      pBLE->isWriting = false;
       pBLE->onWritten(p_data->write.status == ESP_GATT_OK);
     } break;
 
     case ESP_GATTC_DISCONNECT_EVT: {
       BTAddr a(p_data->disconnect.remote_bda);
-      a.print("#ESP_GATTC_DISCONNECT_EVT ", true);
+      a.println("#ESP_GATTC_DISCONNECT_EVT ");
 
       BleBase::eState state = pBLE->getConnState(a);
       if (state == BleBase::connected) { // only send disconnect, if connected before
@@ -315,7 +314,7 @@ bool BleBase::init()
     return true;
 }
 
-bool BleBase::write(BTAddr &addr, uint16_t handle, uint8_t* data, uint8_t len, bool response) {
+bool BleBase::write(const BTAddr &addr, uint16_t handle, const uint8_t* data, uint8_t len, bool response) {
     Serial.print("BleBase::write(handle=0x");
     Serial.print(handle, HEX);
     Serial.print(", len=");
@@ -328,7 +327,7 @@ bool BleBase::write(BTAddr &addr, uint16_t handle, uint8_t* data, uint8_t len, b
         connId,
         handle,
         len,
-        data,
+        (uint8_t*)data,
         response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP,
         ESP_GATT_AUTH_REQ_NONE
     );
@@ -342,10 +341,10 @@ bool BleBase::write(BTAddr &addr, uint16_t handle, uint8_t* data, uint8_t len, b
     }
 }
 
-bool BleBase::connect(BTAddr& addr) {
-    addr.print("BleBase::connect()",true);
+bool BleBase::connect(const BTAddr& addr) {
+    addr.println("BleBase::connect()");
     setConnState(addr, connecting, CONNID_INVALID);
-    esp_err_t errRc = esp_ble_gattc_open(a_gattc_if, addr.addr, true);
+    esp_err_t errRc = esp_ble_gattc_open(a_gattc_if, (uint8_t*)addr.addr, true);
 //    Serial.println(errRc == ESP_OK ? ") ok" : ") failed");
 
     if(errRc == ESP_OK) {
@@ -357,29 +356,22 @@ bool BleBase::connect(BTAddr& addr) {
     }
 }
 
-void BleBase::disconnect() {
-  Serial.println("BleBase::disconnect() TODO");
- // setConnState(disconnecting);  
- // esp_ble_gattc_close(gattcProfile[APP_ID].gattc_if, gattcProfile[APP_ID].conn_id);
-}
 
-
-bool BleBase::registerNotify(BTAddr &addr, uint16_t handle) {
+bool BleBase::registerNotify(const BTAddr &addr, uint16_t handle) {
     Serial.print("BleBase::registerNotify() handle=0x");
     Serial.println(handle, HEX);
-    esp_ble_gattc_register_for_notify (pBLE->a_gattc_if, addr.addr, handle);
+    esp_ble_gattc_register_for_notify (pBLE->a_gattc_if, (uint8_t*)addr.addr, handle);
     return true;
 }
 
 
-BleBase::BleBase() 
-: isWriting(false) {
+BleBase::BleBase() {
+
   connStateMutex = xSemaphoreCreateMutex();
   memset(&connState, 0, sizeof(connState));
- //   Serial.println("BleBase()");
 }
 
-int BleBase::getConnIndex(BTAddr &addr) {
+int BleBase::getConnIndex(const BTAddr &addr) {
   
   for (int i=0; i<MAX_CONNECTIONS; i++) {
     if(addr.isSame(connState[i].addr)) {
@@ -396,7 +388,7 @@ int BleBase::getConnIndex(BTAddr &addr) {
   return -1;
 }
 
-void BleBase::setConnState(BTAddr &addr, eState state, uint16_t connId) {
+void BleBase::setConnState(const BTAddr &addr, eState state, uint16_t connId) {
 
   xSemaphoreTake(connStateMutex, MUTEX_MAX_DELAY);
   int i = getConnIndex(addr);
@@ -412,18 +404,18 @@ void BleBase::setConnState(BTAddr &addr, eState state, uint16_t connId) {
   }
   xSemaphoreGive(connStateMutex);
 
-  addr.print("setConnState: ", false);
-  Serial.print(", state=");
-  Serial.print(state);
+  Serial.print("BleBase::setConnState(");
+  Serial.print(eState2Str(state));
   if (connId != CONNID_INVALID) {
     Serial.print(", connId=0x");
     Serial.print(connId, HEX);
   }
   Serial.print(", i=");
-  Serial.println(i);
+  Serial.print(i);
+  addr.println(")");
 }
 
-BleBase::eState BleBase::getConnState(BTAddr &addr) {
+BleBase::eState BleBase::getConnState(const BTAddr &addr) {
 
   xSemaphoreTake(connStateMutex, MUTEX_MAX_DELAY);
   eState ret = disconnected;
@@ -443,7 +435,7 @@ BleBase::eState BleBase::getConnState(BTAddr &addr) {
   return ret;
 }
 
-uint16_t BleBase::getConnId(BTAddr &addr) {
+uint16_t BleBase::getConnId(const BTAddr &addr) {
   
   xSemaphoreTake(connStateMutex, MUTEX_MAX_DELAY);
   int i = getConnIndex(addr);
@@ -454,16 +446,27 @@ uint16_t BleBase::getConnId(BTAddr &addr) {
   }
 
   xSemaphoreGive(connStateMutex);
-  
+  /*
   addr.print("getConnId: ", false);
   Serial.print(", connId=0x");
   Serial.print(connId, HEX);
   Serial.print(", i=");
-  Serial.println(i);
+  Serial.println(i);*/
   return connId;
 }
 
-bool BleBase::isConnState(BTAddr &addr, eState state) {
+bool BleBase::isConnState(const BTAddr &addr, eState state) {
   return getConnState(addr) == state;
+}
+
+const char *BleBase::eState2Str(eState state) const {
+  switch(state) {
+    case disconnected:  return "DISCONNECTED";
+    case connecting:    return "CONNECTING";
+    case disconnecting: return "DISCONNECTING";
+    case failed:        return "FAILED";
+    case connected:     return "CONNECTED";
+    default:            return "??"; 
+  }
 }
 

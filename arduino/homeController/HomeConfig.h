@@ -31,7 +31,7 @@ class HomeConfig {
     String mqtt_topic_request;
   
   
-  boolean getInput(char* str, const char* old, char* input) {
+  boolean getInput(const char *str, const char *old, char *input) {
     int i=0;
     Serial.print(str);
     if(old!=nullptr) {
@@ -58,7 +58,7 @@ class HomeConfig {
   }
 
   
-  bool updatePerfData(char* key, const char* old) {
+  bool updatePerfData(const char *key, const char *old) {
     char buf[30];  
     bool ok = getInput(key, old, buf);
     if(ok) {
@@ -68,7 +68,7 @@ class HomeConfig {
   }
 
   
-  void loadPrefData(char* key, String& data) {
+  void loadPrefData(const char *key, String &data) {
     data = preferences.getString(key);
     Serial.print(key);
     Serial.print(": ");
@@ -77,7 +77,6 @@ class HomeConfig {
   
   
   void doConfiguration() {
-  
     preferences.begin(PREF_APPNAME, false);
     Serial.println("** INPUT CONFIG **");
     updatePerfData(PREF_WLAN_SSID, wlan_ssid.c_str());
@@ -114,7 +113,6 @@ class HomeConfig {
 
   void userInput(int ms) {
     Serial.println("Press return for config\n");
-  
     delay(ms);
     while(Serial.available() > 0) {
       if (Serial.read() == '\n') {

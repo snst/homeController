@@ -3,43 +3,37 @@
 #include "MqttHandler.h"
 #include "BTAddr.h"
 #include "BleHandler.h"
-#include "MqttMsg.h"
+#include "MqttResponse.h"
 
 extern BleHandler ble;
 extern MqttHandler mqtt;
 
-void(* softReset2) (void) = 0;//declare reset function at address 0
+void(* softReset2) (void) = 0; //declare reset function at address 0
 
 
 MqttHandler::MqttHandler(PubSubClient &c)
 : client(c) {
   queueMutex = xSemaphoreCreateMutex();
-  queue = xQueueCreate(MQTT_RESPONSE_QUEUE_LEN, MQTT_RESPONSE_SIZE);
+  queue = xQueueCreate(MQTT_RESPONSE_QUEUE_LEN, sizeof(MqttResponse));
   client.setCallback(MqttHandler::callback);
 }
 
 void MqttHandler::addResponse(MqttResponse &msg) {
   xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
-  xQueueSendToBack(queue, msg.get(), 0);
+  xQueueSendToBack(queue, &msg, 0);
   xSemaphoreGive(queueMutex);
 }
 
 
-bool MqttHandler::get(uint8_t *msg) {
+bool MqttHandler::getResponse(MqttResponse &msg) {
   xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
-  bool ret = (pdPASS == xQueueReceive(queue, msg, 0));
+  bool ret = (pdPASS == xQueueReceive(queue, &msg, 0));
   xSemaphoreGive(queueMutex);
-
- /* if (ret) {
-    Serial.print("MqttHandler::get(");
-    Serial.print(msg[0]);
-    Serial.println(")");
-  }*/
   return ret;
 }
 
 
-void MqttHandler::sendResponseStatus(BTAddr &addr, uint8_t* pData, size_t length) {
+void MqttHandler::sendResponseStatus(const BTAddr &addr, const uint8_t *pData, size_t length) {
   if (addr.isValid() && pData && length==6) {
     MqttResponseTempState msg(addr, &pData[2]);
     msg.print();
@@ -48,14 +42,14 @@ void MqttHandler::sendResponseStatus(BTAddr &addr, uint8_t* pData, size_t length
 }
 
 
-void MqttHandler::sendResponsePong() {
+void MqttHandler::sendResponsePing() {
   MqttResponsePing msg;
   msg.print();
   addResponse(msg);
 }
 
 
-void MqttHandler::sendResponseConnection(BTAddr &addr, eConnectionState state) {
+void MqttHandler::sendResponseConnection(const BTAddr &addr, eConnectionState state) {
   if (addr.isValid()) {
     MqttResponseConnState msg(addr, state);
     msg.print();
@@ -64,8 +58,7 @@ void MqttHandler::sendResponseConnection(BTAddr &addr, eConnectionState state) {
 }
 
 
-void MqttHandler::connect()
-{
+void MqttHandler::connect() {
   while (!client.connected()) {
     Serial.print("Connecting to MQTT.. ");
     if (client.connect("ESP32Client", user, password )) {
@@ -82,20 +75,16 @@ void MqttHandler::connect()
 
 
 void MqttHandler::execute() {
-  
   client.loop();
-
-  uint8_t msg[MQTT_RESPONSE_SIZE];
-  if (get(msg)) {
-//    Serial.print("<MQTT: ");
-//    Serial.print(msg[0]);
-    if(client.publish(topicStatus, msg, msg[1])) {
+  MqttResponse msg;
+  if (getResponse(msg)) {
+//    dump("Publish", msg.getBuffer(), msg.getSize());
+    if(client.publish(topicStatus, msg.getBuffer(), msg.getSize())) {
 //      Serial.println(" - OK");
     } else {
 //      Serial.println(" - FAILED");
     }
   }
-
   client.loop();
 }
 
@@ -105,12 +94,8 @@ void MqttHandler::setServer(const char *server, int port) {
 }
 
 
-void MqttHandler::callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("\n>MQTT: ");
-  Serial.print(topic);
-  Serial.print(", len(");
-  Serial.print(length);
-  Serial.println(")");
+void MqttHandler::callback(char *topic, byte *payload, unsigned int length) {
+  Serial.print("\n>MQTT ");
 //  if(!strcmp(topic, topicRequest) && (length >= 2) && (payload[1]==length) && (length<=MQTT_CMD_SIZE)) {
   if((length >= 2) && (payload[1] == length) && (length <= MQTT_CMD_SIZE)) {
     mqtt.parseRequest(payload);
@@ -119,7 +104,7 @@ void MqttHandler::callback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
-void MqttHandler::parseRequest(uint8_t *payload) {
+void MqttHandler::parseRequest(const uint8_t *payload) {
   // payload: CMD(1), LEN(1), BTADDR(6), PARAM(1)
   tBleCmd cmd;
   memset(&cmd, 0, sizeof(tBleCmd));
@@ -128,82 +113,78 @@ void MqttHandler::parseRequest(uint8_t *payload) {
   uint8_t length = payload[1];
   payload += 2;
   length -= 2;
-  Serial.print("MqttHandler::parseRequest(");
-  Serial.print(inCmd);
-  Serial.print(") - ");
   cmd.addr.setAddr(payload);
-  cmd.addr.print("BLE", false);
-  payload += BTADDR_LEN;
-  length -= BTADDR_LEN;
-  Serial.print(" : ");
+  Serial.print("->parseRequest(");
+  payload += BT_ADDR_SIZE;
+  length -= BT_ADDR_SIZE;
   
   switch(inCmd) {
     
     case NONE: {
-      Serial.println("NONE");
+      Serial.println("NONE)");
       break;
     }
     case PING: {
-      Serial.println("PING");
-      mqtt.sendResponsePong();
+      Serial.println("PING)");
+      mqtt.sendResponsePing();
       break;
     } 
     case BOOST_ON: {
       cmd.data[0] = 0x45; 
       cmd.data[1] = 0xff; 
       cmd.len = 2;
-      Serial.println("BOOST ON");
+      Serial.print("BOOST ON");
       break;
     }
     case BOOST_OFF: {
       cmd.data[0] = 0x45; 
       cmd.data[1] = 0x00; 
       cmd.len = 2;
-      Serial.println("BOOST OFF");
+      Serial.print("BOOST OFF");
       break;
     }
     case ON: {
       cmd.data[0] = 0x41; 
       cmd.data[1] = 0x3c; 
       cmd.len = 2;
-      Serial.println("ON");
+      Serial.print("ON");
       break;
     }
     case OFF: {
       cmd.data[0] = 0x41; 
       cmd.data[1] = 0x09; 
       cmd.len = 2;
-      Serial.println("OFF");
+      Serial.print("OFF");
       break;
     }
     case ECO: {
       cmd.data[0] = 0x44; 
       cmd.len = 1;
-      Serial.println("ECO");
+      Serial.print("ECO");
       break;
     }
     case COMFORT: {
       cmd.data[0] = 0x43; 
       cmd.len = 1;
-      Serial.println("COMFORT");
+      Serial.print("COMFORT");
       break;
     }
     case AUTO: {
       cmd.data[0] = 0x40; 
       cmd.data[1] = 0x00; 
       cmd.len = 2;
-      Serial.println("AUTO");
+      Serial.print("AUTO");
       break;
     }
     case MANUAL: {
       cmd.data[0] = 0x40; 
       cmd.data[1] = 0x40;  
       cmd.len = 2;
-      Serial.println("MANUAL");
+      Serial.print("MANUAL");
       break;
     }
     case REBOOT: {
-      Serial.println("REBOOT");
+      Serial.println("REBOOT)");
       softReset2();
       break; // compiler error
     }
@@ -213,36 +194,37 @@ void MqttHandler::parseRequest(uint8_t *payload) {
         cmd.data[0] = 0x41; 
         cmd.data[1] = *payload;
         cmd.len = 2;
-        Serial.println(cmd.data[1]);
+        Serial.print(cmd.data[1] * 5);
       } else {
-        Serial.println("PACKET");
+        Serial.println("invalid)");
       }
       break;
     }
     case GETSTATUS: {
-      Serial.println("GETSTATUS");
+      Serial.print("GETSTATUS");
       if(length==6) {
         cmd.data[0] = 3;
         cmd.len = 7;
         memcpy(&cmd.data[1], payload, 6);
       } else {
-        Serial.println("ERR");
+        Serial.println("invalid)");
       }
       break;
     }
     case ABORT: {
-      Serial.println("ABORT");
+      Serial.println("ABORT)");
       ble.clear();
       break;
     }
     default: {
-      Serial.println("Invalid cmd");
+      Serial.println("Invalid cmd)");
       break;
     }
   }
-
+  
   if (cmd.len > 0) {
-    ble.addCmd(&cmd);
+    cmd.addr.println(")");
+    ble.addCmd(cmd);
   }
 }
 

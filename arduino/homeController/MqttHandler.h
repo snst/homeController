@@ -13,18 +13,18 @@ class MqttHandler {
 
 public:
   MqttHandler(PubSubClient &c);
-  void sendResponseStatus(BTAddr &addr, uint8_t* pData, size_t length);
-  void sendResponseConnection(BTAddr &addr, eConnectionState state);
-  void sendResponsePong();
+  void sendResponseStatus(const BTAddr &addr, const uint8_t* pData, size_t length);
+  void sendResponseConnection(const BTAddr &addr, eConnectionState state);
+  void sendResponsePing();
   void connect();
   void execute();
   void setServer(const char *server, int port);
   void setUser(const char *user, const char *password);
-  static void callback(char* topic, byte* payload, unsigned int length);
+  static void callback(char *topic, byte *payload, unsigned int length);
   void setTopicStatus(const char *topic);
   void setTopicRequest(const char *topic);
   void addResponse(MqttResponse &msg);
-  bool get(uint8_t *msg);
+  bool getResponse(MqttResponse &msg);
   
 protected:
   xQueueHandle queue;
@@ -34,7 +34,7 @@ protected:
   const char *topicRequest;
   const char *user;
   const char *password;
-  void parseRequest(uint8_t *payload);
+  void parseRequest(const uint8_t *payload);
 };
 
 

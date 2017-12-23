@@ -13,18 +13,17 @@ class BleHandler : public BleBase
   public:
     BleHandler();
     virtual ~BleHandler();
-    virtual void onReceiveData(BTAddr &addr, uint8_t *pData, uint8_t len);
-    virtual void onConnected(BTAddr &addr);
+    virtual void onReceiveData(const BTAddr &addr, const uint8_t *pData, uint8_t len);
+    virtual void onConnected(const BTAddr &addr);
     virtual void onWritten(bool success);
-    virtual void onDisconnected(BTAddr &addr);
-    virtual void onConnectFailed(BTAddr &addr);
-    bool connect(BTAddr &addr);
+    virtual void onDisconnected(const BTAddr &addr);
+    virtual void onConnectFailed(const BTAddr &addr);
+    bool connect(const BTAddr &addr);
     void disconnect();
     void execute();
     void clear();
-  	void addCmd(tBleCmd *cmd);
-    bool getCmd(tBleCmd *cmd);
-    bool peekCmd(tBleCmd *cmd);
+  	void addCmd(const tBleCmd &cmd);
+    bool getCmd(tBleCmd &cmd);
     bool hasCmd();
   
   protected:
