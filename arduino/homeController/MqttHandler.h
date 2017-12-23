@@ -7,6 +7,7 @@
 
 class BTAddr;
 class PubSubClient;
+class MqttResponse;
 
 class MqttHandler {
 
@@ -22,7 +23,7 @@ public:
   static void callback(char* topic, byte* payload, unsigned int length);
   void setTopicStatus(const char *topic);
   void setTopicRequest(const char *topic);
-  void addResponse(uint8_t *msg);
+  void addResponse(MqttResponse &msg);
   bool get(uint8_t *msg);
   
 protected:

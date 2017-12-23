@@ -9,10 +9,7 @@
         android:title="Reboot" />
     <item
         android:id="@+id/action_abort"
-        android:title="Clear cmd queue" />
-    <item
-        android:id="@+id/action_refresh_all"
-        android:title="Refresh all" />
+        android:title="Clear queue" />
     <item
         android:id="@+id/action_log"
         android:title="Log" />
@@ -20,6 +17,6 @@
         android:id="@+id/action_main_settings"
         android:title="Settings" />
     <item
-        android:id="@+id/action_main_version"
-        android:title="v0.1.1" />
+        android:id="@+id/action_refresh_all"
+        android:title="Refresh all" />
 </menu>

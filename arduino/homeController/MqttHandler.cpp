@@ -3,6 +3,7 @@
 #include "MqttHandler.h"
 #include "BTAddr.h"
 #include "BleHandler.h"
+#include "MqttMsg.h"
 
 extern BleHandler ble;
 extern MqttHandler mqtt;
@@ -17,13 +18,10 @@ MqttHandler::MqttHandler(PubSubClient &c)
   client.setCallback(MqttHandler::callback);
 }
 
-void MqttHandler::addResponse(uint8_t *msg) {
+void MqttHandler::addResponse(MqttResponse &msg) {
   xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
-  xQueueSendToBack(queue, msg, 0);
+  xQueueSendToBack(queue, msg.get(), 0);
   xSemaphoreGive(queueMutex);
-/*  Serial.print("MqttHandler::addResponse(");
-  Serial.print(msg[0]);
-  Serial.println(")");*/
 }
 
 
@@ -43,38 +41,24 @@ bool MqttHandler::get(uint8_t *msg) {
 
 void MqttHandler::sendResponseStatus(BTAddr &addr, uint8_t* pData, size_t length) {
   if (addr.isValid() && pData && length==6) {
-    uint8_t msg[MQTT_RESPONSE_SIZE];
-    int i = 0;
-    msg[i++] = (byte)eResponse::STATE;
-    msg[i++] = 2 + BT_ADDR_SIZE + 4;
-    memcpy(&msg[i], addr.addr, BT_ADDR_SIZE);
-    i += BT_ADDR_SIZE;
-    memcpy(&msg[i], &pData[2], 4);
-    addr.print("<MqttHandler::sendResponseStatus", true);
+    MqttResponseTempState msg(addr, &pData[2]);
+    msg.print();
     addResponse(msg);
   }
 }
 
 
 void MqttHandler::sendResponsePong() {
-  uint8_t msg[MQTT_RESPONSE_SIZE];
-  msg[0] = (byte)eResponse::PONG;
-  msg[1] = 2;  
-  Serial.println("<MqttHandler::sendResponsePong()");
+  MqttResponsePing msg;
+  msg.print();
   addResponse(msg);
 }
 
 
 void MqttHandler::sendResponseConnection(BTAddr &addr, eConnectionState state) {
   if (addr.isValid()) {
-    uint8_t msg[MQTT_RESPONSE_SIZE];
-    msg[0] = (byte)eResponse::CONNECTION;
-    msg[1] = 3 + BT_ADDR_SIZE;
-    memcpy(&msg[2], addr.addr, BT_ADDR_SIZE);
-    msg[8] = (byte)state;
-    addr.print("<MqttHandler::sendResponseConnection()", false);
-    Serial.print(" : ConnState=");
-    Serial.println(msg[8]);
+    MqttResponseConnState msg(addr, state);
+    msg.print();
     addResponse(msg);
   }
 }

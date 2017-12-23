@@ -26,6 +26,8 @@ import java.util.Date;
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
 public class MainActivity extends AppCompatActivity {
 
+    final String APP_VERSION = "0.1.1";
+
     MqttHelper mqttHelper = null;
     Handler handler = new Handler();
     ListView listView = null;
@@ -177,6 +179,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getLogger().add("app version: " + APP_VERSION);
+
         AccountConfig.load(this);
         roomSettings = new RoomSettings(this);
         listView = (ListView) findViewById(R.id.listViewRooms);
@@ -287,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
 
                                         int status = b[i++];
                                         room.percent =  b[i++];
-                                        i++; // b[3];
+                                        i++; // data[2];
                                         room.temp = 5 *  b[i++];
                                         room.autoActive = (status & 1)==0;
                                         room.boostActive = (status & 4)>0;
@@ -304,8 +308,11 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             } break;
                             case PONG: {
-                                getLogger().add(">mqtt: " + topic + ": pong");
-                                showShortToast("Pong!");
+                                if(b.length==(2 + 3)) {
+                                    String version = " ESP v" + b[i++] + "." + b[i++] + "." + b[i++];
+                                    getLogger().add(">mqtt: " + topic + ": pong! " + version);
+                                    showShortToast("Pong!\n" + version);
+                                }
                             } break;
                             case CONNECTION: {
                                 if(b.length==(2 + BTAddr.LENGTH + 1)) {

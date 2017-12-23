@@ -5,6 +5,10 @@
 
 #include "BTAddr.h"
 
+#define VERSION_MAJOR   0
+#define VERSION_MINOR   1
+#define VERSION_REV     1
+
 #define BLE_CMD_SIZE 7
 
 #define BT_CMD_QUEUE_LEN 20
@@ -54,10 +58,6 @@ typedef struct {
   BTAddr addr;
 } tBleCmd;
 
-
-class BLEAddr;
-void setMqttResponseStatus(BLEAddr* addr, uint8_t* pData, size_t length);
-void setMqttResponseConnection(BLEAddr* addr, eConnectionState state);
 
 
 #endif
