@@ -12,7 +12,7 @@
     <ListView xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/listViewRooms"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:gravity="top|fill_vertical"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
