@@ -38,7 +38,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
         Serial.println( (param->open.status == ESP_GATT_OK) ? " OK" : "FAILED");
 
         if (param->open.status != ESP_GATT_OK){
-            pBLE->setConnState(a, BleBase::disconnected, CONNID_INVALID);
+            pBLE->setConnState(a, BleBase::failed, CONNID_INVALID);
             pBLE->onConnectFailed(a);
         } else {
 //            pBLE->setState(BleBase::connected);
@@ -93,7 +93,6 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     case ESP_GATTC_SRVC_CHG_EVT: {
         Serial.println("#ESP_GATTC_SRVC_CHG_EVT ??");
     } break;
-
     case ESP_GATTC_WRITE_CHAR_EVT: {
       //Serial.print("ESP_GATTC_WRITE_CHAR_EVT) ");
       pBLE->isWriting = false;
@@ -412,8 +411,10 @@ void BleBase::setConnState(BTAddr &addr, eState state, uint16_t connId) {
   addr.print("setConnState: ", false);
   Serial.print(", state=");
   Serial.print(state);
-  Serial.print(", connId=0x");
-  Serial.print(connId, HEX);
+  if (connId != CONNID_INVALID) {
+    Serial.print(", connId=0x");
+    Serial.print(connId, HEX);
+  }
   Serial.print(", i=");
   Serial.println(i);
 }

@@ -69,24 +69,31 @@ void BleHandler::execute() {
     switch (state) {
       case disconnected: {
         connect(cmd.addr);
-        cmd.addr.print("disconnected: Re-add cmd", true);
+        cmd.addr.print("!!Disconnected: Reinsert cmd", true);
         addCmd(&cmd);
         break;
       }
       case connecting: {
-//        cmd.addr.print("connecting: Re-add cmd", true);
+//        cmd.addr.print("connecting: Reinsert cmd", true);
         addCmd(&cmd);
         break;
       }
       case disconnecting: {
+        cmd.addr.print("!!Disconnecting", true);
+        // drop command
+        break;
+      }
+      case failed: {
+        cmd.addr.print("!!Connect failed", true);
+        // drop command
         break;
       }
       case connected: {
       //if(canWrite()) 
         {
           if (!write(cmd.addr, 0x411, cmd.data, cmd.len, true) ) {
-            cmd.addr.print("write failed: Re-add cmd", true);
-            addCmd(&cmd);
+            cmd.addr.print("write failed: Reinsert cmd", true);
+            addCmd(&cmd); 
           }
         }
         break;

@@ -31,7 +31,7 @@ void setMqttResponse(uint8_t* pData, size_t length);
 class BleBase {
 
   public:
-  enum eState { disconnected=0, connecting, disconnecting, connected };
+  enum eState { disconnected=0, connecting, disconnecting, failed, connected };
   bool isWriting;
   esp_gattc_cb_t a_gattc_cb;
   uint16_t a_gattc_if;
