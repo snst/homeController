@@ -35,7 +35,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     case ESP_GATTC_OPEN_EVT: {
         BTAddr a(p_data->open.remote_bda);
         a.print("#ESP_GATTC_OPEN_EVT ", false);
-        Serial.println( (param->open.status == ESP_GATT_OK) ? " OK" : "FAILED");
+        Serial.println( (param->open.status == ESP_GATT_OK) ? " OK" : " FAILED");
 
         if (param->open.status != ESP_GATT_OK){
             pBLE->setConnState(a, BleBase::failed, CONNID_INVALID);
@@ -102,8 +102,12 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     case ESP_GATTC_DISCONNECT_EVT: {
       BTAddr a(p_data->disconnect.remote_bda);
       a.print("#ESP_GATTC_DISCONNECT_EVT ", true);
-      pBLE->setConnState(a, BleBase::disconnected, CONNID_INVALID);
-      pBLE->onDisconnected(a);
+
+      BleBase::eState state = pBLE->getConnState(a);
+      if (state == BleBase::connected) { // only send disconnect, if connected before
+        pBLE->setConnState(a, BleBase::disconnected, CONNID_INVALID);
+        pBLE->onDisconnected(a);
+      }
   } break;
 
     default:

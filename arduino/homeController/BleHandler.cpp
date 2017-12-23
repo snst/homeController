@@ -80,11 +80,14 @@ void BleHandler::execute() {
       }
       case disconnecting: {
         cmd.addr.print("!!Disconnecting", true);
+        setConnState(cmd.addr, BleBase::disconnected, CONNID_INVALID);
+        // todo cmd
         // drop command
         break;
       }
       case failed: {
         cmd.addr.print("!!Connect failed", true);
+        setConnState(cmd.addr, BleBase::disconnected, CONNID_INVALID);
         // drop command
         break;
       }
