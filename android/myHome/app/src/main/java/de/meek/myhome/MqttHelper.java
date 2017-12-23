@@ -65,7 +65,7 @@ public class MqttHelper {
 
         try {
             if(cmd != null && isConnected()) {
-                getLogger().add("<mqtt: " +  cmd.cmd.toString(), cmd.addr);
+                getLogger().add("<" + AccountConfig.MQTT_TOPIC_REQUEST + ": " + cmd.cmd.toString(), cmd.addr);
                mqttAndroidClient.publish(AccountConfig.MQTT_TOPIC_REQUEST, cmd.getBuffer(), 0, false);
             }
         } catch (MqttException e) {
@@ -83,7 +83,7 @@ public class MqttHelper {
 
     public void disconnect() {
         try {
-            getLogger().add("mqtt: disconnect");
+            getLogger().add("Mqtt disconnecting");
             mqttAndroidClient.disconnect();
         } catch (MqttException e) {
             e.printStackTrace();
@@ -91,7 +91,7 @@ public class MqttHelper {
     }
 
     private void connect(){
-        getLogger().add("mqtt: connect");
+        getLogger().add("Mqtt connecting");
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setAutomaticReconnect(true);
         mqttConnectOptions.setCleanSession(false);
@@ -116,7 +116,8 @@ public class MqttHelper {
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                     String str = "Failed to connect to: " + serverUri + exception.toString();
-                    Log.w("Mqtt", str);
+                    getLogger().add(str);
+                    Log.w("Mqtt",str);
                     Toast.makeText(_context, str,
                             Toast.LENGTH_LONG).show();
                 }
@@ -134,14 +135,16 @@ public class MqttHelper {
             mqttAndroidClient.subscribe(subscriptionTopic, 0, null, new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
-                    getLogger().add("mqtt: subscribe ok");
-                    Log.w("Mqtt","Subscribed!");
+                    String str = "Mqtt subscribe ok: " + subscriptionTopic;
+                    getLogger().add(str);
+                    Log.w("Mqtt",str);
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    getLogger().add("mqtt: subscribe failed");
-                    Log.w("Mqtt", "Subscribed fail!");
+                    String str = "Mqtt subscribe failed: " + subscriptionTopic;
+                    getLogger().add(str);
+                    Log.w("Mqtt",str);
                 }
             });
 

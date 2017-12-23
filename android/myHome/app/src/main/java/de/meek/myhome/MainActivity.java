@@ -13,7 +13,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -116,6 +115,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void log(String str, boolean toast) {
+        getLogger().add(str);
+        if(toast) {
+            showShortToast(str);
+        }
+    }
+    public void log(String str) {
+        log(str, false);
+    }
+
+    public void log(String str, BTAddr addr) {
+        getLogger().add(str, addr);
+    }
 
     public void showRoomSettingsActivity(int roomId) {
         Intent intent = new Intent(this, RoomActivity.class);
@@ -175,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getHouse().clear();
         setContentView(R.layout.activity_main);
-        getLogger().add("app version: " + APP_VERSION);
+        log("App version: " + APP_VERSION);
 
         AccountConfig.load(this);
         roomSettings = new RoomSettings(this);
@@ -217,7 +229,6 @@ public class MainActivity extends AppCompatActivity {
 
         updateAllRooms();
         startMqtt();
-
     }
 
     @Override
@@ -242,12 +253,8 @@ public class MainActivity extends AppCompatActivity {
         mqttHelper.setCallback(new MqttCallbackExtended() {
             @Override
             public void connectComplete(boolean b, String s) {
-
-                getLogger().add("mqtt connected");
-                showShortToast("Mqtt connected");
-
+                log("Mqtt connected", true);
                 handler.postDelayed(new Runnable() {
-
                     @Override
                     public void run() {
                         requestStatusOfAllRooms();
@@ -257,17 +264,14 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void connectionLost(Throwable throwable) {
-                getLogger().add("mqtt disconnected");
-                showShortToast("Mqtt disconnected");
+                log("Mqtt disconnected", true);
             }
 
             @Override
             public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
 
                 if(topic.compareTo(AccountConfig.MQTT_TOPIC_STATUS)==0) {
-
                     msgCntStatus++;
-
                     int i=0;
                     byte[] b = mqttMessage.getPayload();
                     // CMD, LEN, BTADDR, PARAM
@@ -280,11 +284,10 @@ public class MainActivity extends AppCompatActivity {
                                     BTAddr addr = new BTAddr();
                                     addr.convertFromBytes(b,i);
                                     i += BTAddr.LENGTH;
-                                    getLogger().add(">mqtt: " + topic + ": temp", addr);
+                                    log(">" + topic + ": tempState", addr);
 
                                     Room room = getHouse().findRoom(addr);
                                     if(room != null) {
-
                                         int status = b[i++];
                                         room.percent =  b[i++];
                                         i++; // data[2];
@@ -295,18 +298,16 @@ public class MainActivity extends AppCompatActivity {
                                         room.msgCount++;
                                         room.lastUpdate = new Date();
                                         room.connectionState = eConnectionState.CONNECTED;
-                                        //room.update();
                                         updateRoom(room);
                                     } else {
-                                        getLogger().add("Invalid roomId: " + addr.toString(), addr);
-                                        showShortToast("Invalid roomId: " + addr.toString());
+                                        log("Invalid roomId", addr);
                                     }
                                 }
                             } break;
                             case PONG: {
                                 if(b.length==(2 + 3)) {
-                                    String version = " ESP v" + b[i++] + "." + b[i++] + "." + b[i++];
-                                    getLogger().add(">mqtt: " + topic + ": pong! " + version);
+                                    String version = "ESP v" + b[i++] + "." + b[i++] + "." + b[i++];
+                                    log(">" + topic + ": pong! " + version);
                                     showShortToast("Pong!\n" + version);
                                 }
                             } break;
@@ -319,21 +320,20 @@ public class MainActivity extends AppCompatActivity {
                                     Room room = getHouse().findRoom(addr);
                                     if (room != null) {
                                         room.connectionState = eConnectionState.values()[b[i]];
-                                        getLogger().add(">mqtt: " + topic + ": BT: " + room.connectionState.toString(), addr);
+                                        log(">" + topic + ": connState: " + room.connectionState.toString(), addr);
                                         updateRoom(room);
                                     } else {
-                                        getLogger().add(">mqtt: " + topic + ": BT: no matching room", addr);
+                                        log(">" + topic + ": connState: no matching room", addr);
                                     }
                                 }
                             } break;
                             default: {
-                                getLogger().add(">mqtt: " + topic + ": unkown");
+                                log(">" + topic + ": unkown state packet");
                             }
                         }
                     }
                     else {
-                        getLogger().add(">mqtt: " + topic + ": invalid status packet");
-                        showShortToast("Invalid status packet");
+                        log(">mqtt: " + topic + ": Invalid state packet");
                     }
                 } else {
                     msgCntMode++;
