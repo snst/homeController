@@ -26,7 +26,7 @@ import java.util.Date;
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
 public class MainActivity extends AppCompatActivity {
 
-    final String APP_VERSION = "0.1.1";
+    final String APP_VERSION = "0.1.2";
 
     MqttHelper mqttHelper = null;
     Handler handler = new Handler();
@@ -166,11 +166,6 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent,Const.ACTIVITY_LOG);
     }
 
-   @Override
-    public void onResume() {
-        super.onResume();
-    }
-
     void updateRoom(Room room) {
         adapter.notifyDataSetChanged();
     }
@@ -178,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getHouse().clear();
         setContentView(R.layout.activity_main);
         getLogger().add("app version: " + APP_VERSION);
 
@@ -185,19 +181,18 @@ public class MainActivity extends AppCompatActivity {
         roomSettings = new RoomSettings(this);
         listView = (ListView) findViewById(R.id.listViewRooms);
 
-        for(int j=0; j<AccountConfig.NUMBER_OF_ROOMS; j++) {
+        for (int j = 0; j < AccountConfig.NUMBER_OF_ROOMS; j++) {
             Room room = new Room(j);
             roomSettings.loadRoom(room);
             getHouse().addRoom(room);
         }
         adapter = new RoomStatusArrayAdapter(this, getHouse().getRoomList());
         listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
-        {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapter, View v, int position, long arg3) {
 
-                if(touchPositionX < v.getWidth()*2/3 ) {
+                if (touchPositionX < v.getWidth() * 2 / 3) {
                     showRoomSettingsActivity(position);
                 } else {
                     requestStatusOfRoom(position);
@@ -215,13 +210,14 @@ public class MainActivity extends AppCompatActivity {
 
         listView.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View view, MotionEvent event) {
-                touchPositionX = (int)event.getX();
+                touchPositionX = (int) event.getX();
                 return false;
             }
         });
 
         updateAllRooms();
         startMqtt();
+
     }
 
     @Override

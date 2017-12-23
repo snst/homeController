@@ -38,4 +38,8 @@ public class House {
     public ArrayList<Room> getRoomList() {
         return rooms;
     }
+
+    public void clear() {
+        rooms.clear();
+    }
 }

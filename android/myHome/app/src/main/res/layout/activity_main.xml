@@ -6,21 +6,18 @@
     android:layout_height="match_parent"
     android:layout_gravity="fill_vertical"
     tools:context="de.meek.myhome.MainActivity"
-    tools:layout_editor_absoluteX="8dp"
-    tools:layout_editor_absoluteY="41dp">
+    tools:layout_editor_absoluteX="0dp"
+    tools:layout_editor_absoluteY="0dp">
 
     <ListView xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/listViewRooms"
         android:layout_width="0dp"
-        android:layout_height="495dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_height="0dp"
         android:gravity="top|fill_vertical"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-    </ListView>
+        app:layout_constraintTop_toTopOf="parent"></ListView>
 
 </android.support.constraint.ConstraintLayout>
