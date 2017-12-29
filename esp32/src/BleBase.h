@@ -26,7 +26,7 @@
 class BleBase {
 
   public:
-    enum eState { disconnected=0, connecting, disconnecting, failed, connected };
+    enum eState { queued=0, disconnected, connecting, disconnecting, failed, connected };
     esp_gattc_cb_t a_gattc_cb;
     uint16_t a_gattc_if;
 
@@ -62,6 +62,10 @@ class BleBase {
 
     virtual void onConnected(const BTAddr &addr) {
       addr.println("BleBase::onConnected()");
+    }
+
+    virtual void onConnecting(const BTAddr &addr) {
+      addr.println("BleBase::onConnecting()");
     }
 
     virtual void onReceiveData(const BTAddr &addr, const uint8_t* pData, uint8_t len) {

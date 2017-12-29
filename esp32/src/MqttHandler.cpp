@@ -65,10 +65,11 @@ void MqttHandler::connect() {
       Serial.print("connected!\nSubscripe to ");
       Serial.println(topicRequest);  
       client.subscribe(topicRequest);
+      delay(500);
     } else {
       Serial.print("failed with state ");
       Serial.println(client.state());
-      delay(2000);
+      delay(1000);
     }
   }
 }

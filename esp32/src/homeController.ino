@@ -17,17 +17,9 @@ MqttHandler mqtt(client);
 void(* softReset) (void) = 0;//declare reset function at address 0
 
 
-void printMem()
-{
-  Serial.print("mem: ");
-  Serial.print(xPortGetFreeHeapSize());
-  Serial.print("/");
-  Serial.println(xPortGetMinimumEverFreeHeapSize());
-}
-
-
 void setup() {
   Serial.begin(115200);
+  p("Version %d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_REV);
   printMem();
 
   config.loadSettings();
@@ -66,16 +58,12 @@ void connectWLAN()
 void loop() {
 
   connectWLAN();
-  taskYIELD();
 
   mqtt.connect();
-  taskYIELD();
 
   mqtt.execute();
-  taskYIELD();
   
   ble.execute();
-  taskYIELD();
 
-  vTaskDelay(20/portTICK_PERIOD_MS);
+  delay(50);
 }

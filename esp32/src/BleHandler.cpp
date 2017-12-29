@@ -54,10 +54,11 @@ void BleHandler::execute() {
   if(getCmd(cmd)) {
     eState state = getConnState(cmd.addr);
     switch (state) {
-      case disconnected: {
+      case queued: {
         connect(cmd.addr);
-        cmd.addr.println("!!Disconnected: Reinsert cmd");
+        cmd.addr.println("Queued: Reinsert cmd");
         addCmd(cmd);
+        delay(100);
         break;
       }
       case connecting: {
@@ -70,6 +71,10 @@ void BleHandler::execute() {
         setConnState(cmd.addr, BleBase::disconnected, CONNID_INVALID);
         // todo cmd
         // drop command
+        break;
+      }
+      case disconnected: {
+        cmd.addr.println("!!Disconnected");
         break;
       }
       case failed: {

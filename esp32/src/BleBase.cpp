@@ -24,7 +24,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
         Serial.println("#ESP_GATTC_REG_EVT, profile");
     } break;
 
-    case ESP_GATTC_CONNECT_EVT: {
+    case ESP_GATTC_CONNECT_EVT: { // physical connection set up
         esp_err_t mtu_ret = esp_ble_gattc_send_mtu_req (gattc_if, p_data->connect.conn_id);
         BTAddr a(p_data->connect.remote_bda);
         a.println("#ESP_GATTC_CONNECT_EVT ");
@@ -38,6 +38,8 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
         Serial.println( (param->open.status == ESP_GATT_OK) ? " OK" : " FAILED");
 
         if (param->open.status != ESP_GATT_OK){
+            Serial.print("STATUS:");
+            Serial.println(param->open.status, HEX);
             pBLE->setConnState(a, BleBase::failed, CONNID_INVALID);
             pBLE->onConnectFailed(a);
         } else {
@@ -45,6 +47,19 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 //            pBLE->onConnected();
         }
     } break;
+
+    case ESP_GATTC_QUEUE_FULL_EVT: {
+        Serial.println("#ESP_GATTC_QUEUE_FULL_EVT");
+    } break;
+
+    case ESP_GATTC_CONGEST_EVT: {
+        Serial.println("#ESP_GATTC_CONGEST_EVT");
+    } break;
+
+    case ESP_GATTC_CANCEL_OPEN_EVT: {
+        Serial.println("#ESP_GATTC_CANCEL_OPEN_EVT");
+    } break;
+
 
     case ESP_GATTC_CFG_MTU_EVT: {
         Serial.println("#ESP_GATTC_CFG_MTU_EVT ");
@@ -345,7 +360,7 @@ bool BleBase::connect(const BTAddr& addr) {
     addr.println("BleBase::connect()");
     setConnState(addr, connecting, CONNID_INVALID);
     esp_err_t errRc = esp_ble_gattc_open(a_gattc_if, (uint8_t*)addr.addr, true);
-//    Serial.println(errRc == ESP_OK ? ") ok" : ") failed");
+    Serial.println(errRc == ESP_OK ? ") ok" : ") failed");
 
     if(errRc == ESP_OK) {
 //      setConnState(addr, connecting, CONNID_INVALID);
