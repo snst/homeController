@@ -6,11 +6,12 @@ package de.meek.myhome;
 
 
 public enum eConnectionState {
-    UNKOWN(0, "?"),
-    CONNECTING(1, "connecting"),
-    CONNECTED(2, "connected"),
-    DISCONNECTED(3, "disconnected"),
-    NORESPONSE(4, "noresponse");
+    QUEUED(0, "QUEUED"),
+    DISCONNECTED(1, "disconnected"),
+    CONNECTING(2, "connecting"),
+    DISCONNECTING(3, "disconnecting"),
+    FAILED(4, "failed"),
+    CONNECTED(5, "connected");
 
     private byte value;
     private String name;

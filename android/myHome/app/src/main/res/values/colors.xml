@@ -7,6 +7,7 @@
     <color name="colorBtnInactive">#000000</color>
     <color name="RoomConnected">#b2ffa9</color>
     <color name="RoomConnecting">#aeffe4</color>
+    <color name="RoomQueued">#cfffef</color>
     <color name="RoomFailed">#ffd5a2</color>
     <color name="RoomDisconnected">#ffffff</color>
 </resources>
