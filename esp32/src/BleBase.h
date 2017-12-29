@@ -50,38 +50,15 @@ class BleBase {
     bool write(const BTAddr &addr, uint16_t handle, const uint8_t *data, uint8_t len, bool response);
     bool connect(const BTAddr &addr);
     bool init();
-    const char *eState2Str(eState state) const;
-
-    virtual void onConnectFailed(const BTAddr &addr) {
-      addr.println("BleBase::onConnectFailed()");
-    }
-
-    virtual void onDisconnected(const BTAddr &addr) {
-      addr.println("BleBase::disconnected()");
-    }
-
-    virtual void onConnected(const BTAddr &addr) {
-      addr.println("BleBase::onConnected()");
-    }
-
-    virtual void onConnecting(const BTAddr &addr) {
-      addr.println("BleBase::onConnecting()");
-    }
-
-    virtual void onReceiveData(const BTAddr &addr, const uint8_t* pData, uint8_t len) {
-      Serial.print("BleBase::onReceiveData(len=");
-      Serial.print(len);
-      Serial.println(")");
-    }
-
-    virtual void onServiceFound() {
-      Serial.println("BleBase::onServiceFound()");
-    }
-
-    virtual void onWritten(bool success) {
-  //    Serial.print("BleBase::onWritten() ");
-  //    Serial.println(success ? "ok" : "failed");
-    }
+    static const char *eState2Str(eState state);
+    bool canConnect();
+    virtual void onConnectFailed(const BTAddr &addr);
+    virtual void onDisconnected(const BTAddr &addr);
+    virtual void onConnected(const BTAddr &addr);
+    virtual void onConnecting(const BTAddr &addr);
+    virtual void onReceiveData(const BTAddr &addr, const uint8_t* pData, uint8_t len);
+    virtual void onServiceFound();
+    virtual void onWritten(bool success);
 };
 
 #endif

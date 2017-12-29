@@ -6,6 +6,7 @@
 
 extern MqttHandler mqtt;
 
+
 BleHandler::BleHandler() {
   queueMutex = xSemaphoreCreateMutex();
   queue = xQueueCreate(BT_CMD_QUEUE_LEN, sizeof(tBleCmd));
@@ -38,31 +39,24 @@ void BleHandler::onConnected(const BTAddr &addr) {
 }
 
 
-bool BleHandler::connect(const BTAddr& addr) {
-  mqtt.sendResponseConnection(addr, eConnectionState::CONNECTING);
-  return BleBase::connect(addr);
-}
-
-
-void BleHandler::onWritten(bool success) {
-  BleBase::onWritten(success);
-}
-
-
 void BleHandler::execute() {
   tBleCmd cmd;
   if(getCmd(cmd)) {
     eState state = getConnState(cmd.addr);
     switch (state) {
       case queued: {
-        connect(cmd.addr);
-        cmd.addr.println("Queued: Reinsert cmd");
+        if(canConnect()) {
+          connect(cmd.addr);
+//          cmd.addr.println("New state connecting: Reinsert cmd");
+          mqtt.sendResponseConnection(cmd.addr, eConnectionState::CONNECTING);
+          delay(100);
+        } else {
+          p("W");
+        }
         addCmd(cmd);
-        delay(100);
         break;
       }
       case connecting: {
-//        cmd.addr.print("connecting: Reinsert cmd", true);
         addCmd(cmd);
         break;
       }
@@ -124,3 +118,13 @@ void BleHandler::clear() {
   xSemaphoreGive(queueMutex);
 }
 
+
+
+void BleHandler::sendAllConnStates() {
+
+  for (int i=0; i<MAX_CONNECTIONS; i++) {
+    if (connState[i].addr.isValid()) {
+ //     mqtt.sendResponseConnection(connState[i].addr, connState[i].state);
+    }
+  }
+}

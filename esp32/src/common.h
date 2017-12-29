@@ -21,6 +21,9 @@
 
 #define MUTEX_MAX_DELAY 1000
 
+#define IDLE_AFTER_MS 100000
+#define IDLE_MS 50
+
 enum eCmd {
     NONE = 0,
     PING,
@@ -61,6 +64,8 @@ typedef struct {
 void dump(const char *str, const uint8_t *data, uint8_t len);
 void p(const char *fmt, ... );
 void printMem();
+void updateLastCmdTimestamp();
+void doIdle();
 
 
 #endif

@@ -65,5 +65,5 @@ void loop() {
   
   ble.execute();
 
-  delay(50);
+  doIdle();
 }

@@ -4,6 +4,27 @@
 #define __COMMON_H__
 #include <Arduino.h>
 #include <stdarg.h>
+#include "common.h"
+
+unsigned long lastMS = 0;
+
+void updateLastCmdTimestamp() {
+ lastMS = millis();
+}
+
+void doIdle() {
+
+  unsigned long ms = millis();
+  if (ms < lastMS) {
+    lastMS = ms;
+  }
+
+  if ((ms - lastMS) > IDLE_AFTER_MS) {
+    delay(IDLE_MS);
+  } else {
+    delay(0);
+  }
+}
 
 void p(const char *fmt, ... ) {
         char buf[128]; // resulting string limited to 128 chars

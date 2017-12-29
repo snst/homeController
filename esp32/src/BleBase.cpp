@@ -4,15 +4,13 @@
 #include "common.h"
 
 
-#define GATTC_TAG "GATTC_DEMO"
-
+#define GATTC_TAG "GATTC_ESP"
 #define PROFILE_NUM      1
 #define INVALID_HANDLE   0
 
+extern "C" uint8_t gatt_find_i_tcb_free(void);
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
-static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
 static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
-
 static BleBase* pBLE = nullptr;
 
 static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param)
@@ -21,7 +19,15 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
     switch (event) {
     case ESP_GATTC_REG_EVT: {
-        Serial.println("#ESP_GATTC_REG_EVT, profile");
+        Serial.print("#ESP_GATTC_REG_EVT app_id=0x");
+        Serial.print(param->reg.app_id, HEX);
+
+        if (param->reg.status == ESP_GATT_OK) {
+            Serial.println(" ok");
+            pBLE->a_gattc_if = gattc_if;
+        } else {
+            Serial.println(" failed");
+        }
     } break;
 
     case ESP_GATTC_CONNECT_EVT: { // physical connection set up
@@ -161,24 +167,6 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
         switch (scan_result->scan_rst.search_evt) {
             case ESP_GAP_SEARCH_INQ_RES_EVT: {
                 Serial.println("##ESP_GAP_SEARCH_INQ_RES_EVT)");
-    //            esp_log_buffer_hex(GATTC_TAG, scan_result->scan_rst.bda, 6);
-            //    ESP_LOGI(GATTC_TAG, "searched Adv Data Len %d, Scan Response Len %d", scan_result->scan_rst.adv_data_len, scan_result->scan_rst.scan_rsp_len);
-                adv_name = esp_ble_resolve_adv_data(scan_result->scan_rst.ble_adv,
-                                                    ESP_BLE_AD_TYPE_NAME_CMPL, &adv_name_len);
-            //  ESP_LOGI(GATTC_TAG, "searched Device Name Len %d", adv_name_len);
-                esp_log_buffer_char(GATTC_TAG, adv_name, adv_name_len);
-            // ESP_LOGI(GATTC_TAG, "\n");
-                if (adv_name != NULL) {
-                /*  if (strlen(remote_device_name) == adv_name_len && strncmp((char *)adv_name, remote_device_name, adv_name_len) == 0) {
-                //        ESP_LOGI(GATTC_TAG, "searched device %s\n", remote_device_name);
-                        if (connect == false) {
-                            connect = true;
-                //           ESP_LOGI(GATTC_TAG, "connect to the remote device.");
-                            esp_ble_gap_stop_scanning();
-                            esp_ble_gattc_open(pBLE->gattcProfile[APP_ID].gattc_if, scan_result->scan_rst.bda, true);
-                        }
-                    }*/
-                }
             } break;
             case ESP_GAP_SEARCH_INQ_CMPL_EVT: {
                 Serial.println("##ESP_GAP_SEARCH_INQ_CMPL_EVT)");
@@ -192,70 +180,22 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 
     case ESP_GAP_BLE_SCAN_STOP_COMPLETE_EVT: {
           Serial.println("#ESP_GAP_BLE_SCAN_STOP_COMPLETE_EVT");
-        if (param->scan_stop_cmpl.status != ESP_BT_STATUS_SUCCESS){
-  //          ESP_LOGE(GATTC_TAG, "scan stop failed, error status = %x", param->scan_stop_cmpl.status);
-            break;
-        }
-//        ESP_LOGI(GATTC_TAG, "stop scan successfully");
     } break;
 
     case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT: {
           Serial.println("#ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT");
-        if (param->adv_stop_cmpl.status != ESP_BT_STATUS_SUCCESS){
-         //   ESP_LOGE(GATTC_TAG, "adv stop failed, error status = %x", param->adv_stop_cmpl.status);
-            break;
-        }
-//        ESP_LOGI(GATTC_TAG, "stop adv successfully");
     } break;
 
     case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT: {
           Serial.println("#ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT");
-       /* ESP_LOGI(GATTC_TAG, "update connetion params status = %d, min_int = %d, max_int = %d,conn_int = %d,latency = %d, timeout = %d",
-                  param->update_conn_params.status,
-                  param->update_conn_params.min_int,
-                  param->update_conn_params.max_int,
-                  param->update_conn_params.conn_int,
-                  param->update_conn_params.latency,
-                  param->update_conn_params.timeout);*/
     } break;
+
     default:
         Serial.println("default)");
         break;
     }
 }
 
-static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param)
-{
-    if (event == ESP_GATTC_REG_EVT) {
-        Serial.print("#ESP_GATTC_REG_EVT app_id=0x");
-        Serial.print(param->reg.app_id, HEX);
-
-        if (param->reg.status == ESP_GATT_OK) {
-            Serial.println(" ok");
-            if(param->reg.app_id<MAX_APP) {
-                pBLE->a_gattc_if = gattc_if;
-            }
-        } else {
-            Serial.println(" failed");
-//            ESP_LOGI(GATTC_TAG, "reg app failed, app_id %04x, status %d", param->reg.app_id, param->reg.status);
-            return;
-        }
-    }
-
-    /* If the gattc_if equal to profile A, call profile A cb handler,
-     * so here call each profile's callback */
-    do {
-        int idx;
-        for (idx = 0; idx < MAX_APP; idx++) {
-            if (gattc_if == ESP_GATT_IF_NONE || // ESP_GATT_IF_NONE, not specify a certain gatt_if, need to call every profile cb function 
-                    gattc_if == pBLE->a_gattc_if) {
-                if (pBLE->a_gattc_cb) {
-                    pBLE->a_gattc_cb(event, gattc_if, param);
-                }
-            }
-        }
-    } while (0);
-}
 
 bool BleBase::init()
 {
@@ -306,7 +246,7 @@ bool BleBase::init()
     }
 
     //register the callback function to the gattc module
-    ret = esp_ble_gattc_register_callback(esp_gattc_cb);
+    ret = esp_ble_gattc_register_callback(gattc_profile_event_handler);
     if(ret){
       Serial.println("-initBLE6");
       return false;
@@ -358,12 +298,10 @@ bool BleBase::write(const BTAddr &addr, uint16_t handle, const uint8_t* data, ui
 
 bool BleBase::connect(const BTAddr& addr) {
     addr.println("BleBase::connect()");
-    setConnState(addr, connecting, CONNID_INVALID);
     esp_err_t errRc = esp_ble_gattc_open(a_gattc_if, (uint8_t*)addr.addr, true);
-    Serial.println(errRc == ESP_OK ? ") ok" : ") failed");
-
+//    Serial.println(errRc == ESP_OK ? ") ok" : ") failed");
     if(errRc == ESP_OK) {
-//      setConnState(addr, connecting, CONNID_INVALID);
+      setConnState(addr, connecting, CONNID_INVALID);
       return true;
     } else {
       setConnState(addr, disconnected, CONNID_INVALID);
@@ -474,8 +412,9 @@ bool BleBase::isConnState(const BTAddr &addr, eState state) {
   return getConnState(addr) == state;
 }
 
-const char *BleBase::eState2Str(eState state) const {
+const char *BleBase::eState2Str(eState state) {
   switch(state) {
+    case queued:        return "QUEUED";
     case disconnected:  return "DISCONNECTED";
     case connecting:    return "CONNECTING";
     case disconnecting: return "DISCONNECTING";
@@ -485,3 +424,35 @@ const char *BleBase::eState2Str(eState state) const {
   }
 }
 
+bool BleBase::canConnect() {
+  return gatt_find_i_tcb_free() != 0xFF;
+}
+
+void BleBase::onConnectFailed(const BTAddr &addr) {
+    addr.println("BleBase::onConnectFailed()");
+}
+
+void BleBase::onDisconnected(const BTAddr &addr) {
+    p("BleBase::disconnected()");
+}
+
+void BleBase::onConnected(const BTAddr &addr) {
+    p("BleBase::onConnected()");
+}
+
+void BleBase::onConnecting(const BTAddr &addr) {
+    p("BleBase::onConnecting()");
+}
+
+void BleBase::onReceiveData(const BTAddr &addr, const uint8_t* pData, uint8_t len) {
+    p("BleBase::onReceiveData(len=%d)");
+}
+
+void BleBase::onServiceFound() {
+    p("BleBase::onServiceFound()");
+}
+
+void BleBase::onWritten(bool success) {
+//    Serial.print("BleBase::onWritten() ");
+//    Serial.println(success ? "ok" : "failed");
+}

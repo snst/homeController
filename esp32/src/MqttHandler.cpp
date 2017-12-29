@@ -107,6 +107,7 @@ void MqttHandler::callback(char *topic, byte *payload, unsigned int length) {
 
 void MqttHandler::parseRequest(const uint8_t *payload) {
   // payload: CMD(1), LEN(1), BTADDR(6), PARAM(1)
+  updateLastCmdTimestamp();
   tBleCmd cmd;
   memset(&cmd, 0, sizeof(tBleCmd));
  
