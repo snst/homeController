@@ -58,7 +58,7 @@ class MqttResponsePing : public MqttResponse {
 
 class MqttResponseConnState : public MqttResponse {
   public:
-    MqttResponseConnState(const BTAddr &addr, eConnectionState state) 
+    MqttResponseConnState(const BTAddr &addr, eState state) 
     : MqttResponse(eResponse::CONNECTION, BT_ADDR_SIZE + 1) {
       setBTAddr(addr);
       data[BT_ADDR_SIZE] = (uint8_t)state;
@@ -66,24 +66,10 @@ class MqttResponseConnState : public MqttResponse {
 
     void print() const {
       BTAddr a(data);
-      const char *state = "?)";
-      switch ((eConnectionState)data[BT_ADDR_SIZE]) {
-        case eConnectionState::CONNECTING:
-          state = "CONNECTING)";
-          break;
-        case eConnectionState::CONNECTED:
-          state = "CONNECTED)";
-          break;
-        case eConnectionState::DISCONNECTED:
-          state = "DISCONNECTED)";
-          break;
-        case eConnectionState::NORESPONSE:
-          state = "NORESPONSE)";
-          break;
-      }
+      eState state = (eState)data[BT_ADDR_SIZE];
       MqttResponse::print();
-      Serial.print("ConnState(");
-      a.println(state);
+      p("ConnState(%s)", BleBase::eState2Str(state));
+      a.println("");
     }
 };
 

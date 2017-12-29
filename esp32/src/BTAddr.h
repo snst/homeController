@@ -11,7 +11,7 @@ class BTAddr
     esp_bd_addr_t addr;
     
     BTAddr() {
-      memset(&addr, 0, sizeof(esp_bd_addr_t)); 
+      reset();
     }
     
     BTAddr(const uint8_t *_addr) {
@@ -21,6 +21,10 @@ class BTAddr
     BTAddr& operator= (const BTAddr &src) {
       memcpy(addr, src.addr, sizeof(esp_bd_addr_t));
       return *this;
+    }
+
+    void reset() {
+      memset(&addr, 0, sizeof(esp_bd_addr_t)); 
     }
 
     bool isValid() const {

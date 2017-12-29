@@ -47,13 +47,15 @@ enum eResponse {
   CONNECTION = 3
 };
 
-enum eConnectionState {
-  UNKOWN = 0,
-  CONNECTING = 1,
-  CONNECTED = 2,
-  DISCONNECTED = 3,
-  NORESPONSE = 4
+enum eState { 
+  queued=0, 
+  disconnected, 
+  connecting, 
+  disconnecting, 
+  failed, 
+  connected 
 };
+
 
 typedef struct {
   uint8_t data[BLE_CMD_SIZE];

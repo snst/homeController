@@ -4,6 +4,7 @@
 #include "BTAddr.h"
 #include "BleHandler.h"
 #include "MqttResponse.h"
+#include "common.h"
 
 extern BleHandler ble;
 extern MqttHandler mqtt;
@@ -49,7 +50,7 @@ void MqttHandler::sendResponsePing() {
 }
 
 
-void MqttHandler::sendResponseConnection(const BTAddr &addr, eConnectionState state) {
+void MqttHandler::sendResponseConnection(const BTAddr &addr, eState state) {
   if (addr.isValid()) {
     MqttResponseConnState msg(addr, state);
     msg.print();

@@ -14,7 +14,7 @@ class MqttHandler {
 public:
   MqttHandler(PubSubClient &c);
   void sendResponseStatus(const BTAddr &addr, const uint8_t* pData, size_t length);
-  void sendResponseConnection(const BTAddr &addr, eConnectionState state);
+  void sendResponseConnection(const BTAddr &addr, eState state);
   void sendResponsePing();
   void connect();
   void execute();
