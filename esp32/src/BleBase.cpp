@@ -364,7 +364,8 @@ uint16_t BleBase::getConnId(const BTAddr &addr) {
 
 
 bool BleBase::canConnect() {
-  return gatt_find_i_tcb_free() != 0xFF;
+  //return gatt_find_i_tcb_free() != 0xFF;
+  return countStates(eState::connecting) == 0;
 }
 
 void BleBase::onConnectFailed(const BTAddr &addr) {
@@ -414,4 +415,19 @@ void BleBase::resetConnState(const BTAddr &addr) {
 
 void BleBase::disconnect(const BTAddr &addr) {
     esp_ble_gap_disconnect((uint8_t*)addr.addr);
+}
+
+
+uint8_t BleBase::countStates(eState state) {
+
+    uint8_t n = 0;
+    xSemaphoreTake(connStateMutex, MUTEX_MAX_DELAY);
+    for (int i=0; i<MAX_CONNECTIONS; i++) {
+        tConnState &st = connState[i];
+        if ((st.state == state) && (st.addr.isValid())) {
+            n++;
+        }
+    }  
+    xSemaphoreGive(connStateMutex);
+    return n;
 }

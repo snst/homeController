@@ -62,6 +62,7 @@ class BleBase {
     void resetConnState(const BTAddr &addr);
     eState getConnState(const BTAddr &addr);
     uint16_t getConnId(const BTAddr &addr);
+    uint8_t countStates(eState state);
     static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
     static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
 };
