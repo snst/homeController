@@ -6,6 +6,7 @@ package de.meek.myhome;
 
 import android.content.Intent;
 import android.os.Handler;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     int touchPositionX = 0;
     RoomSettings roomSettings = null;
     RoomStatusArrayAdapter adapter = null;
+    SwipeRefreshLayout refreshLayout = null;
 
     protected MyApplication getMyApp() {
         return ((MyApplication)getApplicationContext());
@@ -237,6 +239,18 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        refreshLayout = (SwipeRefreshLayout)findViewById(R.id.swiperefresh);
+        refreshLayout.setOnRefreshListener(
+                new SwipeRefreshLayout.OnRefreshListener() {
+                    @Override
+                    public void onRefresh() {
+                        requestStatusOfAllRooms();
+                        refreshLayout.setRefreshing(false);
+                    }
+                }
+        );
+
 
         updateAllRooms();
         startMqtt();
