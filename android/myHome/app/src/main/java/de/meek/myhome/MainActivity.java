@@ -65,8 +65,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void requestStatusOfAllRooms() {
         for(int i=0; i<getHouse().getSize(); i++) {
+            getHouse().getRoom(i).connectionState = eConnectionState.DISCONNECTED;
             requestStatusOfRoom(i);
         }
+        updateAllRooms();
     }
 
     public void requestStatusOfRoom(int roomId) {
@@ -219,8 +221,12 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapter, View v, int position, long id) {
-                //showRoomSettingsActivity(position);
-                closeConnection(position);
+
+                if(getHouse().getRoom(position).isConnected()) {
+                    closeConnection(position);
+                } else {
+                    showRoomSettingsActivity(position);
+                }
                 return true;
             }
         });

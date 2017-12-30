@@ -20,7 +20,7 @@
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
         android:textAlignment="textEnd"
-        android:textSize="28sp" />
+        android:textSize="24sp" />
 
     <TextView
         android:id="@+id/txtRoomStatusTemp"
@@ -29,7 +29,7 @@
         android:layout_gravity="center_vertical"
         android:layout_weight="1.5"
         android:textAlignment="center"
-        android:textSize="28sp" />
+        android:textSize="24sp" />
 
     <TextView
         android:id="@+id/txtRoomStatusPercent"
