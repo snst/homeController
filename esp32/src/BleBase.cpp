@@ -9,11 +9,9 @@
 #define INVALID_HANDLE   0
 
 extern "C" uint8_t gatt_find_i_tcb_free(void);
-static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
-static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
 static BleBase* pBLE = nullptr;
 
-static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param)
+void BleBase::gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param)
 {
     esp_ble_gattc_cb_param_t *p_data = (esp_ble_gattc_cb_param_t *)param;
 
@@ -111,7 +109,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     }
 }
 
-static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
+void BleBase::esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
     uint8_t *adv_name = NULL;
     uint8_t adv_name_len = 0;
@@ -232,7 +230,7 @@ bool BleBase::init()
       Serial.println("-initBLE7");
     }
   
-    esp_err_t local_mtu_ret = esp_ble_gatt_set_local_mtu(500);
+    esp_err_t local_mtu_ret = esp_ble_gatt_set_local_mtu(50);
     if (local_mtu_ret){
       Serial.println("-initBLE8");
     }
@@ -365,23 +363,6 @@ uint16_t BleBase::getConnId(const BTAddr &addr) {
 }
 
 
-bool BleBase::isConnState(const BTAddr &addr, eState state) {
-  return getConnState(addr) == state;
-}
-
-
-const char *BleBase::eState2Str(eState state) {
-  switch(state) {
-    case queued:        return "QUEUED";
-    case disconnected:  return "DISCONNECTED";
-    case connecting:    return "CONNECTING";
-    case disconnecting: return "DISCONNECTING";
-    case failed:        return "FAILED";
-    case connected:     return "CONNECTED";
-    default:            return "??"; 
-  }
-}
-
 bool BleBase::canConnect() {
   return gatt_find_i_tcb_free() != 0xFF;
 }
@@ -429,4 +410,8 @@ void BleBase::resetConnState(const BTAddr &addr) {
     }
   }  
   xSemaphoreGive(connStateMutex);
+}
+
+void BleBase::disconnect(const BTAddr &addr) {
+    esp_ble_gap_disconnect((uint8_t*)addr.addr);
 }

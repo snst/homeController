@@ -219,6 +219,11 @@ void MqttHandler::parseRequest(const uint8_t *payload) {
       ble.clear();
       break;
     }
+    case CLOSE_CONNECTION: {
+      Serial.println("CLOSE_CONNECTION)");
+      ble.disconnect(cmd.addr);
+      break;
+    }
     default: {
       Serial.println("Invalid cmd)");
       break;

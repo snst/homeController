@@ -68,7 +68,7 @@ class MqttResponseConnState : public MqttResponse {
       BTAddr a(data);
       eState state = (eState)data[BT_ADDR_SIZE];
       MqttResponse::print();
-      p("ConnState(%s)", BleBase::eState2Str(state));
+      p("ConnState(%s)", eState2Str(state));
       a.println("");
     }
 };

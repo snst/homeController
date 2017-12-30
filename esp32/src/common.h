@@ -38,7 +38,8 @@ enum eCmd {
     REBOOT,
     SETTEMP,
     GETSTATUS,
-    ABORT
+    ABORT,
+    CLOSE_CONNECTION
 };
 
 enum eResponse {
@@ -68,6 +69,8 @@ void p(const char *fmt, ... );
 void printMem();
 void updateLastCmdTimestamp();
 void doIdle();
+const char *eState2Str(eState state);
+
 
 
 #endif

@@ -73,6 +73,10 @@ public class MainActivity extends AppCompatActivity {
         sendCmd(new CmdGetStatus(roomId));
     }
 
+    public void closeConnection(int roomId) {
+        sendCmd(new Cmd(roomId, eCmd.CLOSE_CONNCTION));
+    }
+
     public void requestSetTemp(int roomId, int temp) {
         final int finalTemp = temp;
         final int finalRoom = roomId;
@@ -215,7 +219,8 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapter, View v, int position, long id) {
-                showRoomSettingsActivity(position);
+                //showRoomSettingsActivity(position);
+                closeConnection(position);
                 return true;
             }
         });

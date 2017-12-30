@@ -27,6 +27,24 @@
 class BleBase {
 
   public:
+
+    BleBase();
+    virtual ~BleBase() {}
+    bool init();
+    void disconnect(const BTAddr &addr);
+    bool connect(const BTAddr &addr);
+    bool canConnect();
+    bool write(const BTAddr &addr, uint16_t handle, const uint8_t *data, uint8_t len, bool response);
+    virtual void onConnectFailed(const BTAddr &addr);
+    virtual void onDisconnected(const BTAddr &addr);
+    virtual void onConnected(const BTAddr &addr, uint16_t connId);
+    virtual void onConnecting(const BTAddr &addr);
+    virtual void onReceiveData(const BTAddr &addr, const uint8_t* pData, uint8_t len);
+    virtual void onServiceFound();
+    virtual void onWritten(bool success);
+    bool registerNotify(const BTAddr &addr, uint16_t handle);
+
+  protected:
     esp_gattc_cb_t a_gattc_cb;
     uint16_t a_gattc_if;
 
@@ -39,27 +57,13 @@ class BleBase {
     tConnState connState[MAX_CONNECTIONS];
     SemaphoreHandle_t connStateMutex;
     
-    BleBase();
-    virtual ~BleBase() {}
     int getConnIndex(const BTAddr &addr);
     virtual void setConnState(const BTAddr &addr, eState state, uint16_t connId);
     void resetConnState(const BTAddr &addr);
     eState getConnState(const BTAddr &addr);
     uint16_t getConnId(const BTAddr &addr);
-    bool isConnState(const BTAddr &addr, eState state);
-    bool registerNotify(const BTAddr &addr, uint16_t handle);
-    bool write(const BTAddr &addr, uint16_t handle, const uint8_t *data, uint8_t len, bool response);
-    bool connect(const BTAddr &addr);
-    bool init();
-    static const char *eState2Str(eState state);
-    bool canConnect();
-    virtual void onConnectFailed(const BTAddr &addr);
-    virtual void onDisconnected(const BTAddr &addr);
-    virtual void onConnected(const BTAddr &addr, uint16_t connId);
-    virtual void onConnecting(const BTAddr &addr);
-    virtual void onReceiveData(const BTAddr &addr, const uint8_t* pData, uint8_t len);
-    virtual void onServiceFound();
-    virtual void onWritten(bool success);
+    static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
+    static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
 };
 
 #endif

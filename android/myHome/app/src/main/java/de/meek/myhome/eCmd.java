@@ -19,7 +19,8 @@ public enum eCmd {
     REBOOT(10, "reboot"),
     SETTEMP(11, "settemp"),
     GETSTATUS(12, "getstatus"),
-    ABORT(13, "abort");
+    ABORT(13, "abort"),
+    CLOSE_CONNCTION(14, "close connection");
 
     private byte value;
     private String name;
