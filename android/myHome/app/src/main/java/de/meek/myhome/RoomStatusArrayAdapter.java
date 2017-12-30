@@ -72,7 +72,7 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
                 c = R.color.RoomFailed;
                 break;
         }
-        txtMsgCnt.setText("#"+room.msgCount);
+        txtMsgCnt.setText(""+room.msgCount);
         rowView.setBackgroundColor(rowView.getResources().getColor(c));
         return rowView;
     }
