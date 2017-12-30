@@ -59,21 +59,16 @@ void BleHandler::execute() {
       }
       case disconnecting: {
         cmd.addr.println("!!Disconnecting ??!");
-        //setConnState(cmd.addr, disconnected, CONNID_INVALID);
-        //resetConnState(cmd.addr);
         // todo cmd
         // drop command
         break;
       }
       case disconnected: {
         cmd.addr.println("!!Disconnected");
-//        resetConnState(cmd.addr);
-//        addCmd(cmd);
         break;
       }
       case failed: {
         cmd.addr.println("!!Connect failed");
-//        resetConnState(cmd.addr);
         // drop command
         break;
       }
@@ -104,14 +99,6 @@ void BleHandler::addCmd(const tBleCmd &cmd) {
 }
 
 
-bool BleHandler::hasCmd() {
-  xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
-  bool ret = uxQueueMessagesWaiting(queue) > 0;
-  xSemaphoreGive(queueMutex);
-	return ret;
-}
-
-
 void BleHandler::clear() {
   xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
   xQueueReset(queue);
@@ -119,31 +106,11 @@ void BleHandler::clear() {
 }
 
 
-
-void BleHandler::sendAllConnStates() {
-
-  for (int i=0; i<MAX_CONNECTIONS; i++) {
-    if (connState[i].addr.isValid()) {
-      mqtt.sendResponseConnection(connState[i].addr, connState[i].state);
-    }
-  }
-}
-
-void BleHandler::sendConnState(const BTAddr &addr) {
-  if (addr.isValid()) {
-    eState state = getConnState(addr);
-    mqtt.sendResponseConnection(addr, state);
-  }
-}
-
 void BleHandler::setConnState(const BTAddr &addr, eState state, uint16_t connId) {
   BleBase::setConnState(addr, state, connId);
   mqtt.sendResponseConnection(addr, state);
-
-  if ((state == disconnected) || (state == failed)) {
-    resetConnState(addr);
-  }
 }
+
 
 void BleHandler::clearCmdFromQueue(const BTAddr &addr) {
   xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);

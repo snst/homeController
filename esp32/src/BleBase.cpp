@@ -389,11 +389,13 @@ bool BleBase::canConnect() {
 void BleBase::onConnectFailed(const BTAddr &addr) {
     addr.println("BleBase::onConnectFailed()");
     setConnState(addr, failed, CONNID_INVALID);
+    resetConnState(addr);
 }
 
 void BleBase::onDisconnected(const BTAddr &addr) {
     addr.println("BleBase::disconnected()");
     setConnState(addr, disconnected, CONNID_INVALID);
+    resetConnState(addr);
 }
 
 void BleBase::onConnected(const BTAddr &addr, uint16_t connId) {

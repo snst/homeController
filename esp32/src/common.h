@@ -6,8 +6,8 @@
 #include "BTAddr.h"
 
 #define VERSION_MAJOR   0
-#define VERSION_MINOR   1
-#define VERSION_REV     1
+#define VERSION_MINOR   2
+#define VERSION_REV     0
 
 #define BLE_CMD_SIZE 7
 
@@ -21,7 +21,7 @@
 
 #define MUTEX_MAX_DELAY 1000
 
-#define IDLE_AFTER_MS 100000
+#define IDLE_AFTER_MS (30*1000)
 #define IDLE_MS 50
 
 enum eCmd {

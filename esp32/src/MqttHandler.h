@@ -20,13 +20,14 @@ public:
   void execute();
   void setServer(const char *server, int port);
   void setUser(const char *user, const char *password);
-  static void callback(char *topic, byte *payload, unsigned int length);
   void setTopicStatus(const char *topic);
   void setTopicRequest(const char *topic);
+
+protected:
+  static void callback(char *topic, byte *payload, unsigned int length);
   void addResponse(MqttResponse &msg);
   bool getResponse(MqttResponse &msg);
   
-protected:
   xQueueHandle queue;
   SemaphoreHandle_t queueMutex;
   PubSubClient &client;
