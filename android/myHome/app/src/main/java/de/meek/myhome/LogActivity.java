@@ -27,7 +27,7 @@ public class LogActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log);
 
-        final ListView listview = (ListView) findViewById(R.id.listLog);
+        final ListView listview = findViewById(R.id.listLog);
 
         final StableArrayAdapter adapter = new StableArrayAdapter(this,
                 android.R.layout.simple_list_item_1, getMyApp().getLogger().getLog());

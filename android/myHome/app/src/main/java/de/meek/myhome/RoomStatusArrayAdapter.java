@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -29,10 +30,11 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View rowView = inflater.inflate(R.layout.roomstatus_view, parent, false);
 
-        TextView txtName = (TextView) rowView.findViewById(R.id.txtRoomStatusName);
-        TextView txtTemp = (TextView) rowView.findViewById(R.id.txtRoomStatusTemp);
-        TextView txtPercent = (TextView) rowView.findViewById(R.id.txtRoomStatusPercent);
-        TextView txtMsgCnt = (TextView) rowView.findViewById(R.id.txtRoomStatusMsgCnt);
+        TextView txtName = rowView.findViewById(R.id.txtRoomStatusName);
+        TextView txtTemp = rowView.findViewById(R.id.txtRoomStatusTemp);
+        TextView txtPercent = rowView.findViewById(R.id.txtRoomStatusPercent);
+        TextView txtMsgCnt = rowView.findViewById(R.id.txtRoomStatusMsgCnt);
+        ImageView imgStatus = rowView.findViewById(R.id.imageStatus);
 
         Room room = rooms.get(position);
 
@@ -48,32 +50,32 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
             if(room.boostActive)
                 mode += "B";
             if(mode.length()>0)
-                mode += ",";
+                mode += " ";
 
             percent = "("+mode+room.percent+"%)";
         }
-        txtTemp.setText(temp);
-        txtPercent.setText(percent);
-        int c = R.color.RoomDisconnected;
+
+        int icon = R.drawable.ic_offline;
         switch(room.connectionState) {
             case CONNECTED:
-                c = R.color.RoomConnected;
+                icon = R.drawable.ic_online;
                 break;
             case CONNECTING:
-                c = R.color.RoomConnecting;
+                icon = R.drawable.ic_connecting;
                 break;
             case QUEUED:
-                c = R.color.RoomQueued;
                 break;
             case DISCONNECTED:
-                c = R.color.RoomDisconnected;
+                icon = R.drawable.ic_offline;
                 break;
             case FAILED:
-                c = R.color.RoomFailed;
+                icon = R.drawable.ic_failed;
                 break;
         }
+        txtTemp.setText(temp);
+        txtPercent.setText(percent);
+        imgStatus.setImageResource(icon);
         txtMsgCnt.setText(""+room.msgCount);
-        rowView.setBackgroundColor(rowView.getResources().getColor(c));
         return rowView;
     }
 }

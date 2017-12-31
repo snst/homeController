@@ -25,7 +25,7 @@ public enum eCmd {
     private byte value;
     private String name;
 
-    private eCmd(int value, String name) {
+    eCmd(int value, String name) {
         this.value = (byte)value;
         this.name = name;
     }

@@ -13,7 +13,7 @@ public enum eResponse {
 
     private byte value;
 
-    private eResponse(int value) {
+    eResponse(int value) {
         this.value = (byte)value;
     }
     public byte getValue() {

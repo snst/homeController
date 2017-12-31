@@ -35,8 +35,8 @@
             android:id="@+id/txtViewTempNew"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="6dp"
-            android:layout_marginTop="3dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginTop="6dp"
             android:text="TextView"
             android:textAlignment="center"
             android:textSize="30sp" />
@@ -49,24 +49,25 @@
 
 
             <Button
-                android:id="@+id/btnComfort"
+                android:id="@+id/btnOff"
                 android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
-                android:onClick="onBtnComfort"
-                android:text="comfort" />
+                android:onClick="onBtnOff"
+                android:text="off" />
+
             <Button
-                android:id="@+id/btnBootOn"
+                android:id="@+id/btnBoost"
                 android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
-                android:onClick="onBtnBoostOn"
+                android:onClick="onBtnBoost"
                 android:text="boost on" />
 
             <Button
                 android:id="@+id/btnOn"
                 android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
                 android:onClick="onBtnOn"
                 android:text="On" />
@@ -77,61 +78,32 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-            <Button
-                android:id="@+id/btnEco"
-                android:layout_width="wrap_content"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:onClick="onBtnEco"
-                android:text="Eco" />
-
-            <Button
-                android:id="@+id/btnBoostOff"
-                android:layout_width="wrap_content"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:onClick="onBtnBoostOff"
-                android:text="boost off" />
-
-            <Button
-                android:id="@+id/btnOff"
-                android:layout_width="wrap_content"
-                android:layout_height="60dp"
-                android:layout_weight="1"
-                android:onClick="onBtnOff"
-                android:text="off" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btnTemp0"
                 android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
                 android:text="-" />
 
             <Button
                 android:id="@+id/btnTemp1"
                 android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
                 android:text="-" />
 
             <Button
                 android:id="@+id/btnTemp2"
                 android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
                 android:text="-" />
 
             <Button
                 android:id="@+id/btnTemp3"
                 android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
                 android:text="-" />
         </LinearLayout>
@@ -142,6 +114,7 @@
             style="@style/Widget.AppCompat.SeekBar.Discrete"
             android:layout_width="match_parent"
             android:layout_height="20dp"
+            android:layout_marginTop="5dp"
             android:layout_weight="1"
             tools:layout_editor_absoluteX="321dp" />
 
@@ -150,6 +123,7 @@
             style="@style/Widget.AppCompat.SeekBar.Discrete"
             android:layout_width="match_parent"
             android:layout_height="20dp"
+            android:layout_marginBottom="5dp"
             android:layout_weight="1"
             tools:layout_editor_absoluteX="321dp" />
 
@@ -161,7 +135,7 @@
             <Button
                 android:id="@+id/btnDec"
                 android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
                 android:onClick="onBtnDec"
                 android:text="-" />
@@ -169,7 +143,7 @@
             <Button
                 android:id="@+id/btnSetTemp"
                 android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
                 android:onClick="onBtnSetTemp"
                 android:text="set" />
@@ -177,7 +151,7 @@
             <Button
                 android:id="@+id/btnInc"
                 android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
                 android:onClick="onBtnInc"
                 android:text="+" />
@@ -188,7 +162,9 @@
             android:id="@+id/txtLastUpdate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
             android:layout_weight="1"
+            android:gravity="bottom"
             android:text="?" />
 
     </LinearLayout>

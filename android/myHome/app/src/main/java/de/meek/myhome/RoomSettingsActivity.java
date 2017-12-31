@@ -25,8 +25,8 @@ public class RoomSettingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_room_settings);
         setTitle("Room RoomSettings");
 
-        txtRoomName = (TextView) findViewById(R.id.editRoomName);
-        txtBtAddress = (TextView) findViewById(R.id.editBTAddress);
+        txtRoomName = findViewById(R.id.editRoomName);
+        txtBtAddress = findViewById(R.id.editBTAddress);
 
         Intent intent = getIntent();
         int id = intent.getIntExtra(Const.INTENT_ROOM_ID, 0);

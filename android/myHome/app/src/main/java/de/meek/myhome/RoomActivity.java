@@ -25,6 +25,7 @@ public class RoomActivity extends AppCompatActivity {
     TextView txtLastUpdate;
     SeekBar seekBarTemp;
     SeekBar seekBarTempComfort;
+    Button btnBoost;
     Room room = null;
     int temp;
 
@@ -45,27 +46,8 @@ public class RoomActivity extends AppCompatActivity {
         runCmd(eCmd.ON);
     }
 
-    public void onBtnBoostOn(View view) {
-        runCmd(eCmd.BOOST_ON);
-    }
-
-    public void onBtnBoostOff(View view) {
-        runCmd(eCmd.BOOST_OFF);
-    }
-
-    public void onBtnEco(View view) {
-        runCmd(eCmd.ECO);
-    }
-
-    public void onBtnComfort(View view) {
-        runCmd(eCmd.COMFORT);
-    }
-
-    public void onBtnTemp(View view) {
-        Button btn = (Button) view;
-        int presetIndex = Integer.parseInt((String)btn.getTag());
-        temp = room.presetTemp.get(presetIndex);
-        requestNewTempAndClose(temp);
+    public void onBtnBoost(View view) {
+        runCmd(room.boostActive ? eCmd.BOOST_OFF : eCmd.BOOST_ON);
     }
 
     public void onBtnDec(View view) {
@@ -113,7 +95,7 @@ public class RoomActivity extends AppCompatActivity {
     }
 
     void updateButtonPresetTemp(int btnId, int value) {
-        Button btn = (Button) findViewById(btnId);
+        Button btn = findViewById(btnId);
         btn.setText(Format.tempToString(value));
     }
 
@@ -141,7 +123,7 @@ public class RoomActivity extends AppCompatActivity {
     }
 
     void registerButtonPresetLongClick(int btnId, int presetIndex) {
-        Button btn = (Button) findViewById(btnId);
+        Button btn = findViewById(btnId);
         btn.setTag(presetIndex);
 
         btn.setOnLongClickListener(new View.OnLongClickListener() {
@@ -175,6 +157,12 @@ public class RoomActivity extends AppCompatActivity {
                 break;
             case R.id.action_room_setting:
                 showRoomSettingsActivity();
+                break;
+            case R.id.action_eco:
+                runCmd(eCmd.ECO);
+                break;
+            case R.id.action_comfort:
+                runCmd(eCmd.COMFORT);
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -215,11 +203,12 @@ public class RoomActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_room);
-        txtViewTempNew = (TextView) findViewById(R.id.txtViewTempNew);
-        txtViewTempCurrent = (TextView) findViewById(R.id.txtViewTempCurrent);
-        txtLastUpdate = (TextView) findViewById(R.id.txtLastUpdate);
-        seekBarTemp = (SeekBar) findViewById(R.id.seekBarTemp);
-        seekBarTempComfort = (SeekBar) findViewById(R.id.seekBarTempComfort);
+        txtViewTempNew = findViewById(R.id.txtViewTempNew);
+        txtViewTempCurrent = findViewById(R.id.txtViewTempCurrent);
+        txtLastUpdate = findViewById(R.id.txtLastUpdate);
+        btnBoost = findViewById(R.id.btnBoost);
+        seekBarTemp = findViewById(R.id.seekBarTemp);
+        seekBarTempComfort = findViewById(R.id.seekBarTempComfort);
         seekBarTemp.setMax((Const.TEMP_MAX - Const.TEMP_MIN) / Const.TEMP_STEP);
         seekBarTempComfort.setMax((Const.TEMP_MAX_COMFORT - Const.TEMP_MIN_COMFORT) / Const.TEMP_STEP);
 
@@ -233,6 +222,8 @@ public class RoomActivity extends AppCompatActivity {
         if(temp<Const.TEMP_MIN) {
             temp = Const.TEMP_DEFAULT;
         }
+
+        btnBoost.setText(room.boostActive ? "Boost off" : "Boost on");
 
         registerButtonPresetLongClick(R.id.btnTemp0, 0);
         registerButtonPresetLongClick(R.id.btnTemp1, 1);

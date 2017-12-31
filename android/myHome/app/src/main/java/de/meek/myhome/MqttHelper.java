@@ -78,7 +78,7 @@ public class MqttHelper {
     }
 
     public boolean isConnected() {
-        return mqttAndroidClient!=null ? mqttAndroidClient.isConnected() : false;
+        return mqttAndroidClient != null && mqttAndroidClient.isConnected();
     }
 
     public void disconnect() {

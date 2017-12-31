@@ -199,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
 
         AccountConfig.load(this);
         roomSettings = new RoomSettings(this);
-        listView = (ListView) findViewById(R.id.listViewRooms);
+        listView = findViewById(R.id.listViewRooms);
 
         for (int j = 0; j < AccountConfig.NUMBER_OF_ROOMS; j++) {
             Room room = new Room(j);
@@ -240,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        refreshLayout = (SwipeRefreshLayout)findViewById(R.id.swiperefresh);
+        refreshLayout = findViewById(R.id.swiperefresh);
         refreshLayout.setOnRefreshListener(
                 new SwipeRefreshLayout.OnRefreshListener() {
                     @Override
@@ -264,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void restartMqtt() {
 
-        mqttHelper.disconnect();;
+        mqttHelper.disconnect();
         mqttHelper = null;
         startMqtt();
     }

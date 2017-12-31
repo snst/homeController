@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">#2c6657</color>
+    <color name="colorPrimaryDark">#204d41</color>
+    <color name="colorAccent">#40ffef</color>
     <color name="colorBtnActive">#009900</color>
     <color name="colorBtnInactive">#000000</color>
-    <color name="RoomConnected">#085000</color>
-    <color name="RoomConnecting">#004040</color>
-    <color name="RoomQueued">#00b97b</color>
-    <color name="RoomFailed">#500000</color>
-    <color name="RoomDisconnected">#484848</color>
+    <color name="listBackground">#282828</color>
 </resources>

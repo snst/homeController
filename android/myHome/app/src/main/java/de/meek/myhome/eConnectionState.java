@@ -16,7 +16,7 @@ public enum eConnectionState {
     private byte value;
     private String name;
 
-    private eConnectionState(int value, String name) {
+    eConnectionState(int value, String name) {
         this.value = (byte) value;
         this.name = name;
     }

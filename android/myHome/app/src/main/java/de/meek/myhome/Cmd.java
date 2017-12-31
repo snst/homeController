@@ -39,7 +39,7 @@ public class Cmd {
             }
             // CMD, LEN, BTAddr, Param
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            out.write((byte) cmd.getValue());
+            out.write(cmd.getValue());
             out.write((byte) len);
             if (addr != null) {
                 out.write(addr.toByte());
