@@ -12,10 +12,10 @@
         android:title="Manual" />
     <item
         android:id="@+id/action_eco"
-        android:title="Manual" />
+        android:title="Eco" />
     <item
         android:id="@+id/action_comfort"
-        android:title="Manual" />
+        android:title="Comfort" />
     <item
         android:id="@+id/action_room_setting"
         android:title="Settings" />

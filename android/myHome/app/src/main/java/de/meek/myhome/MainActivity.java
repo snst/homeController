@@ -26,7 +26,7 @@ import java.util.Date;
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
 public class MainActivity extends AppCompatActivity {
 
-    final String APP_VERSION = "0.2.0";
+    final String APP_VERSION = "0.2.1";
 
     MqttHelper mqttHelper = null;
     Handler handler = new Handler();
