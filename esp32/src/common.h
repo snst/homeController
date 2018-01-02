@@ -7,7 +7,7 @@
 
 #define VERSION_MAJOR   0
 #define VERSION_MINOR   2
-#define VERSION_REV     4
+#define VERSION_REV     5
 
 #define MAX_OPEN_CONNECTIONS 4
 

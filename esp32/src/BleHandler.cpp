@@ -7,7 +7,8 @@
 extern MqttHandler mqtt;
 
 
-BleHandler::BleHandler() {
+BleHandler::BleHandler()
+: msNextRound(0) {
   queue = xQueueCreate(BT_CMD_QUEUE_LEN, sizeof(tBleCmd));
 }
 
@@ -46,51 +47,67 @@ void BleHandler::onConnected(const BTAddr &addr, uint16_t connId) {
   mqtt.sendResponseConnection(addr, connected);
 }
 
+bool BleHandler::skipRound() {
+  return millis() < msNextRound;
+}
+
+void BleHandler::setNextRound(uint16_t ms) {
+  msNextRound = millis() + ms;
+}
+
 
 void BleHandler::execute() {
-  tBleCmd cmd;
-  AutoLock m1(mutexCmd);
-  AutoLock m2(mutexBT);
-  if(getCmd(cmd)) {
-    eState state = connState.get(cmd.addr);
-    switch (state) {
-      case waiting: {
-        if (!isConnecting()) {
-          if (hasFreeConnections()) {
-            connect(cmd.addr);
+
+  if (!skipRound()) {
+
+    setNextRound(100);
+
+    tBleCmd cmd;
+    AutoLock m1(mutexCmd);
+    AutoLock m2(mutexBT);
+    if(getCmd(cmd)) {
+      eState state = connState.get(cmd.addr);
+      switch (state) {
+        case waiting: {
+          if (!isConnecting()) {
+            if (hasFreeConnections()) {
+              connect(cmd.addr);
+              setNextRound(500);
+            } else {
+              closeOldestConnection();
+              setNextRound(500);
+            }
           } else {
-            closeOldestConnection();
+            //p("W");
           }
-        } else {
-          //p("W");
+          addCmdIntern(cmd);
+          break;
         }
-        addCmdIntern(cmd);
-        break;
-      }
-      case connecting: {
-        addCmdIntern(cmd);
-        break;
-      }
-      case disconnecting: {
-        cmd.addr.println("!!Disconnecting??");
-        // drop command
-        break;
-      }
-      case disconnected: {
-        cmd.addr.println("!!Disconnected");
-        break;
-      }
-      case failed: {
-        cmd.addr.println("!!Connect failed");
-        // drop command
-        break;
-      }
-      case connected: {
-        if (!write(cmd.addr, 0x411, cmd.data, cmd.len, true) ) {
-          cmd.addr.println("write failed: Reinsert cmd");
-          addCmdIntern(cmd); 
+        case connecting: {
+          addCmdIntern(cmd);
+          break;
         }
-        break;
+        case disconnecting: {
+          cmd.addr.println("!!Disconnecting??");
+          // drop command
+          break;
+        }
+        case disconnected: {
+          cmd.addr.println("!!Disconnected");
+          break;
+        }
+        case failed: {
+          cmd.addr.println("!!Connect failed");
+          // drop command
+          break;
+        }
+        case connected: {
+          if (!write(cmd.addr, 0x411, cmd.data, cmd.len, true) ) {
+            cmd.addr.println("write failed: Reinsert cmd");
+            addCmdIntern(cmd); 
+          }
+          break;
+        }
       }
     }
   }
