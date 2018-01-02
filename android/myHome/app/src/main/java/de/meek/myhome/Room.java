@@ -10,6 +10,7 @@ import java.util.Date;
 public class Room {
     public String name;
     public BTAddr btAddress = new BTAddr();
+    public String mqttTopic;
     public int id;
     public boolean autoActive = false;
     public boolean boostActive = false;

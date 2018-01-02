@@ -7,11 +7,12 @@
 
 #define VERSION_MAJOR   0
 #define VERSION_MINOR   2
-#define VERSION_REV     1
+#define VERSION_REV     4
 
 #define MAX_OPEN_CONNECTIONS 4
 
 #define MAX_CONNECTIONS 15
+
 
 #define BLE_CMD_SIZE 7
 
