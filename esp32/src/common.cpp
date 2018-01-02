@@ -59,7 +59,7 @@ void printMem()
 
 const char *eState2Str(eState state) {
   switch(state) {
-    case queued:        return "QUEUED";
+    case waiting:       return "WAITING";
     case disconnected:  return "DISCONNECTED";
     case connecting:    return "CONNECTING";
     case disconnecting: return "DISCONNECTING";

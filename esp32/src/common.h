@@ -7,7 +7,11 @@
 
 #define VERSION_MAJOR   0
 #define VERSION_MINOR   2
-#define VERSION_REV     0
+#define VERSION_REV     1
+
+#define MAX_OPEN_CONNECTIONS 4
+
+#define MAX_CONNECTIONS 15
 
 #define BLE_CMD_SIZE 7
 
@@ -18,8 +22,6 @@
 #define MQTT_RESPONSE_QUEUE_LEN 20
 
 #define CONNID_INVALID 0xFFFF
-
-#define MUTEX_MAX_DELAY 1000
 
 #define IDLE_AFTER_MS (30*1000)
 #define IDLE_MS 50
@@ -49,7 +51,7 @@ enum eResponse {
 };
 
 enum eState { 
-  queued=0, 
+  waiting=0, 
   disconnected, 
   connecting, 
   disconnecting, 

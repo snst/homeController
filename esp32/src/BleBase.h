@@ -19,10 +19,11 @@
 #include "esp_gatt_common_api.h"
 #include "BTAddr.h"
 #include "common.h"
+#include "ConnState.h"
+#include "Mutex.h"
 
 #define APP_ID 0
 #define MAX_APP 1
-#define MAX_CONNECTIONS 15
 
 class BleBase {
 
@@ -33,7 +34,9 @@ class BleBase {
     bool init();
     void disconnect(const BTAddr &addr);
     bool connect(const BTAddr &addr);
-    bool canConnect();
+    bool isConnecting();
+    bool hasFreeConnections();
+    void closeOldestConnection();
     bool write(const BTAddr &addr, uint16_t handle, const uint8_t *data, uint8_t len, bool response);
     virtual void onConnectFailed(const BTAddr &addr);
     virtual void onDisconnected(const BTAddr &addr);
@@ -47,22 +50,9 @@ class BleBase {
   protected:
     esp_gattc_cb_t a_gattc_cb;
     uint16_t a_gattc_if;
+    ConnState connState;
+    Mutex mutexBT;
 
-    typedef struct {
-      BTAddr addr;
-      eState state;
-      uint16_t connId;
-    } tConnState;
-
-    tConnState connState[MAX_CONNECTIONS];
-    SemaphoreHandle_t connStateMutex;
-    
-    int getConnIndex(const BTAddr &addr);
-    virtual void setConnState(const BTAddr &addr, eState state, uint16_t connId);
-    void resetConnState(const BTAddr &addr);
-    eState getConnState(const BTAddr &addr);
-    uint16_t getConnId(const BTAddr &addr);
-    uint8_t countStates(eState state);
     static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
     static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
 };

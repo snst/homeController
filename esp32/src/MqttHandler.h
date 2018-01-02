@@ -4,6 +4,7 @@
 #define __MQTT_HANDLER_H__
 #include <PubSubClient.h>
 #include "common.h"
+#include "Mutex.h"
 
 class BTAddr;
 class PubSubClient;
@@ -29,7 +30,7 @@ protected:
   bool getResponse(MqttResponse &msg);
   
   xQueueHandle queue;
-  SemaphoreHandle_t queueMutex;
+  Mutex mutexQueue;
   PubSubClient &client;
   const char *topicStatus;
   const char *topicRequest;
