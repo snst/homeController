@@ -14,22 +14,19 @@ void(* softReset2) (void) = 0; //declare reset function at address 0
 
 MqttHandler::MqttHandler(PubSubClient &c)
 : client(c) {
-  queueMutex = xSemaphoreCreateMutex();
   queue = xQueueCreate(MQTT_RESPONSE_QUEUE_LEN, sizeof(MqttResponse));
   client.setCallback(MqttHandler::callback);
 }
 
 void MqttHandler::addResponse(MqttResponse &msg) {
-  xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
+  AutoLock l(mutexQueue);
   xQueueSendToBack(queue, &msg, 0);
-  xSemaphoreGive(queueMutex);
 }
 
 
 bool MqttHandler::getResponse(MqttResponse &msg) {
-  xSemaphoreTake(queueMutex, MUTEX_MAX_DELAY);
+  AutoLock l(mutexQueue);
   bool ret = (pdPASS == xQueueReceive(queue, &msg, 0));
-  xSemaphoreGive(queueMutex);
   return ret;
 }
 
@@ -251,4 +248,3 @@ void MqttHandler::setUser(const char *user, const char *password) {
   this->user = user;
   this->password = password;
 }
-

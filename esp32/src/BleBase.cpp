@@ -13,6 +13,7 @@ static BleBase* pBLE = nullptr;
 
 void BleBase::gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param)
 {
+    AutoLock l(pBLE->mutexBT);
     esp_ble_gattc_cb_param_t *p_data = (esp_ble_gattc_cb_param_t *)param;
 
     switch (event) {
@@ -97,7 +98,7 @@ void BleBase::gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_i
     case ESP_GATTC_DISCONNECT_EVT: {
       BTAddr a(p_data->disconnect.remote_bda);
 //      a.println("#ESP_GATTC_DISCONNECT_EVT ");
-      eState state = pBLE->getConnState(a);
+      eState state = pBLE->connState.get(a);
       if (state == connected) { // only send disconnect, if connected before
         pBLE->onDisconnected(a);
       }
@@ -244,7 +245,7 @@ bool BleBase::init()
 bool BleBase::write(const BTAddr &addr, uint16_t handle, const uint8_t* data, uint8_t len, bool response) {
 
     p("BleBase::write(handle=0x%x, len=%d) ", handle, len);
-    uint16_t connId = getConnId(addr);
+    uint16_t connId = connState.getId(addr);
 
     esp_err_t errRc = ::esp_ble_gattc_write_char(
         pBLE->a_gattc_if,
@@ -267,15 +268,9 @@ bool BleBase::write(const BTAddr &addr, uint16_t handle, const uint8_t* data, ui
 
 bool BleBase::connect(const BTAddr& addr) {
     addr.println("BleBase::connect()");
+    onConnecting(addr);
     esp_err_t errRc = esp_ble_gattc_open(a_gattc_if, (uint8_t*)addr.addr, true);
-//    Serial.println(errRc == ESP_OK ? ") ok" : ") failed");
-    if(errRc == ESP_OK) {
-        onConnecting(addr);
-        return true;
-    } else {
-        onConnectFailed(addr);
-        return false;
-    }
+    return (errRc == ESP_OK);
 }
 
 
@@ -288,106 +283,40 @@ bool BleBase::registerNotify(const BTAddr &addr, uint16_t handle) {
 
 
 BleBase::BleBase() {
-
-  connStateMutex = xSemaphoreCreateMutex();
-  memset(&connState, 0, sizeof(connState));
 }
 
 
-int BleBase::getConnIndex(const BTAddr &addr) {
-  
-  for (int i=0; i<MAX_CONNECTIONS; i++) {
-    if(addr.isSame(connState[i].addr)) {
-      return i;
-    }
-  }  
-
-  for (int i=0; i<MAX_CONNECTIONS; i++) {
-    if(!connState[i].addr.isValid()) {
-      return i;
-    }
-  }  
-  
-  return -1;
-}
-
-
-void BleBase::setConnState(const BTAddr &addr, eState state, uint16_t connId) {
-
-  xSemaphoreTake(connStateMutex, MUTEX_MAX_DELAY);
-  int i = getConnIndex(addr);
-  if (i >= 0) {
-    if (!connState[i].addr.isValid()) {
-      connState[i].addr = addr;
-    }
-    connState[i].state = state;
-
-    if (connId != CONNID_INVALID) {
-      connState[i].connId = connId;
-    }
-  }
-  xSemaphoreGive(connStateMutex);
-
-  p("BleBase::setConnState(%s", eState2Str(state));
-  if (connId != CONNID_INVALID) {
-    p(", connId=0x%x", connId);
-  }
-  p(", i=%d)", i);
-  addr.println("");
-}
-
-
-eState BleBase::getConnState(const BTAddr &addr) {
-
-  xSemaphoreTake(connStateMutex, MUTEX_MAX_DELAY);
-  eState ret = disconnected;
-  int i = getConnIndex(addr);
-  if (i >= 0) {
-    ret = connState[i].state;
-  }
-  xSemaphoreGive(connStateMutex);
-  return ret;
-}
-
-
-uint16_t BleBase::getConnId(const BTAddr &addr) {
-  
-  xSemaphoreTake(connStateMutex, MUTEX_MAX_DELAY);
-  int i = getConnIndex(addr);
-  uint16_t connId = 0;
-  if (i > 0) {
-    connId = connState[i].connId;
-  }
-  xSemaphoreGive(connStateMutex);
-  return connId;
-}
-
-
-bool BleBase::canConnect() {
+bool BleBase::isConnecting() {
   //return gatt_find_i_tcb_free() != 0xFF;
-  return countStates(eState::connecting) == 0;
+  return connState.count(eState::connecting) != 0;
+}
+
+bool BleBase::hasFreeConnections() {
+  //return gatt_find_i_tcb_free() != 0xFF;
+  uint8_t nConnecting = connState.count(eState::connecting);
+  uint8_t nConnected = connState.count(eState::connected);
+//  p("hasFreeConnections(%d,%d)\n", nConnecting, nConnected);
+  return (nConnecting + nConnected) < MAX_OPEN_CONNECTIONS;
 }
 
 void BleBase::onConnectFailed(const BTAddr &addr) {
     addr.println("BleBase::onConnectFailed()");
-    setConnState(addr, failed, CONNID_INVALID);
-    resetConnState(addr);
+    connState.reset(addr);
 }
 
 void BleBase::onDisconnected(const BTAddr &addr) {
     addr.println("BleBase::disconnected()");
-    setConnState(addr, disconnected, CONNID_INVALID);
-    resetConnState(addr);
+    connState.reset(addr);
 }
 
 void BleBase::onConnected(const BTAddr &addr, uint16_t connId) {
     addr.println("BleBase::onConnected()");
-    setConnState(addr, connected, connId);
+    connState.set(addr, connected, connId);
 }
 
 void BleBase::onConnecting(const BTAddr &addr) {
     addr.println("BleBase::onConnecting()");
-    setConnState(addr, connecting, CONNID_INVALID);
+    connState.set(addr, connecting, CONNID_INVALID);
 }
 
 void BleBase::onReceiveData(const BTAddr &addr, const uint8_t* pData, uint8_t len) {
@@ -403,31 +332,15 @@ void BleBase::onWritten(bool success) {
 //    Serial.println(success ? "ok" : "failed");
 }
 
-void BleBase::resetConnState(const BTAddr &addr) {
-  xSemaphoreTake(connStateMutex, MUTEX_MAX_DELAY);
-  for (int i=0; i<MAX_CONNECTIONS; i++) {
-    if(addr.isSame(connState[i].addr)) {
-      memset(&connState[i], 0, sizeof(tConnState));
-    }
-  }  
-  xSemaphoreGive(connStateMutex);
-}
 
 void BleBase::disconnect(const BTAddr &addr) {
     esp_ble_gap_disconnect((uint8_t*)addr.addr);
 }
 
-
-uint8_t BleBase::countStates(eState state) {
-
-    uint8_t n = 0;
-    xSemaphoreTake(connStateMutex, MUTEX_MAX_DELAY);
-    for (int i=0; i<MAX_CONNECTIONS; i++) {
-        tConnState &st = connState[i];
-        if ((st.state == state) && (st.addr.isValid())) {
-            n++;
-        }
-    }  
-    xSemaphoreGive(connStateMutex);
-    return n;
+void BleBase::closeOldestConnection() {
+    BTAddr addr;
+    if (connState.getOldestOpenConn(addr)) {
+        addr.println("closeOldestConnection");
+        disconnect(addr);
+    }
 }

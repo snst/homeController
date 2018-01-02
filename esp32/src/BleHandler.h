@@ -6,6 +6,7 @@
 #include "BleBase.h"
 #include "common.h"
 #include "BTAddr.h"
+#include "Mutex.h"
 
 
 class BleHandler : public BleBase 
@@ -19,15 +20,15 @@ class BleHandler : public BleBase
 
   protected:
     virtual void onReceiveData(const BTAddr &addr, const uint8_t *pData, uint8_t len);
+    virtual void onConnecting(const BTAddr &addr);
     virtual void onConnected(const BTAddr &addr, uint16_t connId);
     virtual void onDisconnected(const BTAddr &addr);
     virtual void onConnectFailed(const BTAddr &addr);
-    virtual void setConnState(const BTAddr &addr, eState state, uint16_t connId);
+  	void addCmdIntern(const tBleCmd &cmd);
     bool getCmd(tBleCmd &cmd);
     void clearCmdFromQueue(const BTAddr &addr);
-  
     xQueueHandle queue;
-    SemaphoreHandle_t queueMutex;
+    Mutex mutexCmd;
 };
 
 #endif
