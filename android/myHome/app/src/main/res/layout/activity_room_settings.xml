@@ -45,8 +45,21 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="textPersonName"
-            android:text="Name"
-            tools:text="xx:xx:xx:xx:xx" />
+            android:text="0000000000" />
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MQTT Topic" />
+
+        <EditText
+            android:id="@+id/editMQTTTopic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:text="topic" />
 
         <Button
             android:id="@+id/btnSaveRoomSettings"

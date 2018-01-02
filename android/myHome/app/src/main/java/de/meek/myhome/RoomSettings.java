@@ -12,6 +12,7 @@ public class RoomSettings {
 
     private static final String ROOM_NAME = "room_name";
     private static final String ROOM_BT_ADDR = "room_bt_addr";
+    private static final String ROOM_MQTT_TOPIC = "room_mqtt_topic";
     private static final String ROOM_PRESET_TEMP = "room_ptemp";
 
 
@@ -23,10 +24,11 @@ public class RoomSettings {
             SharedPreferences settings = activity.getSharedPreferences(room.getId(), 0);
             room.name = settings.getString(ROOM_NAME, "Name");
         try {
-            room.btAddress.convertFromLong(settings.getLong(ROOM_BT_ADDR, 0x0l));
+            room.btAddress.convertFromLong(settings.getLong(ROOM_BT_ADDR, AccountConfig.BT_ADDRESS_DEFAULT.toLong()));
         } catch (Exception e) {
             room.btAddress.convertFromLong(0);
         }
+        room.mqttTopic = settings.getString(ROOM_MQTT_TOPIC, AccountConfig.MQTT_TOPIC_DEFAULT);
         room.presetTemp.clear();
         for (int i=0; i<Const.MAX_ROOM_PRESET_TEMP; i++) {
             int temp = settings.getInt(ROOM_PRESET_TEMP+i, Const.TEMP_DEFAULT);
@@ -41,6 +43,7 @@ public class RoomSettings {
         SharedPreferences.Editor editor = settings.edit();
         editor.putString(ROOM_NAME, room.name);
         editor.putLong(ROOM_BT_ADDR, room.btAddress.toLong());
+        editor.putString(ROOM_MQTT_TOPIC, room.mqttTopic.toString());
         int i=0;
         for (Integer temp: room.presetTemp
              ) {

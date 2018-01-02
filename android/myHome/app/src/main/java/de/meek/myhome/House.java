@@ -10,9 +10,9 @@ import java.util.ArrayList;
 public class House {
     protected ArrayList<Room> rooms = new ArrayList<Room>();
 
-    public House() {
+    protected ArrayList<String> mqttTopics = new ArrayList<String>();
 
-    }
+    public House() {}
 
     public Room getRoom(int i) {
         return rooms.get(i);
@@ -24,6 +24,9 @@ public class House {
 
     public void addRoom(Room room) {
         rooms.add(room);
+        if(!mqttTopics.contains(room.mqttTopic)) {
+            mqttTopics.add(room.mqttTopic);
+        }
     }
 
     public Room findRoom(BTAddr addr) {
@@ -38,6 +41,8 @@ public class House {
     public ArrayList<Room> getRoomList() {
         return rooms;
     }
+
+    public ArrayList<String> getMqttTopicList() { return mqttTopics; }
 
     public void clear() {
         rooms.clear();

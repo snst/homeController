@@ -13,6 +13,7 @@ public class Cmd {
     protected byte[] param = null;
     protected int roomId = -1;
     protected BTAddr addr = null;
+    protected String mqttTopic = "";
 
     public Cmd(int roomId, eCmd cmd) {
         this.cmd = cmd;
@@ -25,6 +26,10 @@ public class Cmd {
 
     public void setBtAddress(BTAddr addr) {
         this.addr = addr;
+    }
+
+    public void setMQTTTopic(String mqttTopic) {
+        this.mqttTopic = mqttTopic;
     }
 
     public byte[] getBuffer() {

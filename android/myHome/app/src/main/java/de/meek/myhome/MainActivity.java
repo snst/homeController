@@ -26,7 +26,7 @@ import java.util.Date;
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
 public class MainActivity extends AppCompatActivity {
 
-    final String APP_VERSION = "0.2.1";
+    final String APP_VERSION = "0.2.2";
 
     MqttHelper mqttHelper = null;
     Handler handler = new Handler();
@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
             if(r != null) {
                 if(r.btAddress.toLong() != 0) {
                     cmd.setBtAddress(r.btAddress);
+                    cmd.setMQTTTopic(r.mqttTopic);
                     mqttHelper.sendCmd(cmd);
                 }
             }
@@ -293,9 +294,9 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
-
-                if(topic.compareTo(AccountConfig.MQTT_TOPIC_STATUS)==0) {
+            public void messageArrived(String topicStatus, MqttMessage mqttMessage) throws Exception {
+                String topic = topicStatus.replace(AccountConfig.MQTT_TOPIC_STATUS_SUFFIX, "");
+                if(getHouse().getMqttTopicList().contains(topic)) {
                     msgCntStatus++;
                     int i=0;
                     byte[] b = mqttMessage.getPayload();

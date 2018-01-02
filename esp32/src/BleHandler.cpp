@@ -44,6 +44,7 @@ void BleHandler::execute() {
     switch (state) {
       case queued: {
         if(canConnect()) {
+          delay(50);
           connect(cmd.addr);
 //          cmd.addr.println("New state connecting: Reinsert cmd");
           delay(50);

@@ -13,6 +13,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import java.util.ArrayList;
 
 /**
  * Created by stefan on 02.12.2017.
@@ -24,11 +25,15 @@ public class MqttHelper {
     final String serverUri = AccountConfig.MQTT_SERVER_URI;
 
     final String clientId = AccountConfig.MQTT_CLIENT_ID;
-    final String subscriptionTopic = AccountConfig.MQTT_TOPIC_SUBSCRIPTION;
 
     final String username = AccountConfig.MQTT_USERNAME;
     final String password = AccountConfig.MQTT_PASSWORD;
     Context _context;
+
+    protected ArrayList<String> getMqttTopicList() {
+        MyApplication app = (MyApplication)_context;
+        return app.getHouse().getMqttTopicList();
+    }
 
     protected Logger getLogger() {
         MyApplication app = (MyApplication)_context;
@@ -65,8 +70,8 @@ public class MqttHelper {
 
         try {
             if(cmd != null && isConnected()) {
-                getLogger().add("<" + AccountConfig.MQTT_TOPIC_REQUEST + ": " + cmd.cmd.toString(), cmd.addr);
-               mqttAndroidClient.publish(AccountConfig.MQTT_TOPIC_REQUEST, cmd.getBuffer(), 0, false);
+                getLogger().add("<" + cmd.mqttTopic + AccountConfig.MQTT_TOPIC_REQUEST_SUFFIX + ": " + cmd.cmd.toString(), cmd.addr);
+               mqttAndroidClient.publish(cmd.mqttTopic + AccountConfig.MQTT_TOPIC_REQUEST_SUFFIX, cmd.getBuffer(), 0, false);
             }
         } catch (MqttException e) {
             e.printStackTrace();
@@ -110,8 +115,10 @@ public class MqttHelper {
                     disconnectedBufferOptions.setPersistBuffer(false);
                     disconnectedBufferOptions.setDeleteOldestMessages(false);
                     mqttAndroidClient.setBufferOpts(disconnectedBufferOptions);
-                    subscribeToTopic();
-                }
+                    for (String mqttTopic: getMqttTopicList()) {
+                        subscribeToTopic(mqttTopic + AccountConfig.MQTT_TOPIC_SUBSCRIPTION_SUFFIX);
+                    }
+                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
@@ -130,7 +137,7 @@ public class MqttHelper {
     }
 
 
-    private void subscribeToTopic() {
+    private void subscribeToTopic(final String subscriptionTopic) {
         try {
             mqttAndroidClient.subscribe(subscriptionTopic, 0, null, new IMqttActionListener() {
                 @Override

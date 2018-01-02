@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainSettingsActivity extends AppCompatActivity {
 
@@ -24,7 +25,10 @@ public class MainSettingsActivity extends AppCompatActivity {
         AccountConfig.MQTT_CLIENT_ID = getEditText(R.id.editClientId);
         AccountConfig.MQTT_USERNAME = getEditText(R.id.editUsername);
         AccountConfig.MQTT_PASSWORD = getEditText(R.id.editPassword);
-        AccountConfig.MQTT_TOPIC = getEditText(R.id.editMqttTopic);
+        AccountConfig.MQTT_TOPIC_DEFAULT = getEditText(R.id.editDefMqttTopic);
+        if(!AccountConfig.BT_ADDRESS_DEFAULT.convertFromString(getEditText(R.id.editDefBtAddr))) {
+            Toast.makeText(this, "Invalid BT address!", Toast.LENGTH_LONG).show();
+        }
         int n = Integer.parseInt(getEditText(R.id.editNumberOfRooms));
         n = Math.min(20, n);
         n = Math.max(1, n);
@@ -45,7 +49,8 @@ public class MainSettingsActivity extends AppCompatActivity {
         setEditText(R.id.editClientId, AccountConfig.MQTT_CLIENT_ID);
         setEditText(R.id.editUsername, AccountConfig.MQTT_USERNAME);
         setEditText(R.id.editPassword, AccountConfig.MQTT_PASSWORD);
-        setEditText(R.id.editMqttTopic, AccountConfig.MQTT_TOPIC);
+        setEditText(R.id.editDefMqttTopic, AccountConfig.MQTT_TOPIC_DEFAULT);
+        setEditText(R.id.editDefBtAddr, AccountConfig.BT_ADDRESS_DEFAULT.toString());
         setEditText(R.id.editNumberOfRooms, ""+AccountConfig.NUMBER_OF_ROOMS);
     }
 }

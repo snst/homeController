@@ -15,18 +15,21 @@ public class RoomSettingsActivity extends AppCompatActivity {
 
     String roomName;
     String btAddress;
-    TextView txtBtAddress;
+    String mqttTopic;
     TextView txtRoomName;
+    TextView txtBtAddress;
+    TextView txtMqttTopic;
     Room room;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_room_settings);
-        setTitle("Room RoomSettings");
+        setTitle("Room Settings");
 
         txtRoomName = findViewById(R.id.editRoomName);
         txtBtAddress = findViewById(R.id.editBTAddress);
+        txtMqttTopic = findViewById(R.id.editMQTTTopic);
 
         Intent intent = getIntent();
         int id = intent.getIntExtra(Const.INTENT_ROOM_ID, 0);
@@ -34,6 +37,7 @@ public class RoomSettingsActivity extends AppCompatActivity {
 
         txtRoomName.setText( room.name);
         txtBtAddress.setText( room.btAddress.toString());
+        txtMqttTopic.setText( room.mqttTopic);
     }
 
     public void onSaveSettings(View view) {
@@ -42,6 +46,7 @@ public class RoomSettingsActivity extends AppCompatActivity {
         if(!room.btAddress.convertFromString(txtBtAddress.getText().toString())) {
             Toast.makeText(this, "Invalid BT address!", Toast.LENGTH_LONG).show();
         }
+        room.mqttTopic = txtMqttTopic.getText().toString();
 
         RoomSettings roomSettings = new RoomSettings(this);
         roomSettings.saveRoom(room);
