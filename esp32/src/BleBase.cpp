@@ -292,11 +292,11 @@ bool BleBase::isConnecting() {
 }
 
 bool BleBase::hasFreeConnections() {
-  //return gatt_find_i_tcb_free() != 0xFF;
-  uint8_t nConnecting = connState.count(eState::connecting);
-  uint8_t nConnected = connState.count(eState::connected);
+  return gatt_find_i_tcb_free() != 0xFF;
+  //uint8_t nConnecting = connState.count(eState::connecting);
+  //uint8_t nConnected = connState.count(eState::connected);
 //  p("hasFreeConnections(%d,%d)\n", nConnecting, nConnected);
-  return (nConnecting + nConnected) < MAX_OPEN_CONNECTIONS;
+  //return (nConnecting + nConnected) < MAX_OPEN_CONNECTIONS;
 }
 
 void BleBase::onConnectFailed(const BTAddr &addr) {
