@@ -17,6 +17,27 @@ MqttHandler mqtt(client);
 void(* softReset) (void) = 0;//declare reset function at address 0
 
 
+static int taskCore = 1;
+ 
+/*
+void rrr() {
+  ble->execute();
+}*/
+
+void taskBT( void * pvParameters ){
+ 
+  delay(100);
+  //Serial.println("BTTask started");
+  while(true) {
+    delay(100);
+ble.execute();
+    Serial.print(".");
+  }
+
+  vTaskDelete(NULL);  
+}
+
+
 void setup() {
   Serial.begin(115200);
   p("Version %d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_REV);
@@ -25,6 +46,7 @@ void setup() {
   config.loadSettings();
   config.userInput(2000);
 
+ // ble = new BleHandler;
   ble.init();
 
   mqtt.setTopicStatus(config.mqtt_topic_status.c_str());
@@ -34,6 +56,8 @@ void setup() {
   
   WiFi.begin(config.wlan_ssid.c_str(), config.wlan_pw.c_str());
   printMem();
+
+  xTaskCreate(&taskBT, "taskBT", 10240, NULL, 1, NULL);
 }
 
 
@@ -57,13 +81,15 @@ void connectWLAN()
 
 void loop() {
 
+//Serial.println(xPortGetCoreID());
+
   connectWLAN();
 
   mqtt.connect();
 
   mqtt.execute();
-  
-  ble.execute();
 
-  doIdle();
+ // ble.execute();
+
+//  doIdle();
 }

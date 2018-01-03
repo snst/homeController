@@ -58,9 +58,10 @@ void BleHandler::setNextRound(uint16_t ms) {
 
 void BleHandler::execute() {
 
-  if (!skipRound()) {
+//  if (!skipRound()) 
+  {
 
-    setNextRound(100);
+  //  setNextRound(100);
 
     tBleCmd cmd;
     AutoLock m1(mutexCmd);
@@ -72,10 +73,10 @@ void BleHandler::execute() {
           if (!isConnecting()) {
             if (hasFreeConnections()) {
               connect(cmd.addr);
-              setNextRound(500);
+  //            setNextRound(500);
             } else {
               closeOldestConnection();
-              setNextRound(500);
+  //            setNextRound(500);
             }
           } else {
             //p("W");
