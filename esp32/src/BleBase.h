@@ -46,6 +46,7 @@ class BleBase {
     virtual void onServiceFound();
     virtual void onWritten(bool success);
     bool registerNotify(const BTAddr &addr, uint16_t handle);
+    bool unregisterNotify(const BTAddr &addr, uint16_t handle);
 
   protected:
     esp_gattc_cb_t a_gattc_cb;

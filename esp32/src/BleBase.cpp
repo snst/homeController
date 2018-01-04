@@ -277,10 +277,14 @@ bool BleBase::connect(const BTAddr& addr) {
 bool BleBase::registerNotify(const BTAddr &addr, uint16_t handle) {
     Serial.print("BleBase::registerNotify() handle=0x");
     Serial.println(handle, HEX);
-    esp_ble_gattc_register_for_notify (pBLE->a_gattc_if, (uint8_t*)addr.addr, handle);
-    return true;
+    return ESP_OK == esp_ble_gattc_register_for_notify(pBLE->a_gattc_if, (uint8_t*)addr.addr, handle);
 }
 
+bool BleBase::unregisterNotify(const BTAddr &addr, uint16_t handle) {
+    Serial.print("BleBase::unregisterNotify() handle=0x");
+    Serial.println(handle, HEX);
+    return ESP_OK == esp_ble_gattc_unregister_for_notify(pBLE->a_gattc_if, (uint8_t*)addr.addr, handle);
+}
 
 BleBase::BleBase() {
 }

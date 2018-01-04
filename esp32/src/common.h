@@ -7,7 +7,7 @@
 
 #define VERSION_MAJOR   0
 #define VERSION_MINOR   2
-#define VERSION_REV     5
+#define VERSION_REV     6
 
 #define MAX_OPEN_CONNECTIONS 4
 
@@ -25,7 +25,10 @@
 #define CONNID_INVALID 0xFFFF
 
 #define IDLE_AFTER_MS (30*1000)
-#define IDLE_MS 50
+#define SLEEP_IDLE_TIME 250
+#define SLEEP_WORK_TIME 10
+
+#define EQ3_NOTIFICATION_HANDLE 0x421
 
 enum eCmd {
     NONE = 0,
@@ -71,7 +74,7 @@ void dump(const char *str, const uint8_t *data, uint8_t len);
 void p(const char *fmt, ... );
 void printMem();
 void updateLastCmdTimestamp();
-void doIdle();
+int getSleepTime();
 const char *eState2Str(eState state);
 
 

@@ -17,6 +17,30 @@ MqttHandler mqtt(client);
 void(* softReset) (void) = 0;//declare reset function at address 0
 
 
+void taskBT( void * pvParameters ){
+ 
+  delay(1000);
+  while(true) {
+    delay(getSleepTime());
+    ble.execute();
+//    Serial.print(".");
+  }
+  vTaskDelete(NULL);  
+}
+
+void taskMQTT( void * pvParameters ){
+ 
+  delay(1000);
+  while(true) {
+    delay(getSleepTime());
+    mqtt.connect();
+    mqtt.execute();
+    //Serial.print(",");
+  }
+  vTaskDelete(NULL);  
+}
+
+
 void setup() {
   Serial.begin(115200);
   p("Version %d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_REV);
@@ -34,6 +58,9 @@ void setup() {
   
   WiFi.begin(config.wlan_ssid.c_str(), config.wlan_pw.c_str());
   printMem();
+
+  xTaskCreate(&taskBT, "taskBT", 10240, NULL, 1, NULL);
+  xTaskCreate(&taskMQTT, "taskMQTT", 10240, NULL, 1, NULL);
 }
 
 
@@ -59,11 +86,5 @@ void loop() {
 
   connectWLAN();
 
-  mqtt.connect();
-
-  mqtt.execute();
-  
-  ble.execute();
-
-  doIdle();
+  delay(1000);
 }
