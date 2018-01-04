@@ -12,17 +12,14 @@ void updateLastCmdTimestamp() {
  lastMS = millis();
 }
 
-void doIdle() {
+int getSleepTime() {
 
   unsigned long ms = millis();
-  if (ms < lastMS) {
-    lastMS = ms;
-  }
 
   if ((ms - lastMS) > IDLE_AFTER_MS) {
-    delay(IDLE_MS);
+    return (SLEEP_IDLE_TIME);
   } else {
-    delay(0);
+    return (SLEEP_WORK_TIME);
   }
 }
 

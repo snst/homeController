@@ -25,6 +25,7 @@ void BleHandler::onReceiveData(const BTAddr &addr, const uint8_t *pData, uint8_t
 
 void BleHandler::onDisconnected(const BTAddr &addr) {
   BleBase::onDisconnected(addr);
+  unregisterNotify(addr, EQ3_NOTIFICATION_HANDLE);
   mqtt.sendResponseConnection(addr, disconnected);
 }
 
@@ -43,7 +44,7 @@ void BleHandler::onConnectFailed(const BTAddr &addr) {
 
 void BleHandler::onConnected(const BTAddr &addr, uint16_t connId) {
   BleBase::onConnected(addr, connId);
-  registerNotify(addr, 0x421);
+  registerNotify(addr, EQ3_NOTIFICATION_HANDLE);
   mqtt.sendResponseConnection(addr, connected);
 }
 
@@ -81,11 +82,11 @@ void BleHandler::execute() {
           } else {
             //p("W");
           }
-          addCmdIntern(cmd);
+          addCmdInternFront(cmd);
           break;
         }
         case connecting: {
-          addCmdIntern(cmd);
+          addCmdInternFront(cmd);
           break;
         }
         case disconnecting: {
@@ -105,7 +106,7 @@ void BleHandler::execute() {
         case connected: {
           if (!write(cmd.addr, 0x411, cmd.data, cmd.len, true) ) {
             cmd.addr.println("write failed: Reinsert cmd");
-            addCmdIntern(cmd); 
+            addCmdInternFront(cmd); 
           }
           break;
         }
@@ -123,12 +124,17 @@ bool BleHandler::getCmd(tBleCmd &cmd) {
 
 void BleHandler::addCmd(const tBleCmd &cmd) {
   AutoLock l(mutexCmd);
-  addCmdIntern(cmd);
+  addCmdInternBack(cmd);
 }
 
 
-void BleHandler::addCmdIntern(const tBleCmd &cmd) {
+void BleHandler::addCmdInternBack(const tBleCmd &cmd) {
   xQueueSendToBack(queue, &cmd, 0);
+}
+
+
+void BleHandler::addCmdInternFront(const tBleCmd &cmd) {
+  xQueueSendToFront(queue, &cmd, 0);
 }
 
 

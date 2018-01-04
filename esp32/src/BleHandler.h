@@ -24,7 +24,8 @@ class BleHandler : public BleBase
     virtual void onConnected(const BTAddr &addr, uint16_t connId);
     virtual void onDisconnected(const BTAddr &addr);
     virtual void onConnectFailed(const BTAddr &addr);
-  	void addCmdIntern(const tBleCmd &cmd);
+  	void addCmdInternBack(const tBleCmd &cmd);
+  	void addCmdInternFront(const tBleCmd &cmd);
     bool getCmd(tBleCmd &cmd);
     void clearCmdFromQueue(const BTAddr &addr);
     bool skipRound();
