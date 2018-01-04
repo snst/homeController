@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     public void sendCmd(Cmd cmd) {
 
         if(cmd.roomId == -1) {
+            cmd.setMQTTTopic(AccountConfig.MQTT_TOPIC_DEFAULT);
             mqttHelper.sendCmd(cmd);
         } else {
             Room r = getHouse().getRoom(cmd.roomId);
