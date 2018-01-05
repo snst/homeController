@@ -113,7 +113,7 @@ class HomeConfig {
 
   void userInput(int ms) {
     Serial.println("Press return for config\n");
-    delay(ms);
+    sleep(ms);
     while(Serial.available() > 0) {
       if (Serial.read() == '\n') {
         doConfiguration();

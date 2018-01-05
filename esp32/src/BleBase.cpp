@@ -237,7 +237,7 @@ bool BleBase::init()
     }
 
     Serial.println("BleBase::init: ok");
-    delay(200);
+    sleep(200);
     return true;
 }
 

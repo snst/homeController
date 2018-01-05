@@ -53,6 +53,11 @@ void printMem()
   Serial.println(xPortGetMinimumEverFreeHeapSize());
 }
 
+void sleep(int ms) {
+  vTaskDelay( ms / portTICK_RATE_MS);
+}
+
+
 
 const char *eState2Str(eState state) {
   switch(state) {

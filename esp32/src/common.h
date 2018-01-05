@@ -76,7 +76,7 @@ void printMem();
 void updateLastCmdTimestamp();
 int getSleepTime();
 const char *eState2Str(eState state);
-
+void sleep(int ms);
 
 
 #endif

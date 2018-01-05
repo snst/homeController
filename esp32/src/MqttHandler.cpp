@@ -19,13 +19,11 @@ MqttHandler::MqttHandler(PubSubClient &c)
 }
 
 void MqttHandler::addResponse(MqttResponse &msg) {
-  AutoLock l(mutexQueue);
   xQueueSendToBack(queue, &msg, 0);
 }
 
 
 bool MqttHandler::getResponse(MqttResponse &msg) {
-  AutoLock l(mutexQueue);
   bool ret = (pdPASS == xQueueReceive(queue, &msg, 0));
   return ret;
 }
@@ -63,11 +61,11 @@ void MqttHandler::connect() {
       Serial.print("connected!\nSubscripe to ");
       Serial.println(topicRequest);  
       client.subscribe(topicRequest);
-      delay(500);
+      sleep(500);
     } else {
       Serial.print("failed with state ");
       Serial.println(client.state());
-      delay(1000);
+      sleep(1000);
     }
   }
 }

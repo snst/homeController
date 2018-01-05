@@ -65,8 +65,7 @@ void BleHandler::execute() {
   //  setNextRound(100);
 
     tBleCmd cmd;
-    AutoLock m1(mutexCmd);
-    AutoLock m2(mutexBT);
+    AutoLock m(mutexBT);
     if(getCmd(cmd)) {
       eState state = connState.get(cmd.addr);
       switch (state) {
@@ -74,6 +73,7 @@ void BleHandler::execute() {
           if (!isConnecting()) {
             if (hasFreeConnections()) {
               connect(cmd.addr);
+              sleep(100);
   //            setNextRound(500);
             } else {
               closeOldestConnection();
@@ -82,11 +82,11 @@ void BleHandler::execute() {
           } else {
             //p("W");
           }
-          addCmdInternFront(cmd);
+          addCmd(cmd);
           break;
         }
         case connecting: {
-          addCmdInternFront(cmd);
+          addCmd(cmd);
           break;
         }
         case disconnecting: {
@@ -106,7 +106,7 @@ void BleHandler::execute() {
         case connected: {
           if (!write(cmd.addr, 0x411, cmd.data, cmd.len, true) ) {
             cmd.addr.println("write failed: Reinsert cmd");
-            addCmdInternFront(cmd); 
+            addCmd(cmd); 
           }
           break;
         }
@@ -123,23 +123,11 @@ bool BleHandler::getCmd(tBleCmd &cmd) {
 
 
 void BleHandler::addCmd(const tBleCmd &cmd) {
-  AutoLock l(mutexCmd);
-  addCmdInternBack(cmd);
-}
-
-
-void BleHandler::addCmdInternBack(const tBleCmd &cmd) {
   xQueueSendToBack(queue, &cmd, 0);
 }
 
 
-void BleHandler::addCmdInternFront(const tBleCmd &cmd) {
-  xQueueSendToFront(queue, &cmd, 0);
-}
-
-
 void BleHandler::clear() {
-  AutoLock l(mutexCmd);
   xQueueReset(queue);
 }
 

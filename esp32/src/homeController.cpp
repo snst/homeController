@@ -19,9 +19,9 @@ void(* softReset) (void) = 0;//declare reset function at address 0
 
 void taskBT( void * pvParameters ){
  
-  delay(1000);
+  sleep(1000);
   while(true) {
-    delay(getSleepTime());
+    sleep(getSleepTime());
     ble.execute();
 //    Serial.print(".");
   }
@@ -30,9 +30,9 @@ void taskBT( void * pvParameters ){
 
 void taskMQTT( void * pvParameters ){
  
-  delay(1000);
+  sleep(1000);
   while(true) {
-    delay(getSleepTime());
+    sleep(getSleepTime());
     mqtt.connect();
     mqtt.execute();
     //Serial.print(",");
@@ -74,7 +74,7 @@ void connectWLAN()
         Serial.println(" trying reboot");
         softReset();
       }
-      delay(1000);
+      sleep(1000);
       Serial.print(".");
     }
     Serial.println(" connected!");
@@ -86,5 +86,5 @@ void loop() {
 
   connectWLAN();
 
-  delay(1000);
+  sleep(1000);
 }
