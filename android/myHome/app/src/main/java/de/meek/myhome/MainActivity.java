@@ -26,7 +26,7 @@ import java.util.Date;
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
 public class MainActivity extends AppCompatActivity {
 
-    final String APP_VERSION = "0.2.2";
+    final String APP_VERSION = "0.2.3";
 
     MqttHelper mqttHelper = null;
     Handler handler = new Handler();
@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     RoomSettings roomSettings = null;
     RoomStatusArrayAdapter adapter = null;
     SwipeRefreshLayout refreshLayout = null;
+    boolean mqttConnected = false;
 
     protected MyApplication getMyApp() {
         return ((MyApplication)getApplicationContext());
@@ -53,7 +54,9 @@ public class MainActivity extends AppCompatActivity {
     public void sendCmd(Cmd cmd) {
 
         if(cmd.roomId == -1) {
-            cmd.setMQTTTopic(AccountConfig.MQTT_TOPIC_DEFAULT);
+            for (String mqttTopic: getHouse().getMqttTopicList()) {
+                cmd.setMQTTTopic(mqttTopic);
+            }
             mqttHelper.sendCmd(cmd);
         } else {
             Room r = getHouse().getRoom(cmd.roomId);
@@ -198,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
         getHouse().clear();
         setContentView(R.layout.activity_main);
         log("App version: " + APP_VERSION);
+        updateTitle();
 
         AccountConfig.load(this);
         roomSettings = new RoomSettings(this);
@@ -275,12 +279,22 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
     }
 
+    void updateTitle() {
+        setTitle("myHome - " + (mqttConnected ? "connected" : "disconnected") + " #" + msgCntMode);
+    }
+
+    void setMqttConnectedStatus(boolean connected) {
+        mqttConnected = connected;
+        updateTitle();
+    }
+
     private void startMqtt(){
         mqttHelper = new MqttHelper(getApplicationContext());
         mqttHelper.setCallback(new MqttCallbackExtended() {
             @Override
             public void connectComplete(boolean b, String s) {
-                log("Mqtt connected", true);
+                setMqttConnectedStatus(true);
+                log("Mqtt connected");
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -291,7 +305,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void connectionLost(Throwable throwable) {
-                log("Mqtt disconnected", true);
+                setMqttConnectedStatus(false);
+                log("Mqtt disconnected");
             }
 
             @Override
@@ -321,6 +336,7 @@ public class MainActivity extends AppCompatActivity {
                                         room.temp = 5 *  b[i++];
                                         room.autoActive = (status & 1)==0;
                                         room.boostActive = (status & 4)>0;
+                                        room.lowBattery = (status & 80)>0;
                                         room.valid = true;
                                         room.msgCount++;
                                         room.lastUpdate = new Date();
@@ -365,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     msgCntMode++;
                 }
-                setTitle("myHome #" + msgCntMode);
+                updateTitle();
             }
 
             @Override

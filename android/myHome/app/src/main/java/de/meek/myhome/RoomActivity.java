@@ -175,6 +175,7 @@ public class RoomActivity extends AppCompatActivity {
         if(room != null) {
             str = room.autoActive ? "Auto" : "Manual";
             if (room.boostActive) str += " + Boost";
+            if (room.lowBattery) str += " + low Battery";
             str += "    " + Format.tempAndPercentToString(temp, room.percent);
             lastUpdate += room.msgCount;
             lastUpdate += ": ";

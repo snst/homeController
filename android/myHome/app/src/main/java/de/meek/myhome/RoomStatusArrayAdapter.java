@@ -45,6 +45,8 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
 
         if(room.valid) {
             temp = Format.tempToString(room.temp);
+            if(room.lowBattery)
+                mode += "!";
             if(room.autoActive)
                 mode = "A";
             if(room.boostActive)

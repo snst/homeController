@@ -14,6 +14,7 @@ public class Room {
     public int id;
     public boolean autoActive = false;
     public boolean boostActive = false;
+    public boolean lowBattery = false;
     public int percent = 0;
     public int temp = 0;
     public int msgCount = 0;
