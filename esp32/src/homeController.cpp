@@ -1,6 +1,7 @@
 // Copyright 2017 Stefan Schmidt
 
-#include <WiFi.h>
+//#include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include "common.h"
 #include "BleBase.h"
@@ -12,7 +13,8 @@
 
 BleHandler ble;
 HomeConfig config;
-WiFiClient wifi;
+//WiFiClient wifi;
+WiFiClientSecure wifi;
 PubSubClient client(wifi);
 MqttHandler mqtt(client);
 
@@ -35,8 +37,10 @@ void taskMQTT( void * pvParameters ){
   sleep(1000);
   while(true) {
     sleep(getSleepTime());
-    mqtt.connect();
-    mqtt.execute();
+    if (WiFi.status() == WL_CONNECTED) {
+      mqtt.connect();
+      mqtt.execute();
+    }
     //Serial.print(",");
   }
   vTaskDelete(NULL);  
@@ -71,7 +75,7 @@ void setup() {
 void connectWLAN()
 {
   if(WiFi.status() != WL_CONNECTED) {
-    int i=15;
+    int i=6;
     Serial.print("Connecting to WiFi..");
     while (WiFi.status() != WL_CONNECTED) {
       if(--i == 0) {
