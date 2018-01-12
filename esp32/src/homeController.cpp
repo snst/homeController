@@ -7,6 +7,8 @@
 #include "BleHandler.h"
 #include "HomeConfig.h"
 #include "MqttHandler.h"
+#include "soc/rtc.h"
+
 
 BleHandler ble;
 HomeConfig config;
@@ -59,8 +61,10 @@ void setup() {
   WiFi.begin(config.wlan_ssid.c_str(), config.wlan_pw.c_str());
   printMem();
 
-  xTaskCreate(&taskBT, "taskBT", 10240, NULL, 1, NULL);
-  xTaskCreate(&taskMQTT, "taskMQTT", 10240, NULL, 1, NULL);
+  rtc_clk_cpu_freq_set(RTC_CPU_FREQ_80M);
+
+  xTaskCreate(&taskBT, "taskBT", 5120, NULL, 1, NULL);
+  xTaskCreate(&taskMQTT, "taskMQTT", 5120, NULL, 1, NULL);
 }
 
 
