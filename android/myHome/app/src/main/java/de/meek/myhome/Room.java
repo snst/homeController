@@ -15,6 +15,9 @@ public class Room {
     public boolean autoActive = false;
     public boolean boostActive = false;
     public boolean lowBattery = false;
+    public boolean showControls = false;
+    public int lastRequestedTemp = Const.TEMP_DEFAULT;
+    public boolean updateOnStart = true;
     public int percent = 0;
     public int temp = 0;
     public int msgCount = 0;

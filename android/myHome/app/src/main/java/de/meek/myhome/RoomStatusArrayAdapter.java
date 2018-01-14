@@ -5,40 +5,80 @@
 package de.meek.myhome;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
 public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
     private final Context context;
     private final ArrayList<Room> rooms;
+    private MainActivity mainActivity = null;
+    private int touchPositionX = 0;
+
+    class UserHolder {
+        TextView txtName;
+        TextView txtTemp;
+        TextView txtPercent;
+        TextView txtMsgCnt;
+        ImageView imgStatus;
+        Button btnOff;
+        Button btnOn;
+        Button btnPreset1;
+        Button btnPreset2;
+        Button btnInc;
+        Button btnDec;
+        LinearLayout layoutCmd;
+    }
 
     public RoomStatusArrayAdapter(Context context, ArrayList<Room> rooms) {
         super(context, -1, rooms);
         this.context = context;
         this.rooms = rooms;
+        this.mainActivity = (MainActivity) context;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        LayoutInflater inflater = (LayoutInflater) context
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View rowView = inflater.inflate(R.layout.roomstatus_view, parent, false);
 
-        TextView txtName = rowView.findViewById(R.id.txtRoomStatusName);
-        TextView txtTemp = rowView.findViewById(R.id.txtRoomStatusTemp);
-        TextView txtPercent = rowView.findViewById(R.id.txtRoomStatusPercent);
-        TextView txtMsgCnt = rowView.findViewById(R.id.txtRoomStatusMsgCnt);
-        ImageView imgStatus = rowView.findViewById(R.id.imageStatus);
+        UserHolder holder = null;
+        View rowView = convertView;
+        if(rowView == null) {
+            LayoutInflater inflater = (LayoutInflater) context
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            rowView = inflater.inflate(R.layout.roomstatus_view, parent, false);
+
+            holder = new UserHolder();
+            holder.txtName = rowView.findViewById(R.id.txtRoomStatusName);
+            holder.txtTemp = rowView.findViewById(R.id.txtRoomStatusTemp);
+            holder.txtPercent = rowView.findViewById(R.id.txtRoomStatusPercent);
+            holder.txtMsgCnt = rowView.findViewById(R.id.txtRoomStatusMsgCnt);
+            holder.imgStatus = rowView.findViewById(R.id.imageStatus);
+            holder.btnOff = rowView.findViewById(R.id.btnOff);
+            holder.btnOn = rowView.findViewById(R.id.btnOn);
+            holder.btnPreset1 = rowView.findViewById(R.id.btnPreset1);
+            holder.btnPreset2 = rowView.findViewById(R.id.btnPreset2);
+            holder.btnInc = rowView.findViewById(R.id.btnInc);
+            holder.btnDec = rowView.findViewById(R.id.btnDec);
+            holder.layoutCmd = rowView.findViewById(R.id.layoutCmd);
+            rowView.setTag(holder);
+        } else {
+            holder = (UserHolder) rowView.getTag();
+        }
 
         Room room = rooms.get(position);
-
-        txtName.setText( room.name + " : ");
+        holder.layoutCmd.setVisibility(room.showControls ? View.VISIBLE : View.GONE);
+        holder.txtName.setText( room.name + " : ");
         String mode = "";
         String temp = "";
         String percent = "";
@@ -74,10 +114,96 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
                 icon = R.drawable.ic_failed;
                 break;
         }
-        txtTemp.setText(temp);
-        txtPercent.setText(percent);
-        imgStatus.setImageResource(icon);
-        txtMsgCnt.setText(""+room.msgCount);
+        holder.txtTemp.setText(temp);
+        holder.txtPercent.setText(percent);
+        holder.imgStatus.setImageResource(icon);
+        holder.txtMsgCnt.setText(""+room.msgCount);
+        final int roomId = room.id;
+        final int roomPresetTemp1 = room.presetTemp.get(1);
+        final int roomPresetTemp2 = room.presetTemp.get(2);
+
+        holder.btnPreset1.setText(Format.tempToString(roomPresetTemp1));
+        holder.btnPreset2.setText(Format.tempToString(roomPresetTemp2));
+
+        holder.btnOff.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mainActivity.requestSetTemp(roomId, Const.TEMP_MIN);
+            }
+        });
+
+        holder.btnOn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mainActivity.requestSetTemp(roomId, Const.TEMP_MAX);
+            }
+        });
+
+        holder.btnPreset1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mainActivity.requestSetTemp(roomId, roomPresetTemp1);
+            }
+        });
+
+        holder.btnPreset2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mainActivity.requestSetTemp(roomId, roomPresetTemp2);
+            }
+        });
+
+        holder.btnInc.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Room room = rooms.get(roomId);
+                room.lastRequestedTemp += Const.TEMP_STEP;
+                mainActivity.requestSetTemp(roomId, room.lastRequestedTemp);
+            }
+        });
+
+        holder.btnDec.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Room room = rooms.get(roomId);
+                room.lastRequestedTemp -= Const.TEMP_STEP;
+                mainActivity.requestSetTemp(roomId, room.lastRequestedTemp);
+            }
+        });
+
+        rowView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (touchPositionX < view.getWidth() * 2 / 3) {
+                    mainActivity.showRoomSettingsActivity(roomId);
+                } else {
+                    mainActivity.requestStatusOfRoom(roomId);
+                }
+
+            }
+        });
+
+        rowView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    touchPositionX = (int)event.getX();
+                }
+                return false;
+            }
+        });
+
+
+        rowView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                mainActivity.closeConnection(roomId);
+                return false;
+            }
+        });
+
         return rowView;
     }
+
+
 }

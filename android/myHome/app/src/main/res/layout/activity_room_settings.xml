@@ -61,6 +61,20 @@
             android:inputType="textPersonName"
             android:text="topic" />
 
+        <CheckBox
+            android:id="@+id/cbShowControls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:text="Show controls" />
+
+        <CheckBox
+            android:id="@+id/cbUpdateOnStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:text="Update on start" />
+
         <Button
             android:id="@+id/btnSaveRoomSettings"
             android:layout_width="match_parent"

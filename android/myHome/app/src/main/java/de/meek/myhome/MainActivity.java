@@ -26,14 +26,13 @@ import java.util.Date;
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
 public class MainActivity extends AppCompatActivity {
 
-    final String APP_VERSION = "0.2.3";
+    final String APP_VERSION = "0.2.4";
 
     MqttHelper mqttHelper = null;
     Handler handler = new Handler();
     ListView listView = null;
     int msgCntStatus = 0;
     int msgCntMode = 0;
-    int touchPositionX = 0;
     RoomSettings roomSettings = null;
     RoomStatusArrayAdapter adapter = null;
     SwipeRefreshLayout refreshLayout = null;
@@ -70,10 +69,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void requestStatusOfAllRooms() {
+    public void requestStatusOfAllRooms(boolean forceAll) {
         for(int i=0; i<getHouse().getSize(); i++) {
-            getHouse().getRoom(i).connectionState = eConnectionState.DISCONNECTED;
-            requestStatusOfRoom(i);
+            Room r = getHouse().getRoom(i);
+            if(forceAll || r.updateOnStart) {
+                r.connectionState = eConnectionState.DISCONNECTED;
+                requestStatusOfRoom(i);
+            }
         }
         updateAllRooms();
     }
@@ -89,6 +91,12 @@ public class MainActivity extends AppCompatActivity {
     public void requestSetTemp(int roomId, int temp) {
         final int finalTemp = temp;
         final int finalRoom = roomId;
+        if(temp < Const.TEMP_MIN) {
+            temp = Const.TEMP_MIN;
+        }
+        else if(temp > Const.TEMP_MAX) {
+            temp = Const.TEMP_MAX;
+        }
         getLogger().add("setTemp(roomId=" + roomId + ", temp=" + temp + ")");
         handler.removeCallbacksAndMessages(null);
         handler.postDelayed(new Runnable() {
@@ -168,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
                 sendCmd(new Cmd(-1,eCmd.ABORT));
                 break;
             case R.id.action_refresh_all:
-                requestStatusOfAllRooms();
+                requestStatusOfAllRooms(true);
                 break;
             case R.id.action_log:
                 showLogActivity();
@@ -214,44 +222,14 @@ public class MainActivity extends AppCompatActivity {
         }
         adapter = new RoomStatusArrayAdapter(this, getHouse().getRoomList());
         listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapter, View v, int position, long arg3) {
 
-                if (touchPositionX < v.getWidth() * 2 / 3) {
-                    showRoomSettingsActivity(position);
-                } else {
-                    requestStatusOfRoom(position);
-                }
-            }
-        });
-
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapter, View v, int position, long id) {
-
-                if(getHouse().getRoom(position).isConnected()) {
-                    closeConnection(position);
-                } else {
-                    showRoomSettingsActivity(position);
-                }
-                return true;
-            }
-        });
-
-        listView.setOnTouchListener(new View.OnTouchListener() {
-            public boolean onTouch(View view, MotionEvent event) {
-                touchPositionX = (int) event.getX();
-                return false;
-            }
-        });
 
         refreshLayout = findViewById(R.id.swiperefresh);
         refreshLayout.setOnRefreshListener(
                 new SwipeRefreshLayout.OnRefreshListener() {
                     @Override
                     public void onRefresh() {
-                        requestStatusOfAllRooms();
+                        requestStatusOfAllRooms(true);
                         refreshLayout.setRefreshing(false);
                     }
                 }
@@ -261,6 +239,7 @@ public class MainActivity extends AppCompatActivity {
         updateAllRooms();
         startMqtt();
     }
+
 
     @Override
     public void onBackPressed() {
@@ -298,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        requestStatusOfAllRooms();
+                        requestStatusOfAllRooms(false);
                     }
                 }, 1000); //delay
             }
@@ -334,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
                                         room.percent =  b[i++];
                                         i++; // data[2];
                                         room.temp = 5 *  b[i++];
+                                        room.lastRequestedTemp = room.temp;
                                         room.autoActive = (status & 1)==0;
                                         room.boostActive = (status & 4)>0;
                                         room.lowBattery = (status & 80)>0;
