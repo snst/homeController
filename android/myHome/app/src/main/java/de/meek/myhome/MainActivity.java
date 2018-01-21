@@ -70,6 +70,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void requestStatusOfAllRooms(boolean forceAll) {
+
+        sendCmd(new Cmd(-1,eCmd.GETTEMP));
+
+
         for(int i=0; i<getHouse().getSize(); i++) {
             Room r = getHouse().getRoom(i);
             if(forceAll || r.updateOnStart) {
@@ -348,6 +352,19 @@ public class MainActivity extends AppCompatActivity {
                                     } else {
                                         log(">" + topic + ": connState: no matching room", addr);
                                     }
+                                }
+                            } break;
+                            case BME: {
+                                if(b.length==(2 + 3)) {
+
+                                    short temp = (short)((b[i] << 8) | b[i+1]);
+                                    i += 2;
+                                    int humidity = b[i++];
+                                    float temperature = temp / 100.0f;
+
+                                    String str = "temp=" + temperature + ", humidity=" + humidity;
+                                    log(">" + topic + ": bme " + str);
+                                    showShortToast(str);
                                 }
                             } break;
                             default: {

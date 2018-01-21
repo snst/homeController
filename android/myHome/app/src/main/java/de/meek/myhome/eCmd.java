@@ -20,7 +20,9 @@ public enum eCmd {
     SETTEMP(11, "settemp"),
     GETSTATUS(12, "getstatus"),
     ABORT(13, "abort"),
-    CLOSE_CONNCTION(14, "close connection");
+    CLOSE_CONNCTION(14, "close connection"),
+    GETTEMP(15, "get temperature");
+
 
     private byte value;
     private String name;

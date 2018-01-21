@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginBottom="15dp"
+    android:layout_marginTop="15dp"
     android:baselineAligned="false"
     android:orientation="vertical"
     android:paddingBottom="8dp"
@@ -79,6 +81,7 @@
         android:id="@+id/layoutCmd"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="10dp"
         android:layout_weight="0.95"
         android:orientation="horizontal">
 
