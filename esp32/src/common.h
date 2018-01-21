@@ -4,29 +4,13 @@
 #define _COMMON_H__
 
 #include "BTAddr.h"
-
-#define VERSION_MAJOR   0
-#define VERSION_MINOR   2
-#define VERSION_REV     7
-
-#define MAX_OPEN_CONNECTIONS 4
-
-#define MAX_CONNECTIONS 15
-
+#include "configuration.h"
 
 #define BLE_CMD_SIZE 7
-
-#define BT_CMD_QUEUE_LEN 20
+#define MQTT_RESPONSE_SIZE 12
 #define MQTT_CMD_SIZE 15
 
-#define MQTT_RESPONSE_SIZE 12
-#define MQTT_RESPONSE_QUEUE_LEN 20
-
 #define CONNID_INVALID 0xFFFF
-
-#define IDLE_AFTER_MS (30*1000)
-#define SLEEP_IDLE_TIME 250
-#define SLEEP_WORK_TIME 10
 
 #define EQ3_NOTIFICATION_HANDLE 0x421
 
@@ -45,13 +29,15 @@ enum eCmd {
     SETTEMP,
     GETSTATUS,
     ABORT,
-    CLOSE_CONNECTION
+    CLOSE_CONNECTION,
+    GETTEMP
 };
 
 enum eResponse {
   PONG = 1,
   STATE = 2,
-  CONNECTION = 3
+  CONNECTION = 3,
+  BME = 4
 };
 
 enum eState { 
@@ -77,6 +63,9 @@ void updateLastCmdTimestamp();
 int getSleepTime();
 const char *eState2Str(eState state);
 void sleep(int ms);
+bool isConnected();
 
+
+bool runTemp();
 
 #endif

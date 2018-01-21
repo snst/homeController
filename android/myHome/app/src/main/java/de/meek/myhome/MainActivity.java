@@ -15,6 +15,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -26,11 +27,12 @@ import java.util.Date;
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
 public class MainActivity extends AppCompatActivity {
 
-    final String APP_VERSION = "0.2.4";
+    final String APP_VERSION = "0.3.0";
 
     MqttHelper mqttHelper = null;
     Handler handler = new Handler();
     ListView listView = null;
+    TextView txtBME = null;
     int msgCntStatus = 0;
     int msgCntMode = 0;
     RoomSettings roomSettings = null;
@@ -218,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
         AccountConfig.load(this);
         roomSettings = new RoomSettings(this);
         listView = findViewById(R.id.listViewRooms);
+        txtBME = findViewById(R.id.textViewBME);
 
         for (int j = 0; j < AccountConfig.NUMBER_OF_ROOMS; j++) {
             Room room = new Room(j);
@@ -264,6 +267,11 @@ public class MainActivity extends AppCompatActivity {
 
     void updateTitle() {
         setTitle("myHome - " + (mqttConnected ? "connected" : "disconnected") + " #" + msgCntMode);
+    }
+
+    void showBME(float temp, int humidity, float pressure) {
+        String str = "Temp: " + temp + "°C   Hum: " + humidity + "%";
+        txtBME.setText(str);
     }
 
     void setMqttConnectedStatus(boolean connected) {
@@ -357,14 +365,15 @@ public class MainActivity extends AppCompatActivity {
                             case BME: {
                                 if(b.length==(2 + 3)) {
 
-                                    short temp = (short)((b[i] << 8) | b[i+1]);
-                                    i += 2;
+                                    int t1 = b[i++];
+                                    int t2 = b[i++];
                                     int humidity = b[i++];
-                                    float temperature = temp / 100.0f;
+                                    float temperature = t1 + (t2/100.f);
 
                                     String str = "temp=" + temperature + ", humidity=" + humidity;
                                     log(">" + topic + ": bme " + str);
-                                    showShortToast(str);
+                                    //showShortToast(str);
+                                    showBME(temperature, humidity, 0);
                                 }
                             } break;
                             default: {

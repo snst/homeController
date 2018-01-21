@@ -53,6 +53,15 @@ void MqttHandler::sendResponseConnection(const BTAddr &addr, eState state) {
   }
 }
 
+void MqttHandler::sendResponseBme(float temp, float humidity, float pressure)  {
+  MqttResponseBME280 msg(temp, humidity, pressure);
+  msg.print();
+  addResponse(msg);
+}
+
+bool MqttHandler::isConnected() {
+  return client.connected();
+}
 
 void MqttHandler::connect() {
   while (!client.connected()) {
@@ -61,7 +70,7 @@ void MqttHandler::connect() {
       Serial.print("connected!\nSubscripe to ");
       Serial.println(topicRequest);  
       client.subscribe(topicRequest);
-      sleep(500);
+      //sleep(500);
     } else {
       Serial.print("failed with state ");
       Serial.println(client.state());
@@ -70,8 +79,14 @@ void MqttHandler::connect() {
   }
 }
 
+void MqttHandler::publish(const char *topic, const char *payload, unsigned int length) {
+  if (client.connected()) {
+    client.publish(topic, payload, length);
+  }
+}
 
-void MqttHandler::execute() {
+
+bool MqttHandler::execute() {
   client.loop();
   MqttResponse msg;
   if (getResponse(msg)) {
@@ -83,6 +98,7 @@ void MqttHandler::execute() {
     }
   }
   client.loop();
+  return true;
 }
 
 
@@ -217,6 +233,13 @@ void MqttHandler::parseRequest(const uint8_t *payload) {
     case CLOSE_CONNECTION: {
       Serial.println("CLOSE_CONNECTION)");
       ble.disconnect(cmd.addr);
+      break;
+    }
+    case GETTEMP: {
+      Serial.println("CLOSE_CONNECTION)");
+#ifdef USE_BME280
+      runTemp();
+#endif
       break;
     }
     default: {

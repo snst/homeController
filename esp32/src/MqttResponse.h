@@ -54,6 +54,21 @@ class MqttResponsePing : public MqttResponse {
     }
 };
 
+class MqttResponseBME280 : public MqttResponse {
+  public:
+    MqttResponseBME280(float temp, float humidity, float pressure) 
+    : MqttResponse(eResponse::BME, 3) {
+      int8_t t1 = (int8_t) temp;
+      int8_t t2 = (int8_t)((temp-t1) * 100.0f);
+      data[0] = (uint8_t) t1;
+      data[1] = (uint8_t) t2;
+      data[2] = (uint8_t) humidity;
+    }
+    void print() const {
+      MqttResponse::print();
+      Serial.println("Bme280");
+    }
+};
 
 
 class MqttResponseConnState : public MqttResponse {

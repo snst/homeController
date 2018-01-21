@@ -5,7 +5,16 @@
 #include <Arduino.h>
 #include <stdarg.h>
 #include "common.h"
+#include "MqttHandler.h"
 
+#ifdef USE_SSL
+# include <WiFiClientSecure.h>
+#else
+# include <WiFi.h>
+#endif
+
+
+extern MqttHandler mqtt;
 unsigned long lastMS = 0;
 
 void updateLastCmdTimestamp() {
@@ -54,7 +63,11 @@ void printMem()
 }
 
 void sleep(int ms) {
-  vTaskDelay( ms / portTICK_RATE_MS);
+#ifdef USE_LOW_MHZ  
+  vTaskDelay( (ms / portTICK_RATE_MS) / 3);
+#else
+  vTaskDelay( (ms / portTICK_RATE_MS));
+#endif  
 }
 
 
@@ -70,5 +83,7 @@ const char *eState2Str(eState state) {
     default:            return "??"; 
   }
 }
+
+
 
 #endif

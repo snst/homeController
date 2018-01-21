@@ -14,7 +14,7 @@ class BleHandler : public BleBase
   public:
     BleHandler();
     virtual ~BleHandler();
-    void execute();
+    bool execute();
     void clear();
   	void addCmd(const tBleCmd &cmd);
 

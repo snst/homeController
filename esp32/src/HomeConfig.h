@@ -4,12 +4,17 @@
 #define _HOMECONFIG_H__
 
 #include <Preferences.h>
+#include "common.h"
 
 #define PREF_APPNAME "myHome"
 #define PREF_WLAN_SSID "WLAN_SSID"
 #define PREF_WLAN_PW "WLAN_PW"
 #define PREF_MQTT_SERVER "mqtt_server"
+#ifdef USE_SSL
+#define PREF_MQTT_PORT "mqtt_port_ssl"
+#else
 #define PREF_MQTT_PORT "mqtt_port"
+#endif
 #define PREF_MQTT_USER "mqtt_user"
 #define PREF_MQTT_PW "mqtt_pw"
 #define PREF_MQTT_TOPIC "mqtt_topic"
@@ -45,6 +50,9 @@ class HomeConfig {
       while(Serial.available()) {
         char ch = Serial.read();
         if (ch == '\n') {
+          if (i==1 && input[0]=='-') { // delete entry
+            input[0] = 0; 
+          }
           input[i] = 0;
           Serial.println("");
           return i>0;

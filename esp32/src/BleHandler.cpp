@@ -57,7 +57,7 @@ void BleHandler::setNextRound(uint16_t ms) {
 }
 
 
-void BleHandler::execute() {
+bool BleHandler::execute() {
 
 //  if (!skipRound()) 
   {
@@ -113,6 +113,7 @@ void BleHandler::execute() {
       }
     }
   }
+  return true;
 }
 
 
