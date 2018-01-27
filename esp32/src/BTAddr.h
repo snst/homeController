@@ -1,6 +1,9 @@
 #ifndef __BTADDR_H__
 #define __BTADDR_H__
 
+#include <Arduino.h>
+#include <stdio.h>
+#include <string.h>
 #include <esp_bt_defs.h>
 
 #define BT_ADDR_SIZE (sizeof(esp_bd_addr_t))

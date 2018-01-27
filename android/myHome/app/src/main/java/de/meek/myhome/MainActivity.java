@@ -11,9 +11,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,7 +29,8 @@ public class MainActivity extends AppCompatActivity {
     MqttHelper mqttHelper = null;
     Handler handler = new Handler();
     ListView listView = null;
-    TextView txtBME = null;
+    TextView txtSensor1 = null;
+    TextView txtSensor2 = null;
     int msgCntStatus = 0;
     int msgCntMode = 0;
     RoomSettings roomSettings = null;
@@ -220,7 +218,8 @@ public class MainActivity extends AppCompatActivity {
         AccountConfig.load(this);
         roomSettings = new RoomSettings(this);
         listView = findViewById(R.id.listViewRooms);
-        txtBME = findViewById(R.id.textViewBME);
+        txtSensor1 = findViewById(R.id.txtSensor1);
+        txtSensor2 = findViewById(R.id.txtSensor2);
 
         for (int j = 0; j < AccountConfig.NUMBER_OF_ROOMS; j++) {
             Room room = new Room(j);
@@ -269,9 +268,26 @@ public class MainActivity extends AppCompatActivity {
         setTitle("myHome - " + (mqttConnected ? "connected" : "disconnected") + " #" + msgCntMode);
     }
 
-    void showBME(float temp, int humidity, float pressure) {
-        String str = "Temp: " + temp + "°C   Hum: " + humidity + "%";
-        txtBME.setText(str);
+    void showSensorData(int sensorId, float temp, int humidity, float pressure) {
+        TextView tv = null;
+        String name = null;
+        switch(sensorId) {
+            case 1: {
+                tv = txtSensor1;
+                name = "In: ";
+                break;
+            }
+            case 2: {
+                tv = txtSensor2;
+                name = "Out:";
+                break;
+            }
+            default: break;
+        }
+        if (tv != null) {
+            String str = name + " " + temp + "°C  /  " + humidity + "%";
+            tv.setText(str);
+        }
     }
 
     void setMqttConnectedStatus(boolean connected) {
@@ -362,18 +378,19 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
                             } break;
-                            case BME: {
-                                if(b.length==(2 + 3)) {
+                            case SENSOR: {
+                                if(b.length==(2 + 4)) {
 
+                                    int sensorId = b[i++];
                                     int t1 = b[i++];
                                     int t2 = b[i++];
                                     int humidity = b[i++];
                                     float temperature = t1 + (t2/100.f);
 
-                                    String str = "temp=" + temperature + ", humidity=" + humidity;
-                                    log(">" + topic + ": bme " + str);
+                                    String str = "" + sensorId + ", temp=" + temperature + ", humidity=" + humidity;
+                                    log(">" + topic + ": sensor:" + str);
                                     //showShortToast(str);
-                                    showBME(temperature, humidity, 0);
+                                    showSensorData(sensorId, temperature, humidity, 0);
                                 }
                             } break;
                             default: {

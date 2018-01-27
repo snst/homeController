@@ -16,7 +16,7 @@ public:
   void sendResponseStatus(const BTAddr &addr, const uint8_t* pData, size_t length);
   void sendResponseConnection(const BTAddr &addr, eState state);
   void sendResponsePing();
-  void sendResponseBme(float temp, float humidity, float pressure);
+  void sendResponseSensor(uint8_t sensorId, float temp, float humidity, float pressure);
   void connect();
   bool execute();
   void setServer(const char *server, int port);

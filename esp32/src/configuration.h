@@ -10,7 +10,14 @@
 //#define USE_SSL
 //#define USE_TASKS
 #define USE_BME280
+#define USE_HTU21D
 //#define USE_LOW_MHZ
+
+#define SENSOR_ID_ENV_INSIDE 1
+#define SENSOR_ID_ENV_OUTSIDE 2
+
+#define PIN_SCL 22 //orange
+#define PIN_SDA 21 //yellow
 
 
 #define MAX_OPEN_CONNECTIONS 4

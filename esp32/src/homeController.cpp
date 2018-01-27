@@ -7,6 +7,7 @@
 #include "HomeConfig.h"
 #include "MqttHandler.h"
 #include "soc/rtc.h"
+#include <Wire.h>
 #include "common.h"
 
 #ifdef USE_SSL
@@ -18,7 +19,11 @@ WiFiClient wifiClient;
 #endif
 
 #ifdef USE_BME280
-# include "Bme280.h"
+# include "SensorBme280.h"
+#endif
+
+#ifdef USE_HTU21D
+# include "SensorHtu21d.h"
 #endif
 
 BleHandler ble;
@@ -31,32 +36,42 @@ typedef bool (*execute_t)();
 
 uint32_t lastUpdateBLE = 0;
 uint32_t lastUpdateMQTT = 0;
-
-
-#ifdef USE_BME280
 uint32_t lastUpdateTemp = 0;
-Bme280 bme(mqtt);
-#endif
 
 
-bool runTemp() {
 #ifdef USE_BME280
-  Serial.print("T");
-  return isConnected() && bme.execute();
-#else 
-  return true;
+SensorBme280 bme(mqtt, SENSOR_ID_ENV_INSIDE, "envHome");
 #endif
+
+#ifdef USE_HTU21D
+SensorHtu21d htu(mqtt, SENSOR_ID_ENV_OUTSIDE, "envOut");
+#endif
+
+
+bool runTemp() 
+{
+  bool ret = isConnected();
+#ifdef USE_HTU21D
+//    Serial.print("H");
+    ret &= htu.execute();
+#endif
+  sleep(40);
+#ifdef USE_BME280
+//    Serial.print("E");
+    ret &= bme.execute();
+#endif
+  return ret;
 }
 
 
 bool runBLE() {
-  Serial.print("T");
+//  Serial.print("B");
   return isConnected() && ble.execute();
 }
 
 
 bool runMQTT() {
-  Serial.print("M");
+//  Serial.print("M");
   return isConnected() && mqtt.execute();
 }
 
@@ -111,9 +126,18 @@ void setup() {
   
   WiFi.begin(config.wlan_ssid.c_str(), config.wlan_pw.c_str());
 
-#ifdef USE_BME280
+#if defined(USE_BME280) || defined(USE_HTU21D)
+  Wire.begin(PIN_SDA, PIN_SCL);
+#endif
+#ifdef USE_BME280  
   bme.init();
 #endif
+
+#ifdef USE_HTU21D  
+  htu.init();
+#endif
+
+
 
   printMem();
 
@@ -175,7 +199,7 @@ void loop() {
   runBLE();
 #endif
 
-#if defined(USE_BME280) && !defined(USE_TASK_TEMP)
+#if (defined(USE_BME280) || defined(USE_HTU21D)) && !defined(USE_TASK_TEMP)
   runWithInterval(runTemp, lastUpdateTemp, UPDATE_INTERVAL_TEMP);
 #endif
 sleep(getSleepTime());

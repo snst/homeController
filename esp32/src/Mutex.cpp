@@ -1,3 +1,4 @@
+// Copyright 2017 Stefan Schmidt
 #include "Mutex.h"
 
 

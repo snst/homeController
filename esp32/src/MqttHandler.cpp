@@ -53,8 +53,8 @@ void MqttHandler::sendResponseConnection(const BTAddr &addr, eState state) {
   }
 }
 
-void MqttHandler::sendResponseBme(float temp, float humidity, float pressure)  {
-  MqttResponseBME280 msg(temp, humidity, pressure);
+void MqttHandler::sendResponseSensor(uint8_t sensorId, float temp, float humidity, float pressure)  {
+  MqttResponseSensor msg(sensorId, temp, humidity, pressure);
   msg.print();
   addResponse(msg);
 }

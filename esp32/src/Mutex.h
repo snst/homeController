@@ -1,3 +1,4 @@
+// Copyright 2017 Stefan Schmidt
 #ifndef __MUTEX_H__
 #define __MUTEX_H__
 

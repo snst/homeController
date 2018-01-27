@@ -10,7 +10,7 @@ public enum eResponse {
     PONG(1),
     STATE(2),
     CONNECTION(3),
-    BME(4);
+    SENSOR(4);
 
     private byte value;
 
