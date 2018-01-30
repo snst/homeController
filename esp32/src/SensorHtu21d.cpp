@@ -1,28 +1,26 @@
 // Copyright 2017 Stefan Schmidt
 #include "configuration.h"
 
-#ifdef USE_HTU21D
 #include "SensorHtu21d.h"
 #include "common.h"
 #include <Wire.h>
 
-SensorHtu21d::SensorHtu21d(MqttHandler & m, uint8_t theSensorId, const char *theTopic, int bus)
-    : SensorEnv(m, theSensorId, theTopic, bus) {
+SensorHtu21d::SensorHtu21d(uint8_t bus, uint8_t _sda, uint8_t _scl, uint32_t _frequency, MqttHandler &m, uint8_t _sensorId, const char *_topic)
+    : SensorEnv(bus, _sda, _scl, _frequency, m, _sensorId, _topic) 
+{
 }
 
-void SensorHtu21d::init(int sda, int scl, uint32_t frequency) 
+void SensorHtu21d::begin()
 {
-    SensorEnv::init(sda, scl, frequency);
+    SensorEnv::begin();
     sensor.begin(wire);
 }
 
-bool SensorHtu21d::execute() {
-
+bool SensorHtu21d::execute()
+{
     float temperature = sensor.readTemperature();
     float pressure = 0.0f;
     float humidity = sensor.readHumidity();
-
     return publish(temperature, humidity, pressure);
 }
 
-#endif

@@ -9,6 +9,8 @@
 #include "soc/rtc.h"
 #include <Wire.h>
 #include "common.h"
+#include "SensorBme280.h"
+#include "SensorHtu21d.h"
 
 #ifdef USE_SSL
 # include <WiFiClientSecure.h>
@@ -18,13 +20,6 @@ WiFiClientSecure wifiClient;
 WiFiClient wifiClient;
 #endif
 
-#ifdef USE_BME280
-# include "SensorBme280.h"
-#endif
-
-#ifdef USE_HTU21D
-# include "SensorHtu21d.h"
-#endif
 
 BleHandler ble;
 HomeConfig config;
@@ -34,80 +29,40 @@ MqttHandler mqtt(mqttClient);
 void(* softReset) (void) = 0; //declare reset function at address 0
 typedef bool (*execute_t)();
 
-uint32_t lastUpdateBLE = 0;
-uint32_t lastUpdateMQTT = 0;
-uint32_t lastUpdateTemp = 0;
 
+#ifdef ENABLE_TEMP_OUTSIDE
+SensorBme280 sensorTempOutside(1, BME_PIN_SDA, BME_PIN_SCL, BME_FREQUENCY, mqtt, SENSOR_ID_ENV_OUTSIDE, "envOut");
+uint32_t lastUpdateTempOutside = 0;
 
-#ifdef USE_BME280
-SensorBme280 bme(mqtt, SENSOR_ID_ENV_OUTSIDE, "envOut", 1);
-#endif
-
-#ifdef USE_HTU21D
-SensorHtu21d htu(mqtt, SENSOR_ID_ENV_INSIDE, "envHome", 0);
-#endif
-
-
-bool runTemp() 
+bool runTempOutside() 
 {
-  bool ret = isConnected();
-#ifdef USE_BME280
-//    Serial.print("E");
-    bme.execute();
+  p(60,"O");
+  return sensorTempOutside.execute();
+}
 #endif
 
-#ifdef USE_HTU21D
-//    Serial.print("H");
-    htu.execute();
-#endif
-//  sleep(50);
-  return ret;
+#ifdef ENABLE_TEMP_INSIDE
+SensorHtu21d sensorTempInside(0, HTU_PIN_SDA, HTU_PIN_SCL, HTU_FREQUENCY, mqtt, SENSOR_ID_ENV_INSIDE, "envHome");
+uint32_t lastUpdateTempInside = 0;
+
+bool runTempInside() 
+{
+  p(60,"I");
+  return sensorTempInside.execute();
 }
+#endif
 
 
 bool runBLE() {
-//  Serial.print("B");
+  p(60,"B");
   return isConnected() && ble.execute();
 }
 
 
 bool runMQTT() {
-//  Serial.print("M");
+  p(60,"M");
   return isConnected() && mqtt.execute();
 }
-
-
-#ifdef USE_TASKS
-# ifdef USE_BME280
-void taskTemp(void *pvParameters) {
-  while(true) {
-    sleep(UPDATE_INTERVAL_TEMP);
-    runTemp();
-  }
-  vTaskDelete(NULL);  
-}
-# endif
-
-
-void taskBT( void * pvParameters ) {
-  sleep(1000);
-  while(true) {
-    sleep(getSleepTime());
-    runBLE();
-  }
-  vTaskDelete(NULL);  
-}
-
-
-void taskMQTT( void * pvParameters ) {
-  sleep(1000);
-  while(true) {
-   sleep(getSleepTime());
-   runMQTT();
-  }
-  vTaskDelete(NULL);  
-}
-#endif
 
 
 void setup() {
@@ -127,40 +82,24 @@ void setup() {
   
   WiFi.begin(config.wlan_ssid.c_str(), config.wlan_pw.c_str());
 
-#if defined(USE_BME280) || defined(USE_HTU21D)
-//  Wire.begin(PIN_SDA, PIN_SCL, 10000);
-//  Wire.begin(PIN_SDA, PIN_SCL);
-  //Wire.setTimeout(250);
+#ifdef ENABLE_TEMP_OUTSIDE  
+  sensorTempOutside.begin();
 #endif
 
-#ifdef USE_BME280  
-  bme.init(BME_PIN_SDA, BME_PIN_SCL, BME_FREQUENCY);
+#ifdef ENABLE_TEMP_INSIDE  
+  sensorTempInside.begin();
 #endif
-
-#ifdef USE_HTU21D  
-  htu.init(HTU_PIN_SDA, HTU_PIN_SCL, HTU_FREQUENCY);
-#endif
-
-
 
   printMem();
 
 #ifdef USE_LOW_MHZ
   rtc_clk_cpu_freq_set(RTC_CPU_FREQ_80M);
 #endif
-
-#ifdef USE_TASKS
-  xTaskCreate(&taskBT, "taskBT", 10*1024, NULL, 1, NULL);
-  xTaskCreate(&taskMQTT, "taskMQTT", 10*1024, NULL, 1, NULL);
-# ifdef USE_BME280
-  xTaskCreate(&taskTemp, "taskTemp", 10*1024, NULL, 1, NULL);
-# endif
-#endif
 }
 
 
-bool isConnected() {
-
+bool isConnected() 
+{
   if (WiFi.status() != WL_CONNECTED) {
     int i=15;
     p(1, "Connecting to WiFi..");
@@ -180,31 +119,29 @@ bool isConnected() {
 }
 
 
-void runWithInterval(execute_t exe, uint32_t & lastMS, uint32_t interval) {
-
+void runWithInterval(execute_t function, uint32_t & lastMS, uint32_t interval) 
+{
   uint32_t now = millis();
   if ((now - lastMS) >= interval) {
-    if (exe()) {  
+    if (function()) {  
       lastMS = now;
     }
   }
 }
 
 
-void loop() {
-
-#ifndef USE_TASK_MQTT
-  //runWithInterval(runMQTT, lastUpdateMQTT, getSleepTime());
+void loop() 
+{
   runMQTT();
-#endif
-
-#ifndef USE_TASK_BLE
-  //runWithInterval(runBLE, lastUpdateBLE, getSleepTime());
   runBLE();
+
+#ifdef ENABLE_TEMP_INSIDE
+  runWithInterval(runTempInside, lastUpdateTempInside, UPDATE_INTERVAL_TEMP);
 #endif
 
-#if (defined(USE_BME280) || defined(USE_HTU21D)) && !defined(USE_TASK_TEMP)
-  runWithInterval(runTemp, lastUpdateTemp, UPDATE_INTERVAL_TEMP);
+#ifdef ENABLE_TEMP_OUTSIDE
+  runWithInterval(runTempOutside, lastUpdateTempOutside, UPDATE_INTERVAL_TEMP);
 #endif
-sleep(getSleepTime());
+
+  sleep(getSleepTime());
 }

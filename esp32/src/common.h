@@ -66,6 +66,7 @@ void sleep(int ms);
 bool isConnected();
 
 
-bool runTemp();
+bool runTempInside();
+bool runTempOutside();
 
 #endif

@@ -6,8 +6,8 @@
 #include "common.h"
 
 
-SensorEnv::SensorEnv(MqttHandler & m, uint8_t theSensorId, const char *theTopic, int bus)
-    : mqttHandler(m), sensorId(theSensorId), topic(theTopic), wire(bus)
+SensorEnv::SensorEnv(uint8_t bus, uint8_t _sda, uint8_t _scl, uint32_t _frequency, MqttHandler &m, uint8_t _sensorId, const char *_topic)
+    : sda(_sda), scl(_scl), frequency(_frequency), mqttHandler(m), sensorId(_sensorId), topic(_topic), wire(bus)
 {
 }
 
@@ -22,23 +22,13 @@ void SensorEnv::publishChannelData(const char *channel, float value)
 
 bool SensorEnv::publish(float temperature, float humidity, float pressure)
 {
-    Serial.print("\nSensor: ");
-    Serial.println(topic);
- 
-    Serial.print("Temperature: ");
-    Serial.print(temperature);                                  // display temperature in Celsius
-    Serial.println("C");
-
-    Serial.print("Humidity:    ");
-    Serial.print(humidity);                                     // display humidity in %   
-    Serial.println("%");
-
-    Serial.print("Pressure:    ");
-    Serial.print(pressure);                           // display pressure in hPa
-    Serial.println("hPa");
+    p(5, "\nSensor: %s\n", topic.c_str());
+    p(5, "Temperature: %fC\n", temperature);
+    p(5, "Humidity: %f%%\n", humidity);
+    p(5, "Pressure: %fhPa\n", pressure);
 
     if (temperature > 60.0f || temperature < -40.0f || humidity < 0.0f || humidity > 100.0f) {
-        Serial.println("Skip invalid values.");
+        p(5, "Skip invalid values.");
         return false;
     }
 
@@ -50,9 +40,8 @@ bool SensorEnv::publish(float temperature, float humidity, float pressure)
     return true;
 }
 
-void SensorEnv::init(int sda, int scl, uint32_t frequency) 
+void SensorEnv::begin() 
 {
     wire.begin(sda, scl, frequency);
     wire.setTimeout(500);
-
 }

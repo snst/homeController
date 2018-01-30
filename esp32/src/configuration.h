@@ -8,9 +8,8 @@
 #define VERSION_REV     0
 
 //#define USE_SSL
-//#define USE_TASKS
-#define USE_BME280
-#define USE_HTU21D
+#define ENABLE_TEMP_INSIDE
+#define ENABLE_TEMP_OUTSIDE
 //#define USE_LOW_MHZ
 
 #define SENSOR_ID_ENV_INSIDE 1
@@ -34,8 +33,8 @@
 #define SLEEP_IDLE_TIME 100
 #define SLEEP_WORK_TIME 10
 
-//#define UPDATE_INTERVAL_TEMP (5*60*1000)
-#define UPDATE_INTERVAL_TEMP (10*1000)
+#define UPDATE_INTERVAL_TEMP (3*60*1000)
+//#define UPDATE_INTERVAL_TEMP (10*1000)
 
 #define TRACE_LEVEL 10
 

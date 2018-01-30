@@ -65,13 +65,13 @@ bool MqttHandler::isConnected() {
 
 void MqttHandler::connect() {
   while (!client.connected()) {
-   p(10, "Connecting to MQTT.. ");
+   p(9, "Connecting to MQTT.. ");
     if (client.connect("ESP32Client", user, password )) {
-      p(10, "connected!\nSubscripe to %s\n", topicRequest);
+      p(9, "connected!\nSubscripe to %s\n", topicRequest);
       client.subscribe(topicRequest);
       //sleep(500);
     } else {
-      p(10, "failed with state 0x%x\n", client.state());
+      p(9, "failed with state 0x%x\n", client.state());
       sleep(1000);
     }
   }
@@ -106,12 +106,12 @@ void MqttHandler::setServer(const char *server, int port) {
 
 
 void MqttHandler::callback(char *topic, byte *payload, unsigned int length) {
-  p(10, "\n>MQTT ");
+  p(9, "\n>MQTT ");
 //  if(!strcmp(topic, topicRequest) && (length >= 2) && (payload[1]==length) && (length<=MQTT_CMD_SIZE)) {
   if((length >= 2) && (payload[1] == length) && (length <= MQTT_CMD_SIZE)) {
     mqtt.parseRequest(payload);
   } else {
-    p(10, "corrupt packet");
+    p(9, "corrupt packet");
   }
 }
 
@@ -126,18 +126,18 @@ void MqttHandler::parseRequest(const uint8_t *payload) {
   payload += 2;
   length -= 2;
   cmd.addr.setAddr(payload);
-  p(10, "->parseRequest(");
+  p(9, "->parseRequest(");
   payload += BT_ADDR_SIZE;
   length -= BT_ADDR_SIZE;
   
   switch(inCmd) {
     
     case NONE: {
-      p(10, "NONE)");
+      p(9, "NONE)");
       break;
     }
     case PING: {
-      p(10, "PING)");
+      p(9, "PING)");
       mqtt.sendResponsePing();
       break;
     } 
@@ -145,109 +145,112 @@ void MqttHandler::parseRequest(const uint8_t *payload) {
       cmd.data[0] = 0x45; 
       cmd.data[1] = 0xff; 
       cmd.len = 2;
-      p(10, "BOOST ON");
+      p(9, "BOOST ON");
       break;
     }
     case BOOST_OFF: {
       cmd.data[0] = 0x45; 
       cmd.data[1] = 0x00; 
       cmd.len = 2;
-      p(10, "BOOST OFF");
+      p(9, "BOOST OFF");
       break;
     }
     case ON: {
       cmd.data[0] = 0x41; 
       cmd.data[1] = 0x3c; 
       cmd.len = 2;
-      p(10, "ON");
+      p(9, "ON");
       break;
     }
     case OFF: {
       cmd.data[0] = 0x41; 
       cmd.data[1] = 0x09; 
       cmd.len = 2;
-      p(10, "OFF");
+      p(9, "OFF");
       break;
     }
     case ECO: {
       cmd.data[0] = 0x44; 
       cmd.len = 1;
-      p(10, "ECO");
+      p(9, "ECO");
       break;
     }
     case COMFORT: {
       cmd.data[0] = 0x43; 
       cmd.len = 1;
-      p(10, "COMFORT");
+      p(9, "COMFORT");
       break;
     }
     case AUTO: {
       cmd.data[0] = 0x40; 
       cmd.data[1] = 0x00; 
       cmd.len = 2;
-      p(10, "AUTO");
+      p(9, "AUTO");
       break;
     }
     case MANUAL: {
       cmd.data[0] = 0x40; 
       cmd.data[1] = 0x40;  
       cmd.len = 2;
-      p(10, "MANUAL");
+      p(9, "MANUAL");
       break;
     }
     case REBOOT: {
-      p(10, "REBOOT)\n");
+      p(9, "REBOOT)\n");
       softReset2();
       break; // compiler error
     }
     case SETTEMP: {
-      p(10, "SETTEMP: ");
+      p(9, "SETTEMP: ");
       if(length==1) {
         cmd.data[0] = 0x41; 
         cmd.data[1] = *payload;
         cmd.len = 2;
-        p(10, "%d", cmd.data[1] * 5);
+        p(9, "%d", cmd.data[1] * 5);
       } else {
-        p(10, "invalid)\n");
+        p(9, "invalid)\n");
       }
       break;
     }
     case GETSTATUS: {
-      p(10, "GETSTATUS");
+      p(9, "GETSTATUS");
       if(length==6) {
         cmd.data[0] = 3;
         cmd.len = 7;
         memcpy(&cmd.data[1], payload, 6);
       } else {
-        p(10, "invalid)\n");
+        p(9, "invalid)\n");
       }
       break;
     }
     case ABORT: {
-      p(10, "ABORT)\n");
+      p(9, "ABORT)\n");
       ble.clear();
       break;
     }
     case CLOSE_CONNECTION: {
-      p(10, "CLOSE_CONNECTION)\n");
+      p(9, "CLOSE_CONNECTION)\n");
       ble.disconnect(cmd.addr);
       break;
     }
     case GETTEMP: {
-      p(10, "CLOSE_CONNECTION)\n");
-#ifdef USE_BME280
-      runTemp();
+      p(9, "GETTEMP)\n");
+#ifdef ENABLE_TEMP_INSIDE
+      runTempInside();
+#endif
+#ifdef ENABLE_TEMP_OUTSIDE
+      runTempOutside();
 #endif
       break;
     }
     default: {
-      p(10, "Invalid cmd)\n");
+      p(9, "Invalid cmd)\n");
       break;
     }
   }
   
   if (cmd.len > 0) {
-    p(10, ")\n");
+    p(9, ")\n");
     ble.addCmd(cmd);
   }
 }
