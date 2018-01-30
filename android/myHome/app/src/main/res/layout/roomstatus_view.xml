@@ -93,11 +93,11 @@
             android:text="off" />
 
         <Button
-            android:id="@+id/btnDec"
+            android:id="@+id/btnPreset0"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="-" />
+            android:text="18.5°" />
 
         <Button
             android:id="@+id/btnPreset1"
@@ -112,13 +112,6 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="19.5°" />
-
-        <Button
-            android:id="@+id/btnInc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="+" />
 
         <Button
             android:id="@+id/btnOn"

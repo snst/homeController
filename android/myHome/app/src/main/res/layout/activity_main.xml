@@ -22,25 +22,92 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/txtSensor1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dp"
-                    android:layout_marginTop="5dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:text="-"
-                    android:textSize="24sp" />
+                    android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/txtSensor2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dp"
-                    android:layout_marginTop="5dp"
+                    <ImageView
+                        android:id="@+id/imgIn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.2"
+                        android:alpha="0.7"
+                        app:srcCompat="@drawable/ic_home" />
+
+                    <TextView
+                        android:id="@+id/txtSensorInTemp"
+                        android:layout_width="25dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginTop="5dp"
+                        android:layout_weight="0.3"
+                        android:text="-"
+                        android:textAlignment="viewEnd"
+                        android:textSize="20sp" />
+
+                    <TextView
+                        android:id="@+id/txtSensorInHumidity"
+                        android:layout_width="20dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginTop="5dp"
+                        android:layout_weight="0.3"
+                        android:text="-"
+                        android:textAlignment="viewEnd"
+                        android:textSize="20sp" />
+
+                    <Space
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:text="-"
-                    android:textSize="24sp" />
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/imgOut"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.2"
+                        android:alpha="0.7"
+                        app:srcCompat="@drawable/ic_land" />
+
+                    <TextView
+                        android:id="@+id/txtSensorOutTemp"
+                        android:layout_width="25dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginTop="5dp"
+                        android:layout_weight="0.3"
+                        android:text="-"
+                        android:textAlignment="viewEnd"
+                        android:textSize="20sp" />
+
+                    <TextView
+                        android:id="@+id/txtSensorOutHumidity"
+                        android:layout_width="20sp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginTop="5dp"
+                        android:layout_weight="0.3"
+                        android:text="-"
+                        android:textAlignment="viewEnd"
+                        android:textSize="20sp" />
+
+                    <Space
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8" />
+
+                </LinearLayout>
+
             </LinearLayout>
 
             <ListView xmlns:android="http://schemas.android.com/apk/res/android"

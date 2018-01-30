@@ -34,10 +34,9 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
         ImageView imgStatus;
         Button btnOff;
         Button btnOn;
+        Button btnPreset0;
         Button btnPreset1;
         Button btnPreset2;
-        Button btnInc;
-        Button btnDec;
         LinearLayout layoutCmd;
     }
 
@@ -66,10 +65,9 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
             holder.imgStatus = rowView.findViewById(R.id.imageStatus);
             holder.btnOff = rowView.findViewById(R.id.btnOff);
             holder.btnOn = rowView.findViewById(R.id.btnOn);
+            holder.btnPreset0 = rowView.findViewById(R.id.btnPreset0);
             holder.btnPreset1 = rowView.findViewById(R.id.btnPreset1);
             holder.btnPreset2 = rowView.findViewById(R.id.btnPreset2);
-            holder.btnInc = rowView.findViewById(R.id.btnInc);
-            holder.btnDec = rowView.findViewById(R.id.btnDec);
             holder.layoutCmd = rowView.findViewById(R.id.layoutCmd);
             rowView.setTag(holder);
         } else {
@@ -119,9 +117,11 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
         holder.imgStatus.setImageResource(icon);
         holder.txtMsgCnt.setText(""+room.msgCount);
         final int roomId = room.id;
+        final int roomPresetTemp0 = room.presetTemp.get(0);
         final int roomPresetTemp1 = room.presetTemp.get(1);
         final int roomPresetTemp2 = room.presetTemp.get(2);
 
+        holder.btnPreset0.setText(Format.tempToString(roomPresetTemp0));
         holder.btnPreset1.setText(Format.tempToString(roomPresetTemp1));
         holder.btnPreset2.setText(Format.tempToString(roomPresetTemp2));
 
@@ -139,6 +139,13 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
             }
         });
 
+        holder.btnPreset0.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mainActivity.requestSetTemp(roomId, roomPresetTemp0);
+            }
+        });
+
         holder.btnPreset1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -150,24 +157,6 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
             @Override
             public void onClick(View v) {
                 mainActivity.requestSetTemp(roomId, roomPresetTemp2);
-            }
-        });
-
-        holder.btnInc.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Room room = rooms.get(roomId);
-                room.lastRequestedTemp += Const.TEMP_STEP;
-                mainActivity.requestSetTemp(roomId, room.lastRequestedTemp);
-            }
-        });
-
-        holder.btnDec.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Room room = rooms.get(roomId);
-                room.lastRequestedTemp -= Const.TEMP_STEP;
-                mainActivity.requestSetTemp(roomId, room.lastRequestedTemp);
             }
         });
 

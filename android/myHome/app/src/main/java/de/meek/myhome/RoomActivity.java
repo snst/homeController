@@ -104,7 +104,6 @@ public class RoomActivity extends AppCompatActivity {
         updateButtonPresetTemp(R.id.btnTemp0, room.presetTemp.get(0));
         updateButtonPresetTemp(R.id.btnTemp1, room.presetTemp.get(1));
         updateButtonPresetTemp(R.id.btnTemp2, room.presetTemp.get(2));
-        updateButtonPresetTemp(R.id.btnTemp3, room.presetTemp.get(3));
     }
 
     void setNewButtonPresetTemp(int presetId, int value) {
@@ -229,7 +228,7 @@ public class RoomActivity extends AppCompatActivity {
         registerButtonPresetLongClick(R.id.btnTemp0, 0);
         registerButtonPresetLongClick(R.id.btnTemp1, 1);
         registerButtonPresetLongClick(R.id.btnTemp2, 2);
-        registerButtonPresetLongClick(R.id.btnTemp3, 3);
+//        registerButtonPresetLongClick(R.id.btnTemp3, 3);
 
         showCurrentState();
         updateAllButtonPresetTemps();

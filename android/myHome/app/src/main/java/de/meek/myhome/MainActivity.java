@@ -29,8 +29,10 @@ public class MainActivity extends AppCompatActivity {
     MqttHelper mqttHelper = null;
     Handler handler = new Handler();
     ListView listView = null;
-    TextView txtSensor1 = null;
-    TextView txtSensor2 = null;
+    TextView txtSensorInTemp = null;
+    TextView txtSensorInHumidity = null;
+    TextView txtSensorOutTemp = null;
+    TextView txtSensorOutHumidity = null;
     int msgCntStatus = 0;
     int msgCntMode = 0;
     RoomSettings roomSettings = null;
@@ -218,8 +220,10 @@ public class MainActivity extends AppCompatActivity {
         AccountConfig.load(this);
         roomSettings = new RoomSettings(this);
         listView = findViewById(R.id.listViewRooms);
-        txtSensor1 = findViewById(R.id.txtSensor1);
-        txtSensor2 = findViewById(R.id.txtSensor2);
+        txtSensorInTemp = findViewById(R.id.txtSensorInTemp);
+        txtSensorInHumidity = findViewById(R.id.txtSensorInHumidity);
+        txtSensorOutTemp = findViewById(R.id.txtSensorOutTemp);
+        txtSensorOutHumidity = findViewById(R.id.txtSensorOutHumidity);
 
         for (int j = 0; j < AccountConfig.NUMBER_OF_ROOMS; j++) {
             Room room = new Room(j);
@@ -269,24 +273,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void showSensorData(int sensorId, float temp, int humidity, float pressure) {
-        TextView tv = null;
-        String name = null;
+        TextView tvTemp = null;
+        TextView tvHumidity = null;
         switch(sensorId) {
             case 1: {
-                tv = txtSensor1;
-                name = "In: ";
+                tvTemp = txtSensorInTemp;
+                tvHumidity = txtSensorInHumidity;
                 break;
             }
             case 2: {
-                tv = txtSensor2;
-                name = "Out:";
+                tvTemp = txtSensorOutTemp;
+                tvHumidity = txtSensorOutHumidity;
                 break;
             }
             default: break;
         }
-        if (tv != null) {
-            String str = name + " " + temp + "°C  /  " + humidity + "%";
-            tv.setText(str);
+        if (tvTemp != null) {
+            tvTemp.setText("" + temp + "°C");
+            tvHumidity.setText("" + humidity + "%");
         }
     }
 
