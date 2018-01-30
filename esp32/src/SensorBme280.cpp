@@ -5,12 +5,14 @@
 #include "SensorBme280.h"
 #include "common.h"
 
-SensorBme280::SensorBme280(MqttHandler & m, uint8_t theSensorId, const char *theTopic)
-    : SensorEnv(m, theSensorId, theTopic) {
+SensorBme280::SensorBme280(MqttHandler & m, uint8_t theSensorId, const char *theTopic, int bus)
+    : SensorEnv(m, theSensorId, theTopic, bus) {
 }
 
-void SensorBme280::init() {
-  sensor.begin();
+void SensorBme280::init(int sda, int scl, uint32_t frequency) 
+{
+    SensorEnv::init(sda, scl, frequency);
+    sensor.begin(&wire);
 }
 
 bool SensorBme280::execute() {

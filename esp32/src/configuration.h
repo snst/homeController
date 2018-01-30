@@ -16,9 +16,13 @@
 #define SENSOR_ID_ENV_INSIDE 1
 #define SENSOR_ID_ENV_OUTSIDE 2
 
-#define PIN_SCL 22 //orange
-#define PIN_SDA 21 //yellow
+#define BME_PIN_SDA 23 
+#define BME_PIN_SCL 19 
+#define BME_FREQUENCY 10000
 
+#define HTU_PIN_SDA 21 
+#define HTU_PIN_SCL 22 
+#define HTU_FREQUENCY 10000
 
 #define MAX_OPEN_CONNECTIONS 4
 #define MAX_CONNECTIONS 15
@@ -30,8 +34,10 @@
 #define SLEEP_IDLE_TIME 100
 #define SLEEP_WORK_TIME 10
 
-#define UPDATE_INTERVAL_TEMP (5*60*1000)
+//#define UPDATE_INTERVAL_TEMP (5*60*1000)
+#define UPDATE_INTERVAL_TEMP (10*1000)
 
+#define TRACE_LEVEL 10
 
 
 #endif

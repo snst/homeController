@@ -32,13 +32,15 @@ int getSleepTime() {
   }
 }
 
-void p(const char *fmt, ... ) {
+void p(uint8_t level, const char *fmt, ... ) {
+  if (level < TRACE_LEVEL) {
         char buf[128]; // resulting string limited to 128 chars
         va_list args;
         va_start (args, fmt );
         vsnprintf(buf, 128, fmt, args);
         va_end (args);
         Serial.print(buf);
+  }
 }
 
 void dump(const char *str, const uint8_t *data, uint8_t len) {

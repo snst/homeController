@@ -71,12 +71,12 @@ void ConnState::set(const BTAddr &addr, eState state, uint16_t connId) {
     }
   }
 
-  p("ConnState::set(%s", eState2Str(state));
+  p(20, "ConnState::set(%s", eState2Str(state));
   if (connId != CONNID_INVALID) {
-    p(", connId=0x%x", connId);
+    p(20, ", connId=0x%x", connId);
   }
-  p(", i=%d)", i);
-  addr.println("");
+  p(20, ", i=%d)", i);
+  addr.println(20, "");
 }
 
 
@@ -111,8 +111,8 @@ bool ConnState::getOldestOpenConn(BTAddr &addr) {
     }
     if (selected >= 0) {
         addr = connState[selected].addr;
-        p("Oldest conn(age=%d)", connState[selected].age);
-        addr.println("");
+        p(20, "Oldest conn(age=%d)", connState[selected].age);
+        addr.println(20, "");
         return true;
     }  
     return false;

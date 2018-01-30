@@ -65,15 +65,13 @@ bool MqttHandler::isConnected() {
 
 void MqttHandler::connect() {
   while (!client.connected()) {
-    Serial.print("Connecting to MQTT.. ");
+   p(10, "Connecting to MQTT.. ");
     if (client.connect("ESP32Client", user, password )) {
-      Serial.print("connected!\nSubscripe to ");
-      Serial.println(topicRequest);  
+      p(10, "connected!\nSubscripe to %s\n", topicRequest);
       client.subscribe(topicRequest);
       //sleep(500);
     } else {
-      Serial.print("failed with state ");
-      Serial.println(client.state());
+      p(10, "failed with state 0x%x\n", client.state());
       sleep(1000);
     }
   }
@@ -108,12 +106,12 @@ void MqttHandler::setServer(const char *server, int port) {
 
 
 void MqttHandler::callback(char *topic, byte *payload, unsigned int length) {
-  Serial.print("\n>MQTT ");
+  p(10, "\n>MQTT ");
 //  if(!strcmp(topic, topicRequest) && (length >= 2) && (payload[1]==length) && (length<=MQTT_CMD_SIZE)) {
   if((length >= 2) && (payload[1] == length) && (length <= MQTT_CMD_SIZE)) {
     mqtt.parseRequest(payload);
   } else {
-    Serial.println("corrupt packet");
+    p(10, "corrupt packet");
   }
 }
 
@@ -128,18 +126,18 @@ void MqttHandler::parseRequest(const uint8_t *payload) {
   payload += 2;
   length -= 2;
   cmd.addr.setAddr(payload);
-  Serial.print("->parseRequest(");
+  p(10, "->parseRequest(");
   payload += BT_ADDR_SIZE;
   length -= BT_ADDR_SIZE;
   
   switch(inCmd) {
     
     case NONE: {
-      Serial.println("NONE)");
+      p(10, "NONE)");
       break;
     }
     case PING: {
-      Serial.println("PING)");
+      p(10, "PING)");
       mqtt.sendResponsePing();
       break;
     } 
@@ -147,109 +145,109 @@ void MqttHandler::parseRequest(const uint8_t *payload) {
       cmd.data[0] = 0x45; 
       cmd.data[1] = 0xff; 
       cmd.len = 2;
-      Serial.print("BOOST ON");
+      p(10, "BOOST ON");
       break;
     }
     case BOOST_OFF: {
       cmd.data[0] = 0x45; 
       cmd.data[1] = 0x00; 
       cmd.len = 2;
-      Serial.print("BOOST OFF");
+      p(10, "BOOST OFF");
       break;
     }
     case ON: {
       cmd.data[0] = 0x41; 
       cmd.data[1] = 0x3c; 
       cmd.len = 2;
-      Serial.print("ON");
+      p(10, "ON");
       break;
     }
     case OFF: {
       cmd.data[0] = 0x41; 
       cmd.data[1] = 0x09; 
       cmd.len = 2;
-      Serial.print("OFF");
+      p(10, "OFF");
       break;
     }
     case ECO: {
       cmd.data[0] = 0x44; 
       cmd.len = 1;
-      Serial.print("ECO");
+      p(10, "ECO");
       break;
     }
     case COMFORT: {
       cmd.data[0] = 0x43; 
       cmd.len = 1;
-      Serial.print("COMFORT");
+      p(10, "COMFORT");
       break;
     }
     case AUTO: {
       cmd.data[0] = 0x40; 
       cmd.data[1] = 0x00; 
       cmd.len = 2;
-      Serial.print("AUTO");
+      p(10, "AUTO");
       break;
     }
     case MANUAL: {
       cmd.data[0] = 0x40; 
       cmd.data[1] = 0x40;  
       cmd.len = 2;
-      Serial.print("MANUAL");
+      p(10, "MANUAL");
       break;
     }
     case REBOOT: {
-      Serial.println("REBOOT)");
+      p(10, "REBOOT)\n");
       softReset2();
       break; // compiler error
     }
     case SETTEMP: {
-      Serial.print("SETTEMP: ");
+      p(10, "SETTEMP: ");
       if(length==1) {
         cmd.data[0] = 0x41; 
         cmd.data[1] = *payload;
         cmd.len = 2;
-        Serial.print(cmd.data[1] * 5);
+        p(10, "%d", cmd.data[1] * 5);
       } else {
-        Serial.println("invalid)");
+        p(10, "invalid)\n");
       }
       break;
     }
     case GETSTATUS: {
-      Serial.print("GETSTATUS");
+      p(10, "GETSTATUS");
       if(length==6) {
         cmd.data[0] = 3;
         cmd.len = 7;
         memcpy(&cmd.data[1], payload, 6);
       } else {
-        Serial.println("invalid)");
+        p(10, "invalid)\n");
       }
       break;
     }
     case ABORT: {
-      Serial.println("ABORT)");
+      p(10, "ABORT)\n");
       ble.clear();
       break;
     }
     case CLOSE_CONNECTION: {
-      Serial.println("CLOSE_CONNECTION)");
+      p(10, "CLOSE_CONNECTION)\n");
       ble.disconnect(cmd.addr);
       break;
     }
     case GETTEMP: {
-      Serial.println("CLOSE_CONNECTION)");
+      p(10, "CLOSE_CONNECTION)\n");
 #ifdef USE_BME280
       runTemp();
 #endif
       break;
     }
     default: {
-      Serial.println("Invalid cmd)");
+      p(10, "Invalid cmd)\n");
       break;
     }
   }
   
   if (cmd.len > 0) {
-    cmd.addr.println(")");
+    p(10, ")\n");
     ble.addCmd(cmd);
   }
 }

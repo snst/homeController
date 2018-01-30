@@ -90,22 +90,22 @@ bool BleHandler::execute() {
           break;
         }
         case disconnecting: {
-          cmd.addr.println("!!Disconnecting??");
+          cmd.addr.println(20, "!!Disconnecting??");
           // drop command
           break;
         }
         case disconnected: {
-          cmd.addr.println("!!Disconnected");
+          cmd.addr.println(20, "!!Disconnected");
           break;
         }
         case failed: {
-          cmd.addr.println("!!Connect failed");
+          cmd.addr.println(20, "!!Connect failed");
           // drop command
           break;
         }
         case connected: {
           if (!write(cmd.addr, 0x411, cmd.data, cmd.len, true) ) {
-            cmd.addr.println("write failed: Reinsert cmd");
+            cmd.addr.println(20, "write failed: Reinsert cmd");
             addCmd(cmd); 
           }
           break;

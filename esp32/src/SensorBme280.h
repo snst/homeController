@@ -8,8 +8,8 @@
 class SensorBme280 : public SensorEnv {
 
 public:
-    SensorBme280(MqttHandler &m, uint8_t theSensorId, const char *theTopic);
-    void init();
+    SensorBme280(MqttHandler &m, uint8_t theSensorId, const char *theTopic, int bus);
+    void init(int sda, int scl, uint32_t frequency);
     bool execute();
     Adafruit_BME280 sensor;
 };

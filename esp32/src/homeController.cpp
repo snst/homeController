@@ -40,26 +40,27 @@ uint32_t lastUpdateTemp = 0;
 
 
 #ifdef USE_BME280
-SensorBme280 bme(mqtt, SENSOR_ID_ENV_INSIDE, "envHome");
+SensorBme280 bme(mqtt, SENSOR_ID_ENV_OUTSIDE, "envOut", 1);
 #endif
 
 #ifdef USE_HTU21D
-SensorHtu21d htu(mqtt, SENSOR_ID_ENV_OUTSIDE, "envOut");
+SensorHtu21d htu(mqtt, SENSOR_ID_ENV_INSIDE, "envHome", 0);
 #endif
 
 
 bool runTemp() 
 {
   bool ret = isConnected();
-#ifdef USE_HTU21D
-//    Serial.print("H");
-    ret &= htu.execute();
-#endif
-  sleep(40);
 #ifdef USE_BME280
 //    Serial.print("E");
-    ret &= bme.execute();
+    bme.execute();
 #endif
+
+#ifdef USE_HTU21D
+//    Serial.print("H");
+    htu.execute();
+#endif
+//  sleep(50);
   return ret;
 }
 
@@ -111,7 +112,7 @@ void taskMQTT( void * pvParameters ) {
 
 void setup() {
   Serial.begin(115200);
-  p("Version %d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_REV);
+  p(1, "Version %d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_REV);
   printMem();
 
   config.loadSettings();
@@ -127,14 +128,17 @@ void setup() {
   WiFi.begin(config.wlan_ssid.c_str(), config.wlan_pw.c_str());
 
 #if defined(USE_BME280) || defined(USE_HTU21D)
-  Wire.begin(PIN_SDA, PIN_SCL);
+//  Wire.begin(PIN_SDA, PIN_SCL, 10000);
+//  Wire.begin(PIN_SDA, PIN_SCL);
+  //Wire.setTimeout(250);
 #endif
+
 #ifdef USE_BME280  
-  bme.init();
+  bme.init(BME_PIN_SDA, BME_PIN_SCL, BME_FREQUENCY);
 #endif
 
 #ifdef USE_HTU21D  
-  htu.init();
+  htu.init(HTU_PIN_SDA, HTU_PIN_SCL, HTU_FREQUENCY);
 #endif
 
 
@@ -159,16 +163,16 @@ bool isConnected() {
 
   if (WiFi.status() != WL_CONNECTED) {
     int i=15;
-    Serial.print("Connecting to WiFi..");
+    p(1, "Connecting to WiFi..");
     while (WiFi.status() != WL_CONNECTED) {
       if(--i == 0) {
-        Serial.println(" trying reboot");
+        p(1, " trying reboot\n");
         softReset();
       }
       sleep(1000);
-      Serial.print(".");
+      p(1, ".");
     }
-    Serial.println(" connected!");
+    p(1, " connected!\n");
   }
 
   mqtt.connect();

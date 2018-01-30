@@ -4,11 +4,10 @@
 #include "SensorEnv.h"
 #include "MqttHandler.h"
 #include "common.h"
-#include <Wire.h>
 
 
-SensorEnv::SensorEnv(MqttHandler & m, uint8_t theSensorId, const char *theTopic)
-    : mqttHandler(m), sensorId(theSensorId), topic(theTopic) 
+SensorEnv::SensorEnv(MqttHandler & m, uint8_t theSensorId, const char *theTopic, int bus)
+    : mqttHandler(m), sensorId(theSensorId), topic(theTopic), wire(bus)
 {
 }
 
@@ -38,7 +37,7 @@ bool SensorEnv::publish(float temperature, float humidity, float pressure)
     Serial.print(pressure);                           // display pressure in hPa
     Serial.println("hPa");
 
-    if (temperature > 60.0f || temperature < -40.0f) {
+    if (temperature > 60.0f || temperature < -40.0f || humidity < 0.0f || humidity > 100.0f) {
         Serial.println("Skip invalid values.");
         return false;
     }
@@ -49,4 +48,11 @@ bool SensorEnv::publish(float temperature, float humidity, float pressure)
     publishChannelData("pr", pressure);
 
     return true;
+}
+
+void SensorEnv::init(int sda, int scl, uint32_t frequency) 
+{
+    wire.begin(sda, scl, frequency);
+    wire.setTimeout(500);
+
 }

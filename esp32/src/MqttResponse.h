@@ -22,7 +22,7 @@ class MqttResponse {
     }
     
     virtual void print()const {
-      Serial.print("<MQTT <-");
+      p(19, "<MQTT <-");
     }
 
     uint8_t* getBuffer() {
@@ -44,13 +44,7 @@ class MqttResponsePing : public MqttResponse {
     }
     void print() const {
       MqttResponse::print();
-      Serial.print("Ping(v");
-      Serial.print(data[0]);
-      Serial.print(".");
-      Serial.print(data[1]);
-      Serial.print(".");
-      Serial.print(data[2]);
-      Serial.println(")");
+      p(19, "Ping(v%d.%d.%d)\n",data[0], data[1], data[2]);
     }
 };
 
@@ -67,7 +61,7 @@ class MqttResponseSensor : public MqttResponse {
     }
     void print() const {
       MqttResponse::print();
-      Serial.println("Sensor");
+      p(19, "Sensor\n");
     }
 };
 
@@ -84,8 +78,8 @@ class MqttResponseConnState : public MqttResponse {
       BTAddr a(data);
       eState state = (eState)data[BT_ADDR_SIZE];
       MqttResponse::print();
-      p("ConnState(%s)", eState2Str(state));
-      a.println("");
+      p(19, "ConnState(%s)", eState2Str(state));
+      a.println(19, "");
     }
 };
 
@@ -101,9 +95,8 @@ class MqttResponseTempState : public MqttResponse {
     void print() const {
       BTAddr a(data);
       MqttResponse::print();
-      Serial.print("TempState(");
-      Serial.print((data[BT_ADDR_SIZE+3])*5);
-      a.println(")");
+      p(19, "TempState(%d", (data[BT_ADDR_SIZE+3])*5);
+      a.println(19, ")");
     }
 };
 

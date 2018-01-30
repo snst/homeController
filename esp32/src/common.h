@@ -57,7 +57,7 @@ typedef struct {
 } tBleCmd;
 
 void dump(const char *str, const uint8_t *data, uint8_t len);
-void p(const char *fmt, ... );
+void p(uint8_t level, const char *fmt, ... );
 void printMem();
 void updateLastCmdTimestamp();
 int getSleepTime();

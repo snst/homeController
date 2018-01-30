@@ -6,12 +6,14 @@
 #include "common.h"
 #include <Wire.h>
 
-SensorHtu21d::SensorHtu21d(MqttHandler & m, uint8_t theSensorId, const char *theTopic)
-    : SensorEnv(m, theSensorId, theTopic) {
+SensorHtu21d::SensorHtu21d(MqttHandler & m, uint8_t theSensorId, const char *theTopic, int bus)
+    : SensorEnv(m, theSensorId, theTopic, bus) {
 }
 
-void SensorHtu21d::init() {
-  sensor.begin(Wire);
+void SensorHtu21d::init(int sda, int scl, uint32_t frequency) 
+{
+    SensorEnv::init(sda, scl, frequency);
+    sensor.begin(wire);
 }
 
 bool SensorHtu21d::execute() {

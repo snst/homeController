@@ -8,6 +8,9 @@
 
 #define BT_ADDR_SIZE (sizeof(esp_bd_addr_t))
 
+void p(uint8_t level, const char *fmt, ... );
+
+
 class BTAddr
 {
   public:
@@ -36,17 +39,16 @@ class BTAddr
       return ret;
     }
 
-    void print(const char *txt) const {
-      Serial.print(txt);
+    void print(int level, const char *txt) const {
+      p(level, txt);
       for(int i=0; i<sizeof(esp_bd_addr_t); i++) {
-        Serial.print(":");
-        Serial.print(((uint8_t*)addr)[i], HEX);
+        p(level, ":%x", ((uint8_t*)addr)[i]);
       }
     }
 
-    void println(const char *txt) const {
-      print(txt);
-      Serial.println("");
+    void println(int level, const char *txt) const {
+      print(level, txt);
+      p(level, "\n");
     }
 
     void setStrAddr(const char *strAddr) {
