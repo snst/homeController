@@ -27,7 +27,7 @@ bool SensorEnv::publish(float temperature, float humidity, float pressure)
     p(5, "Humidity: %f%%\n", humidity);
     p(5, "Pressure: %fhPa\n", pressure);
 
-    if (temperature > 60.0f || temperature < -40.0f || humidity < 0.0f || humidity > 100.0f) {
+    if (isnan(temperature) || temperature > 60.0f || temperature < -40.0f || humidity < 0.0f || humidity > 100.0f) {
         p(5, "Skip invalid values.");
         return false;
     }

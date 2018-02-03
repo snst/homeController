@@ -20,5 +20,13 @@ bool SensorBme280::execute()
     float temperature = sensor.readTemperature();
     float pressure = sensor.readPressure() / 100.0f;
     float humidity = sensor.readHumidity();
-    return publish(temperature, humidity, pressure);
+    bool ret = publish(temperature, humidity, pressure);
+    if (!ret) {
+        p(1, "reset BME280\n");
+        wire.reset();
+        sleep(50);
+        sensor.init();
+    }
+
+    return ret;
 }
