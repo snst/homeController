@@ -5,6 +5,7 @@
 //       https://github.com/sparkfun/HTU21D_Breakout/blob/master/Libraries/Arduino/src/SparkFunHTU21D.cpp
 //       https://github.com/ms-iot/htu21d/blob/develop/HTU21D.cs
 // Uses native i2c headers, enable i2c in raspi-config, and reboot.
+// modified by Stefan Schmidt
 
 #include <stdio.h>
 #include <stdint.h>
@@ -13,8 +14,10 @@
 #include <errno.h>
 #include <time.h>
 #include <math.h>
-
 #include "htu21d.h"
+#include "common.h"
+
+#define HTU21D_TEMP_OFFSET (-1.0f)
 
 HTU21D::HTU21D() : _sensorAddress(HTU21D_Default_Address)
 {
@@ -23,10 +26,7 @@ HTU21D::HTU21D() : _sensorAddress(HTU21D_Default_Address)
 bool HTU21D::begin(TwoWire &_wire)
 {
     wire = &_wire;
-    _temp = NAN;
-    _humidity = NAN;
-    _lastRefresh = millis();
-    _reset = false;
+    resolution = Rh11_Temp11;
     return reset();
 }
 
@@ -36,32 +36,77 @@ HTU21D::~HTU21D()
 
 bool HTU21D::reset()
 {
-    if (_reset)
-        return _reset;
-
+    delay(20);
     wire->beginTransmission(_sensorAddress);
     wire->write(Commands::Reset);
     wire->endTransmission();
+    delay(50);
+    setResolution(resolution);
     delay(20);
+    return true;
+}
 
-    // Read the status register to check it's really there
+void HTU21D::setResolution(Resolution res)
+{
+    uint8_t user = readUserRegister();
+    user = (res & 0x81) | (user & 0x7E);
+    writeUserRegister(user);
+}
+
+float HTU21D::readTemperature()
+{
+    uint8_t len = 3;
+    uint8_t rbuf[len];
+
+    if (readOutput(rbuf, Commands::Measure_Temperature_NoHold, len) != len)
+        return NAN;
+
+    // Reconstruct the result using the first two bytes returned from the device
+    // NOTE: Zero out the status bits (bits 0 and 1 of the LSB), but keep them in place
+    // - status bit 0 - not assigned
+    // - status bit 1
+    // -- off = temperature data
+    // -- on = humdity data
+    uint16_t rawValue = (((uint16_t)rbuf[0] << 8) | (uint16_t)rbuf[1]) & 0xFFFC;
+
+    if (ValidCyclicRedundancyCheck(rawValue, rbuf[2]))
+        return (rawValue * 175.72 / 65536 - 46.85) + HTU21D_TEMP_OFFSET;
+    return NAN;
+}
+
+
+float HTU21D::readHumidity()
+{
+    uint8_t len = 3;
+    uint8_t rbuf[len];
+
+    if (readOutput(rbuf, Commands::Measure_Humidity_NoHold, len) != len)
+        return NAN;
+
+    uint16_t rawValue = (((uint16_t)rbuf[0] << 8) | (uint16_t)rbuf[1]) & 0xFFFC;
+
+    //Given the raw humidity data, calculate the actual relative humidity
+    if (ValidCyclicRedundancyCheck(rawValue, rbuf[2] ^ 0x62))
+        return (rawValue * (125.0 / 65536.0) - 6.0);
+    return NAN;
+}
+
+uint8_t HTU21D::readUserRegister()
+{
     wire->beginTransmission(_sensorAddress);
     wire->write(Commands::Read_User_Register);
     wire->endTransmission();
     wire->requestFrom(_sensorAddress, 1);
     uint8_t user = wire->read();
-
-    Serial.print("user reg ");
-    Serial.println(user, BIN);
-    // user = ((user & Resolution_Mask) | Resolution::Rh11_Temp11) | user;
-    // Serial.print("user reg "); Serial.println(user,BIN);
-    // wire->beginTransmission(_sensorAddress);
-    // wire->write(Commands::Write_User_Register);
-    // wire->write(user);
-    // wire->endTransmission();
-
-    _reset = (user == UserRegister_Default);
-    return _reset;
+    return user;
+}
+ 
+void HTU21D::writeUserRegister(uint8_t data)
+{
+    wire->beginTransmission(_sensorAddress);
+    wire->write(Commands::Write_User_Register);
+    wire->write(data);
+    wire->endTransmission();
 }
 
 uint8_t HTU21D::readOutput(uint8_t *arrPtr, uint8_t Command, uint8_t len)
@@ -84,81 +129,6 @@ uint8_t HTU21D::readOutput(uint8_t *arrPtr, uint8_t Command, uint8_t len)
     return i;
 }
 
-bool HTU21D::refreshReading()
-{
-    unsigned long currentMillis = millis();
-    //detect timer roll over
-    if (isnan(_humidity) || isnan(_temp) || currentMillis > _lastRefresh || currentMillis - _lastRefresh < 1000)
-    {
-        _temp = readTemperature();
-        _humidity = readHumidity();
-        bool stat = !(isnan(_humidity) || isnan(_temp));
-        if (stat)
-        {
-            _lastRefresh = currentMillis;
-            _dewpoint = calculateDewPoint();
-            _heatindex = calculateHeatIndex();
-        }
-
-        return stat;
-    }
-    return true;
-}
-
-float HTU21D::getHumidity()
-{
-    if (isnan(_humidity))
-    {
-        refreshReading();
-    }
-    return _humidity;
-}
-
-float HTU21D::readHumidity()
-{
-    uint8_t len = 3;
-    uint8_t rbuf[len];
-
-    if (readOutput(rbuf, Commands::Measure_Humidity, len) != len)
-        return NAN;
-
-    uint16_t rawValue = (((uint16_t)rbuf[0] << 8) | (uint16_t)rbuf[1]) & 0xFFFC;
-
-    //Given the raw humidity data, calculate the actual relative humidity
-    if (ValidCyclicRedundancyCheck(rawValue, rbuf[2] ^ 0x62))
-        return (rawValue * (125.0 / 65536.0) - 6.0);
-    return NAN;
-}
-
-float HTU21D::getTemperature()
-{
-    if (isnan(_temp))
-    {
-        refreshReading();
-    }
-    return _temp;
-}
-
-float HTU21D::readTemperature()
-{
-    uint8_t len = 3;
-    uint8_t rbuf[len];
-
-    if (readOutput(rbuf, Commands::Measure_Temperature_NoHold, len) != len)
-        return NAN;
-
-    // Reconstruct the result using the first two bytes returned from the device
-    // NOTE: Zero out the status bits (bits 0 and 1 of the LSB), but keep them in place
-    // - status bit 0 - not assigned
-    // - status bit 1
-    // -- off = temperature data
-    // -- on = humdity data
-    uint16_t rawValue = (((uint16_t)rbuf[0] << 8) | (uint16_t)rbuf[1]) & 0xFFFC;
-
-    if (ValidCyclicRedundancyCheck(rawValue, rbuf[2]))
-        return (rawValue * 175.72 / 65536 - 46.85);
-    return NAN;
-}
 
 bool HTU21D::ValidCyclicRedundancyCheck(uint16_t data, uint8_t crc)
 {
@@ -181,7 +151,7 @@ bool HTU21D::ValidCyclicRedundancyCheck(uint16_t data, uint8_t crc)
 
     return (crc == crcData);
 }
-
+/*
 float HTU21D::getDewPoint()
 {
     if (isnan(_dewpoint))
@@ -251,3 +221,4 @@ float HTU21D::calculateHeatIndex()
     //convert back to celsius
     return (5.0 / 9.0 * (heatIndex - 32));
 }
+*/

@@ -17,16 +17,23 @@ void SensorBme280::begin()
 
 bool SensorBme280::execute() 
 {
-    float temperature = sensor.readTemperature();
-    float pressure = sensor.readPressure() / 100.0f;
-    float humidity = sensor.readHumidity();
-    bool ret = publish(temperature, humidity, pressure);
-    if (!ret) {
-        p(1, "reset BME280\n");
-        wire.reset();
-        sleep(50);
-        sensor.init();
+    bool ret = sensor.takeForcedMeasurement();
+    if (ret) {
+        float temperature = sensor.readTemperature();
+        float pressure = sensor.readPressure() / 100.0f;
+        float humidity = sensor.readHumidity();
+        ret = publish(temperature, humidity, pressure);
+        if (!ret) {
+            p(1, "reset BME280\n");
+            wire.reset();
+            sleep(50);
+            sensor.init();
+        }
+
+    } else {
+        p(1, "BME280: forced timeout\n");
     }
+
 
     return ret;
 }

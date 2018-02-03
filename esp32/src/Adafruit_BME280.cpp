@@ -18,6 +18,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include "Adafruit_BME280.h"
+#include "common.h"
 
 /***************************************************************************
  PRIVATE FUNCTIONS
@@ -331,8 +332,9 @@ uint32_t Adafruit_BME280::read24(byte reg)
     @brief  Take a new measurement (only possible in forced mode)
 */
 /**************************************************************************/
-void Adafruit_BME280::takeForcedMeasurement()
+bool Adafruit_BME280::takeForcedMeasurement()
 {   
+    uint16_t i=1000;
     // If we are in forced mode, the BME sensor goes back to sleep after each
     // measurement and we need to set it to forced mode once at this point, so
     // it will take the next measurement and then return to sleep again.
@@ -342,8 +344,15 @@ void Adafruit_BME280::takeForcedMeasurement()
         write8(BME280_REGISTER_CONTROL, _measReg.get());
         // wait until measurement has been completed, otherwise we would read
         // the values from the last measurement
-        while (read8(BME280_REGISTER_STATUS) & 0x08)
-		delay(1);
+        while (i--) {
+            if (!(read8(BME280_REGISTER_STATUS) & 0x08)) {
+                return true;
+            }
+		    delay(1);
+        }
+        return false;
+    } else {
+        return true;
     }
 }
 
@@ -426,7 +435,7 @@ float Adafruit_BME280::readTemperature(void)
 float Adafruit_BME280::readPressure(void) {
     int64_t var1, var2, p;
 
-    readTemperature(); // must be done first to get t_fine
+//    readTemperature(); // must be done first to get t_fine
 
     int32_t adc_P = read24(BME280_REGISTER_PRESSUREDATA);
     if (adc_P == 0x800000) // value in case pressure measurement was disabled
@@ -460,7 +469,7 @@ float Adafruit_BME280::readPressure(void) {
 */
 /**************************************************************************/
 float Adafruit_BME280::readHumidity(void) {
-    readTemperature(); // must be done first to get t_fine
+//    readTemperature(); // must be done first to get t_fine
 
     int32_t adc_H = read16(BME280_REGISTER_HUMIDDATA);
     if (adc_H == 0x8000) // value in case humidity measurement was disabled

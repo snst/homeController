@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+
 namespace Commands
 {
     const uint8_t Measure_Temperature = 0xE3;
@@ -34,28 +35,39 @@ class HTU21D {
         bool begin(TwoWire &_wire);
         //Public Functions
         bool reset(); 
+        /*
         float getHumidity();
         float getTemperature();
         float getDewPoint();
         float getHeatIndex();
+        */
         float readHumidity();
         float readTemperature();
 
     private:
-        //Private Functions
+        uint8_t readOutput(uint8_t *arrPtr, uint8_t Command, uint8_t len);
+        uint8_t readUserRegister();
+        void writeUserRegister(uint8_t RegData);
         bool ValidCyclicRedundancyCheck(uint16_t data, uint8_t crc);
+        void setResolution(Resolution res);
+        Resolution resolution;
+        int _sensorAddress;
+
+
+
+        //Private Functions
+        /*
         bool refreshReading();
         float calculateDewPoint();
         float calculateHeatIndex();
         uint8_t readOutput(uint8_t *arrPtr, uint8_t Command, uint8_t len);
         //Private Variables
-        int _sensorAddress;
         bool _reset;    
         float _temp;
         float _humidity;
         float _dewpoint;
         float _heatindex;
         
-        unsigned long _lastRefresh;
+        unsigned long _lastRefresh;*/
         TwoWire *wire;
 };
