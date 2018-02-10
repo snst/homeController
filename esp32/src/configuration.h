@@ -4,7 +4,7 @@
 
 
 #define VERSION_MAJOR   0
-#define VERSION_MINOR   3
+#define VERSION_MINOR   4
 #define VERSION_REV     0
 
 #define USE_SOFT_I2C
@@ -14,16 +14,20 @@
 #define ENABLE_TEMP_OUTSIDE
 //#define USE_LOW_MHZ
 
+#define TEMP_OFFSET_HTU21D (-1.0f)
+#define TEMP_OFFSET_BME280 (-0.5f)
+
+
 #define SENSOR_ID_ENV_INSIDE 1
 #define SENSOR_ID_ENV_OUTSIDE 2
 
 #define BME_PIN_SDA 23 
 #define BME_PIN_SCL 19 
-#define BME_FREQUENCY 10000
+#define BME_FREQUENCY 100000
 
 #define HTU_PIN_SDA 21 
 #define HTU_PIN_SCL 22 
-#define HTU_FREQUENCY 10000
+#define HTU_FREQUENCY 100000
 
 #define MAX_OPEN_CONNECTIONS 4
 #define MAX_CONNECTIONS 15

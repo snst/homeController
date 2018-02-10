@@ -21,11 +21,8 @@
 #include "configuration.h"
 #include <Adafruit_Sensor.h>
 
-#ifdef USE_SOFT_I2C
-# include "SoftI2CMaster.h"
-#else
-# include <Wire.h>
-#endif
+class IDeviceI2C;
+
 /*=========================================================================
     I2C ADDRESS/BITS
     -----------------------------------------------------------------------*/
@@ -162,17 +159,10 @@ class Adafruit_BME280 {
         };
     
         // constructors
-        Adafruit_BME280(void);
-        Adafruit_BME280(int8_t cspin);
-        Adafruit_BME280(int8_t cspin, int8_t mosipin, int8_t misopin, int8_t sckpin);
+        Adafruit_BME280();
+
 		
-#ifdef USE_SOFT_I2C
-		bool begin(SoftI2CMaster *theWire);
-        bool begin(uint8_t addr, SoftI2CMaster *theWire);
-#else
-		bool begin(TwoWire *theWire);
-        bool begin(uint8_t addr, TwoWire *theWire);
-#endif
+		bool begin(IDeviceI2C *_i2c);
 		bool init();
 
 	void setSampling(sensor_mode mode      = MODE_FORCED,
@@ -193,11 +183,7 @@ class Adafruit_BME280 {
 
         
     private:
-#ifdef USE_SOFT_I2C
-        SoftI2CMaster *_wire;
-#else
-		TwoWire *_wire;
-#endif        
+        IDeviceI2C *_wire;
         void readCoefficients(void);
         bool isReadingCalibration(void);
         uint8_t spixfer(uint8_t x);
@@ -213,8 +199,6 @@ class Adafruit_BME280 {
         uint8_t   _i2caddr;
         int32_t   _sensorID;
         int32_t   t_fine;
-
-        int8_t _cs, _mosi, _miso, _sck;
 
         bme280_calib_data _bme280_calib;
 

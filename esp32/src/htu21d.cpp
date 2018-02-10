@@ -16,16 +16,16 @@
 #include <math.h>
 #include "htu21d.h"
 #include "common.h"
+#include "IDeviceI2C.h"
 
-#define HTU21D_TEMP_OFFSET (-1.0f)
-
-HTU21D::HTU21D() : _sensorAddress(HTU21D_Default_Address)
+HTU21D::HTU21D()
+: _sensorAddress(HTU21D_Default_Address), wire(NULL)
 {
 }
 
-bool HTU21D::begin(TwoWire &_wire)
+bool HTU21D::begin(IDeviceI2C *_i2c)
 {
-    wire = &_wire;
+    wire = _i2c;
     resolution = Rh11_Temp11;
     return reset();
 }
@@ -70,7 +70,7 @@ float HTU21D::readTemperature()
     uint16_t rawValue = (((uint16_t)rbuf[0] << 8) | (uint16_t)rbuf[1]) & 0xFFFC;
 
     if (ValidCyclicRedundancyCheck(rawValue, rbuf[2]))
-        return (rawValue * 175.72 / 65536 - 46.85) + HTU21D_TEMP_OFFSET;
+        return (rawValue * 175.72 / 65536 - 46.85) + TEMP_OFFSET_HTU21D;
     return NAN;
 }
 
@@ -120,7 +120,7 @@ uint8_t HTU21D::readOutput(uint8_t *arrPtr, uint8_t Command, uint8_t len)
     delay(85);
     // request bytes from slave device
     wire->requestFrom(_sensorAddress, len);
-    while ((wire->available()) && (i < len)) // slave may send less than requested
+    while (/*(wire->available()) &&*/ (i < len)) // slave may send less than requested
     {
         *arrPtr = wire->read(); // receive a byte
         arrPtr++;

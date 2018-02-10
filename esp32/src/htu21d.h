@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+class IDeviceI2C;
 
 namespace Commands
 {
@@ -32,8 +33,7 @@ class HTU21D {
     public:
         ~HTU21D();
         HTU21D();
-        bool begin(TwoWire &_wire);
-        //Public Functions
+        bool begin(IDeviceI2C *_i2c);
         bool reset(); 
         /*
         float getHumidity();
@@ -52,22 +52,5 @@ class HTU21D {
         void setResolution(Resolution res);
         Resolution resolution;
         int _sensorAddress;
-
-
-
-        //Private Functions
-        /*
-        bool refreshReading();
-        float calculateDewPoint();
-        float calculateHeatIndex();
-        uint8_t readOutput(uint8_t *arrPtr, uint8_t Command, uint8_t len);
-        //Private Variables
-        bool _reset;    
-        float _temp;
-        float _humidity;
-        float _dewpoint;
-        float _heatindex;
-        
-        unsigned long _lastRefresh;*/
-        TwoWire *wire;
+        IDeviceI2C *wire;
 };

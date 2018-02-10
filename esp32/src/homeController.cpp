@@ -7,10 +7,12 @@
 #include "HomeConfig.h"
 #include "MqttHandler.h"
 #include "soc/rtc.h"
-#include <Wire.h>
 #include "common.h"
 #include "SensorBme280.h"
 #include "SensorHtu21d.h"
+#include "DeviceI2CHard.h"
+#include "DeviceI2CSoft.h"
+#include "DataSink.h"
 
 
 #ifdef USE_SSL
@@ -32,7 +34,9 @@ typedef bool (*execute_t)();
 
 
 #ifdef ENABLE_TEMP_OUTSIDE
-SensorBme280 sensorTempOutside(1, BME_PIN_SDA, BME_PIN_SCL, BME_FREQUENCY, mqtt, SENSOR_ID_ENV_OUTSIDE, "envOut");
+DeviceI2CSoft i2cBME(BME_PIN_SCL, BME_PIN_SDA);
+DataSink sinkOutside(mqtt, SENSOR_ID_ENV_OUTSIDE, "envOut");
+SensorBme280 sensorTempOutside(&i2cBME, &sinkOutside);
 uint32_t lastUpdateTempOutside = 0;
 
 bool runTempOutside() 
@@ -43,7 +47,9 @@ bool runTempOutside()
 #endif
 
 #ifdef ENABLE_TEMP_INSIDE
-SensorHtu21d sensorTempInside(0, HTU_PIN_SDA, HTU_PIN_SCL, HTU_FREQUENCY, mqtt, SENSOR_ID_ENV_INSIDE, "envHome");
+DeviceI2CHard i2cHTU(HTU_PIN_SCL, HTU_PIN_SDA);
+DataSink sinkInside(mqtt, SENSOR_ID_ENV_INSIDE, "envHome");
+SensorHtu21d sensorTempInside(&i2cHTU, &sinkInside);
 uint32_t lastUpdateTempInside = 0;
 
 bool runTempInside() 

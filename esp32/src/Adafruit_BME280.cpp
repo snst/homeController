@@ -15,23 +15,15 @@
   BSD license, all text above must be included in any redistribution
  ***************************************************************************/
 #include "Arduino.h"
-#include <SPI.h>
 #include "Adafruit_BME280.h"
 #include "common.h"
+#include "IDeviceI2C.h"
 
 /***************************************************************************
  PRIVATE FUNCTIONS
  ***************************************************************************/
 Adafruit_BME280::Adafruit_BME280()
-    : _cs(-1), _mosi(-1), _miso(-1), _sck(-1)
-{ }
-
-Adafruit_BME280::Adafruit_BME280(int8_t cspin)
-    : _cs(cspin), _mosi(-1), _miso(-1), _sck(-1)
-{ }
-
-Adafruit_BME280::Adafruit_BME280(int8_t cspin, int8_t mosipin, int8_t misopin, int8_t sckpin)
-    : _cs(cspin), _mosi(mosipin), _miso(misopin), _sck(sckpin)
+: _i2caddr(BME280_ADDRESS), _wire(NULL)
 { }
 
 
@@ -41,40 +33,11 @@ Adafruit_BME280::Adafruit_BME280(int8_t cspin, int8_t mosipin, int8_t misopin, i
 */
 /**************************************************************************/
 
-#ifdef USE_SOFT_I2C
-
-bool Adafruit_BME280::begin(SoftI2CMaster *theWire)
+bool Adafruit_BME280::begin(IDeviceI2C *_i2c)
 {
-	_wire = theWire;
-	_i2caddr = BME280_ADDRESS;
+    _wire = _i2c;
 	return init();
 }
-
-bool Adafruit_BME280::begin(uint8_t addr, SoftI2CMaster *theWire)
-{
-    _i2caddr = addr;
-	_wire = theWire;
-	return init();
-}
-
-#else
-
-bool Adafruit_BME280::begin(TwoWire *theWire)
-{
-	_wire = theWire;
-	_i2caddr = BME280_ADDRESS;
-	return init();
-}
-
-bool Adafruit_BME280::begin(uint8_t addr, TwoWire *theWire)
-{
-    _i2caddr = addr;
-	_wire = theWire;
-	return init();
-}
-
-#endif
-
 
 
 bool Adafruit_BME280::init()
@@ -128,7 +91,7 @@ void Adafruit_BME280::setSampling(sensor_mode       mode,
     _configReg.filter = filter;
     _configReg.t_sb   = duration;
 
-    p(1,"set sampling/mode: 0x%x\n", mode);
+    p(1,"BME280::setSampling: 0x%x\n", mode);
     // you must make sure to also set REGISTER_CONTROL after setting the
     // CONTROLHUMID register, otherwise the values won't be applied (see DS 5.4.3)
     write8(BME280_REGISTER_CONTROLHUMID, _humReg.get());
@@ -283,6 +246,7 @@ bool Adafruit_BME280::takeForcedMeasurement()
 /**************************************************************************/
 void Adafruit_BME280::readCoefficients(void)
 {
+    p(1,"BME280::readCoefficients\n");
     _bme280_calib.dig_T1 = read16_LE(BME280_REGISTER_DIG_T1);
     _bme280_calib.dig_T2 = readS16_LE(BME280_REGISTER_DIG_T2);
     _bme280_calib.dig_T3 = readS16_LE(BME280_REGISTER_DIG_T3);
@@ -303,6 +267,13 @@ void Adafruit_BME280::readCoefficients(void)
     _bme280_calib.dig_H4 = (read8(BME280_REGISTER_DIG_H4) << 4) | (read8(BME280_REGISTER_DIG_H4+1) & 0xF);
     _bme280_calib.dig_H5 = (read8(BME280_REGISTER_DIG_H5+1) << 4) | (read8(BME280_REGISTER_DIG_H5) >> 4);
     _bme280_calib.dig_H6 = (int8_t)read8(BME280_REGISTER_DIG_H6);
+
+    Serial.println("readCoefficients");
+    Serial.println(_bme280_calib.dig_T1);
+    Serial.println(_bme280_calib.dig_P1);
+    Serial.println(_bme280_calib.dig_P5);
+    Serial.println(_bme280_calib.dig_H1);
+    Serial.println(_bme280_calib.dig_H2);
 }
 
 /**************************************************************************/
@@ -342,7 +313,7 @@ float Adafruit_BME280::readTemperature(void)
     t_fine = var1 + var2;
 
     float T = (t_fine * 5 + 128) >> 8;
-    return T/100;
+    return (T/100) + TEMP_OFFSET_BME280;
 }
 
 

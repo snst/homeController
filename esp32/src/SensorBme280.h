@@ -2,21 +2,20 @@
 #ifndef _SENSOR_BME280_H_
 #define _SENSOR_BME280_H_
 
-#include "SensorEnv.h"
 #include "Adafruit_BME280.h"
 
-class SensorBme280 : public SensorEnv {
+class IDeviceI2C;
+class IDataSink;
 
+class SensorBme280
+{
 public:
-    SensorBme280(uint8_t bus, uint8_t _sda, uint8_t _scl, uint32_t _frequency, MqttHandler &m, uint8_t _sensorId, const char *_topic);
+    SensorBme280(IDeviceI2C *_i2c, IDataSink *_dataSink);
     void begin();
     bool execute();
     Adafruit_BME280 sensor;
-
-#ifdef USE_SOFT_I2C
-        SoftI2CMaster softwire;
-#endif
-    
+    IDeviceI2C *i2c;
+    IDataSink *dataSink;
 };
 
 #endif
