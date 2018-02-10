@@ -267,13 +267,6 @@ void Adafruit_BME280::readCoefficients(void)
     _bme280_calib.dig_H4 = (read8(BME280_REGISTER_DIG_H4) << 4) | (read8(BME280_REGISTER_DIG_H4+1) & 0xF);
     _bme280_calib.dig_H5 = (read8(BME280_REGISTER_DIG_H5+1) << 4) | (read8(BME280_REGISTER_DIG_H5) >> 4);
     _bme280_calib.dig_H6 = (int8_t)read8(BME280_REGISTER_DIG_H6);
-
-    Serial.println("readCoefficients");
-    Serial.println(_bme280_calib.dig_T1);
-    Serial.println(_bme280_calib.dig_P1);
-    Serial.println(_bme280_calib.dig_P5);
-    Serial.println(_bme280_calib.dig_H1);
-    Serial.println(_bme280_calib.dig_H2);
 }
 
 /**************************************************************************/
