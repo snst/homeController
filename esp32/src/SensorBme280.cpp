@@ -11,8 +11,13 @@ SensorBme280::SensorBme280(uint8_t bus, uint8_t _sda, uint8_t _scl, uint32_t _fr
 
 void SensorBme280::begin() 
 {
+#ifdef USE_SOFT_I2C
+    softwire.setPins(scl, sda, 0);
+    sensor.begin(&softwire);
+#else
     SensorEnv::begin();
     sensor.begin(&wire);
+#endif
 }
 
 bool SensorBme280::execute() 
@@ -25,7 +30,7 @@ bool SensorBme280::execute()
         ret = publish(temperature, humidity, pressure);
         if (!ret) {
             p(1, "reset BME280\n");
-            wire.reset();
+//            wire.reset();
             sleep(50);
             sensor.init();
         }

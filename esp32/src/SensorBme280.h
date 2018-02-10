@@ -12,6 +12,11 @@ public:
     void begin();
     bool execute();
     Adafruit_BME280 sensor;
+
+#ifdef USE_SOFT_I2C
+        SoftI2CMaster softwire;
+#endif
+    
 };
 
 #endif

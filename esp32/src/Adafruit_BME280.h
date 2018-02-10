@@ -17,15 +17,15 @@
 #ifndef __BME280_H__
 #define __BME280_H__
 
-#if (ARDUINO >= 100)
- #include "Arduino.h"
-#else
- #include "WProgram.h"
-#endif
-
+#include "Arduino.h"
+#include "configuration.h"
 #include <Adafruit_Sensor.h>
-#include <Wire.h>
 
+#ifdef USE_SOFT_I2C
+# include "SoftI2CMaster.h"
+#else
+# include <Wire.h>
+#endif
 /*=========================================================================
     I2C ADDRESS/BITS
     -----------------------------------------------------------------------*/
@@ -166,16 +166,19 @@ class Adafruit_BME280 {
         Adafruit_BME280(int8_t cspin);
         Adafruit_BME280(int8_t cspin, int8_t mosipin, int8_t misopin, int8_t sckpin);
 		
-		bool begin(void);
+#ifdef USE_SOFT_I2C
+		bool begin(SoftI2CMaster *theWire);
+        bool begin(uint8_t addr, SoftI2CMaster *theWire);
+#else
 		bool begin(TwoWire *theWire);
-		bool begin(uint8_t addr);
         bool begin(uint8_t addr, TwoWire *theWire);
+#endif
 		bool init();
 
-	void setSampling(sensor_mode mode              = MODE_FORCED,
-			 sensor_sampling tempSampling  = SAMPLING_X16,
-			 sensor_sampling pressSampling = SAMPLING_X16,
-			 sensor_sampling humSampling   = SAMPLING_X16,
+	void setSampling(sensor_mode mode      = MODE_FORCED,
+			 sensor_sampling tempSampling  = SAMPLING_X1,
+			 sensor_sampling pressSampling = SAMPLING_X1,
+			 sensor_sampling humSampling   = SAMPLING_X1,
 			 sensor_filter filter          = FILTER_OFF,
 			 standby_duration duration     = STANDBY_MS_0_5
 			 );
@@ -190,7 +193,11 @@ class Adafruit_BME280 {
 
         
     private:
+#ifdef USE_SOFT_I2C
+        SoftI2CMaster *_wire;
+#else
 		TwoWire *_wire;
+#endif        
         void readCoefficients(void);
         bool isReadingCalibration(void);
         uint8_t spixfer(uint8_t x);

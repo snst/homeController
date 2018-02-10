@@ -7,6 +7,8 @@
 #define VERSION_MINOR   3
 #define VERSION_REV     0
 
+#define USE_SOFT_I2C
+
 //#define USE_SSL
 #define ENABLE_TEMP_INSIDE
 #define ENABLE_TEMP_OUTSIDE
