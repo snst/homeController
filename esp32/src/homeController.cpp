@@ -36,39 +36,23 @@ typedef bool (*execute_t)();
 #ifdef ENABLE_TEMP_OUTSIDE
 DeviceI2CSoft i2cBME(BME_PIN_SCL, BME_PIN_SDA);
 DataSink sinkOutside(mqtt, SENSOR_ID_ENV_OUTSIDE, "envOut");
-SensorBme280 sensorTempOutside(&i2cBME, &sinkOutside);
-uint32_t lastUpdateTempOutside = 0;
-
-bool runTempOutside() 
-{
-  p(60,"O");
-  return sensorTempOutside.execute();
-}
+SensorBme280 sensorTempOutside(&i2cBME, &sinkOutside, UPDATE_INTERVAL_TEMP);
 #endif
 
 #ifdef ENABLE_TEMP_INSIDE
 DeviceI2CHard i2cHTU(HTU_PIN_SCL, HTU_PIN_SDA);
 DataSink sinkInside(mqtt, SENSOR_ID_ENV_INSIDE, "envHome");
-SensorHtu21d sensorTempInside(&i2cHTU, &sinkInside);
-uint32_t lastUpdateTempInside = 0;
-
-bool runTempInside() 
-{
-  p(60,"I");
-  return sensorTempInside.execute();
-}
+SensorHtu21d sensorTempInside(&i2cHTU, &sinkInside, UPDATE_INTERVAL_TEMP);
 #endif
 
-
-bool runBLE() {
-  p(60,"B");
-  return isConnected() && ble.execute();
-}
-
-
-bool runMQTT() {
-  p(60,"M");
-  return isConnected() && mqtt.execute();
+void measureTemperature()
+{
+#ifdef ENABLE_TEMP_INSIDE
+      sensorTempInside.forceExecute();
+#endif
+#ifdef ENABLE_TEMP_OUTSIDE
+      sensorTempOutside.forceExecute();
+#endif
 }
 
 
@@ -89,14 +73,6 @@ void setup() {
   
   WiFi.begin(config.wlan_ssid.c_str(), config.wlan_pw.c_str());
 
-#ifdef ENABLE_TEMP_OUTSIDE  
-  sensorTempOutside.begin();
-#endif
-
-#ifdef ENABLE_TEMP_INSIDE  
-  sensorTempInside.begin();
-#endif
-
   printMem();
 
 #ifdef USE_LOW_MHZ
@@ -105,7 +81,7 @@ void setup() {
 }
 
 
-bool isConnected() 
+void connect() 
 {
   if (WiFi.status() != WL_CONNECTED) {
     int i=15;
@@ -120,35 +96,22 @@ bool isConnected()
     }
     p(1, " connected!\n");
   }
-
-  mqtt.connect();
-  return true;
 }
-
-
-void runWithInterval(execute_t function, uint32_t & lastMS, uint32_t interval) 
-{
-  uint32_t now = millis();
-  if ((now - lastMS) >= interval) {
-    if (function()) {  
-      lastMS = now;
-    }
-  }
-}
-
 
 void loop() 
 {
-  runMQTT();
-  runBLE();
+  connect();
+  if (mqtt.connect()) {
+    mqtt.execute();
+    ble.execute();
 
 #ifdef ENABLE_TEMP_INSIDE
-  runWithInterval(runTempInside, lastUpdateTempInside, UPDATE_INTERVAL_TEMP);
+    sensorTempInside.loop();
 #endif
 
 #ifdef ENABLE_TEMP_OUTSIDE
-  runWithInterval(runTempOutside, lastUpdateTempOutside, UPDATE_INTERVAL_TEMP);
+    sensorTempOutside.loop();
 #endif
-
+  }
   sleep(getSleepTime());
 }

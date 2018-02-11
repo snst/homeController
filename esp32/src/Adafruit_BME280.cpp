@@ -212,30 +212,14 @@ uint32_t Adafruit_BME280::read24(byte reg)
     @brief  Take a new measurement (only possible in forced mode)
 */
 /**************************************************************************/
-bool Adafruit_BME280::takeForcedMeasurement()
+void Adafruit_BME280::takeForcedMeasurement()
 {   
-    uint16_t i=1000;
-    // If we are in forced mode, the BME sensor goes back to sleep after each
-    // measurement and we need to set it to forced mode once at this point, so
-    // it will take the next measurement and then return to sleep again.
-    // In normal mode simply does new measurements periodically.
-    if (_measReg.mode == MODE_FORCED) {
-        // set to forced mode, i.e. "take next measurement"
-        write8(BME280_REGISTER_CONTROL, _measReg.get());
-        // wait until measurement has been completed, otherwise we would read
-        // the values from the last measurement
-        while (i--) {
-            if (!(read8(BME280_REGISTER_STATUS) & 0x08)) {
-                p(1, "readok\n");
-                return true;
-            }
-		    delay(1);
-            p(1, "?%d",i);
-        }
-        return false;
-    } else {
-        return true;
-    }
+    write8(BME280_REGISTER_CONTROL, _measReg.get());
+}
+
+bool Adafruit_BME280::isMeasuementReady()
+{
+    return (!(read8(BME280_REGISTER_STATUS) & 0x08));
 }
 
 

@@ -17,7 +17,7 @@ public:
   void sendResponseConnection(const BTAddr &addr, eState state);
   void sendResponsePing();
   void sendResponseSensor(uint8_t sensorId, float temp, float humidity, float pressure);
-  void connect();
+  bool connect();
   bool execute();
   void setServer(const char *server, int port);
   void setUser(const char *user, const char *password);

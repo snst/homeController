@@ -63,18 +63,18 @@ bool MqttHandler::isConnected() {
   return client.connected();
 }
 
-void MqttHandler::connect() {
-  while (!client.connected()) {
+bool MqttHandler::connect() {
+  if (!client.connected()) {
    p(9, "Connecting to MQTT.. ");
     if (client.connect("ESP32Client", user, password )) {
       p(9, "connected!\nSubscripe to %s\n", topicRequest);
       client.subscribe(topicRequest);
-      //sleep(500);
     } else {
       p(9, "failed with state 0x%x\n", client.state());
-      sleep(1000);
+      return false;
     }
   }
+  return true;
 }
 
 void MqttHandler::publish(const char *topic, const char *payload, unsigned int length) {
@@ -235,12 +235,7 @@ void MqttHandler::parseRequest(const uint8_t *payload) {
     }
     case GETTEMP: {
       p(9, "GETTEMP)\n");
-#ifdef ENABLE_TEMP_INSIDE
-      runTempInside();
-#endif
-#ifdef ENABLE_TEMP_OUTSIDE
-      runTempOutside();
-#endif
+      measureTemperature();
       break;
     }
     default: {

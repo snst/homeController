@@ -6,33 +6,39 @@
 #include "IDeviceI2C.h"
 #include "IDataSink.h"
 
-SensorBme280::SensorBme280(IDeviceI2C *_i2c, IDataSink *_dataSink)
-    : i2c(_i2c), dataSink(_dataSink)
+SensorBme280::SensorBme280(IDeviceI2C *_i2c, IDataSink *_dataSink, uint32_t interval)
+    : Executor(interval), i2c(_i2c), dataSink(_dataSink), isWorking(false)
 {
 }
 
-void SensorBme280::begin() 
+void SensorBme280::init() 
 {
+    p(1, "SensorBme280::init()\n");
     i2c->begin();
     sensor.begin(i2c);
 }
 
-bool SensorBme280::execute() 
+uint32_t SensorBme280::execute() 
 {
-    bool ret = sensor.takeForcedMeasurement();
-    if (ret) {
-        dataSink->setTemperature(sensor.readTemperature());
-        dataSink->setPressure(sensor.readPressure() / 100.0f);
-        dataSink->setHumidity(sensor.readHumidity());
-        ret = dataSink->publish();
-        if (!ret) {
-            p(1, "reset BME280\n");
-//            sleep(50);
-//            sensor.init();
-        }
-
+    uint32_t delay = 0;
+    p(1, "SensorBme280::execute()\n");
+    if (!isWorking) {
+        isWorking = true;
+        p(1, "SensorBme280::takeForcedMeasurement()\n");
+        sensor.takeForcedMeasurement();
+        delay = 2000;
     } else {
-        p(1, "BME280: forced timeout\n");
+        bool res = sensor.isMeasuementReady();
+        p(1, "SensorBme280::readTemperature(), ready=%d\n", res);
+        if (res) {
+            dataSink->setTemperature(sensor.readTemperature());
+            dataSink->setPressure(sensor.readPressure() / 100.0f);
+            dataSink->setHumidity(sensor.readHumidity());
+            res = dataSink->publish();
+            isWorking = false;
+        } else {
+            delay = 1000;
+        }
     }
-    return ret;
+    return delay;
 }

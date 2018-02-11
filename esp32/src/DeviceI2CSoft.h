@@ -1,5 +1,4 @@
 // Copyright 2017 Stefan Schmidt
-
 #ifndef _DEVICEI2CSOFT_H_
 #define _DEVICEI2CSOFT_H_
 

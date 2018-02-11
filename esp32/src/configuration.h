@@ -14,8 +14,8 @@
 #define ENABLE_TEMP_OUTSIDE
 //#define USE_LOW_MHZ
 
-#define TEMP_OFFSET_HTU21D (-1.0f)
-#define TEMP_OFFSET_BME280 (-0.5f)
+#define TEMP_OFFSET_HTU21D 0.0f
+#define TEMP_OFFSET_BME280 (0.0f)
 
 
 #define SENSOR_ID_ENV_INSIDE 1
@@ -40,7 +40,6 @@
 #define SLEEP_WORK_TIME 10
 
 #define UPDATE_INTERVAL_TEMP (3*60*1000)
-//#define UPDATE_INTERVAL_TEMP (10*1000)
 
 #define TRACE_LEVEL 10
 

@@ -65,8 +65,6 @@ const char *eState2Str(eState state);
 void sleep(int ms);
 bool isConnected();
 
-
-bool runTempInside();
-bool runTempOutside();
+void measureTemperature();
 
 #endif

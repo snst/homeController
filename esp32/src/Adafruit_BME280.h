@@ -166,14 +166,15 @@ class Adafruit_BME280 {
 		bool init();
 
 	void setSampling(sensor_mode mode      = MODE_FORCED,
-			 sensor_sampling tempSampling  = SAMPLING_X1,
+			 sensor_sampling tempSampling  = SAMPLING_X8,
 			 sensor_sampling pressSampling = SAMPLING_X1,
-			 sensor_sampling humSampling   = SAMPLING_X1,
+			 sensor_sampling humSampling   = SAMPLING_X8,
 			 sensor_filter filter          = FILTER_OFF,
 			 standby_duration duration     = STANDBY_MS_0_5
 			 );
                    
-        bool takeForcedMeasurement();
+        void takeForcedMeasurement();
+        bool isMeasuementReady();
         float readTemperature(void);
         float readPressure(void);
         float readHumidity(void);
