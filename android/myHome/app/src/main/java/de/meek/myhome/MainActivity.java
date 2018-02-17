@@ -29,15 +29,13 @@ public class MainActivity extends AppCompatActivity {
     MqttHelper mqttHelper = null;
     Handler handler = new Handler();
     ListView listView = null;
-    TextView txtSensorInTemp = null;
-    TextView txtSensorInHumidity = null;
-    TextView txtSensorOutTemp = null;
-    TextView txtSensorOutHumidity = null;
     int msgCntStatus = 0;
     int msgCntMode = 0;
     RoomSettings roomSettings = null;
     RoomStatusArrayAdapter adapter = null;
     SwipeRefreshLayout refreshLayout = null;
+    TempSensorView tempSensorViewOutside = null;
+    TempSensorView tempSensorViewInside = null;
     boolean mqttConnected = false;
 
     protected MyApplication getMyApp() {
@@ -220,10 +218,8 @@ public class MainActivity extends AppCompatActivity {
         AccountConfig.load(this);
         roomSettings = new RoomSettings(this);
         listView = findViewById(R.id.listViewRooms);
-        txtSensorInTemp = findViewById(R.id.txtSensorInTemp);
-        txtSensorInHumidity = findViewById(R.id.txtSensorInHumidity);
-        txtSensorOutTemp = findViewById(R.id.txtSensorOutTemp);
-        txtSensorOutHumidity = findViewById(R.id.txtSensorOutHumidity);
+        tempSensorViewInside = findViewById(R.id.tempViewInside);
+        tempSensorViewOutside = findViewById(R.id.tempViewOutside);
 
         for (int j = 0; j < AccountConfig.NUMBER_OF_ROOMS; j++) {
             Room room = new Room(j);
@@ -273,24 +269,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void showSensorData(int sensorId, float temp, int humidity, float pressure) {
-        TextView tvTemp = null;
-        TextView tvHumidity = null;
+        TempSensorView t = null;
         switch(sensorId) {
             case 1: {
-                tvTemp = txtSensorInTemp;
-                tvHumidity = txtSensorInHumidity;
+                t = tempSensorViewInside;
                 break;
             }
             case 2: {
-                tvTemp = txtSensorOutTemp;
-                tvHumidity = txtSensorOutHumidity;
+                t = tempSensorViewOutside;
                 break;
             }
             default: break;
         }
-        if (tvTemp != null) {
-            tvTemp.setText("" + temp + "°C");
-            tvHumidity.setText("" + humidity + "%");
+        if (t != null) {
+            t.setTemp(temp);
+            t.setHumidity(humidity);
         }
     }
 
