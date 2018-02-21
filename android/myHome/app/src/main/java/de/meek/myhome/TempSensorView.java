@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -39,14 +40,21 @@ public class TempSensorView extends View {
         //canvas.drawRect(0, 0, shapeWidth, shapeHeight, paintShape);
         canvas.drawRoundRect(0,0,shapeWidth, shapeHeight, 5, 5, paintShape);
 
+        paintShape.setAntiAlias(true);
         paintShape.setColor(txtColor);
         paintShape.setTextSize(35);
+     //   paintShape.setFakeBoldText(true);
+        paintShape.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+
         canvas.drawText(String.format("%.1f°", temp) , 80, 40, paintShape);
+     //   paintShape.setFakeBoldText(false);
         paintShape.setTextSize(25);
+        paintShape.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
         canvas.drawText(Integer.toString((int)humidity) + "%", 85, 70, paintShape);
 
-        if(icon!=null)
+        if(icon!=null) {
             icon.draw(canvas);
+        }
     }
 
     private void setupPaint() {
@@ -63,7 +71,8 @@ public class TempSensorView extends View {
             txtColor = a.getColor(R.styleable.TempSensorView_textColor, Color.WHITE);
             backgroundColor = a.getColor(R.styleable.TempSensorView_backgroundColor, Color.BLACK);
             icon = a.getDrawable(R.styleable.TempSensorView_tempIcon);
-            icon.setBounds(10, 20, 60, 60);
+            icon.setBounds(15, 20, 60, 60);
+            icon.setAlpha(200);
          //   displayShapeName = a.getBoolean(R.styleable.ShapeSelectorView_displayShapeName, false);
         } finally {
             // TypedArray objects are shared and must be recycled.
