@@ -22,6 +22,7 @@ public class Room {
     public int temp = 0;
     public int msgCount = 0;
     public boolean valid = false;
+    public boolean isSensorTemp = false;
     public eConnectionState connectionState = eConnectionState.DISCONNECTED;
     public Date lastUpdate;
     public ArrayList<Integer> presetTemp = new ArrayList<Integer>();

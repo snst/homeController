@@ -17,8 +17,6 @@ import android.view.View;
 
 public class TempSensorView extends View {
 
-    private int shapeWidth = 180;
-    private int shapeHeight = 90;
     private Paint paintShape;
     private int txtColor;
     private int backgroundColor;
@@ -37,8 +35,7 @@ public class TempSensorView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         paintShape.setColor(backgroundColor);
-        //canvas.drawRect(0, 0, shapeWidth, shapeHeight, paintShape);
-        canvas.drawRoundRect(0,0,shapeWidth, shapeHeight, 5, 5, paintShape);
+        canvas.drawRoundRect(0,0,this.getWidth(), this.getHeight(), 5, 5, paintShape);
 
         paintShape.setAntiAlias(true);
         paintShape.setColor(txtColor);
@@ -92,24 +89,24 @@ public class TempSensorView extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        // Defines the extra padding for the shape name text
-        int textPadding = 10;
-        int contentWidth = shapeWidth;
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        // Resolve the width based on our minimum and the measure spec
-        int minw = contentWidth + getPaddingLeft() + getPaddingRight();
-        int w = resolveSizeAndState(minw, widthMeasureSpec, 0);
+        final float RATIO = 4f / 3f;
+        int width = getMeasuredWidth();
+        int height = getMeasuredHeight();
+        int widthWithoutPadding = width - getPaddingLeft() - getPaddingRight();
+        int heigthWithoutPadding = height - getPaddingTop() - getPaddingBottom();
 
-        // Ask for a height that would let the view get as big as it can
-        int minh = shapeHeight + getPaddingBottom() + getPaddingTop();
-     //   if (displayShapeName) {
-       //     minh += textYOffset + textPadding;
-        //}
-        int h = resolveSizeAndState(minh, heightMeasureSpec, 0);
+        int maxWidth = (int) (widthWithoutPadding);// * RATIO);
+        int maxHeight = (int) (heigthWithoutPadding);// / RATIO);
 
-        // Calling this method determines the measured width and height
-        // Retrieve with getMeasuredWidth or getMeasuredHeight methods later
-        setMeasuredDimension(w, h);
+        if (widthWithoutPadding  > maxWidth) {
+            width = maxWidth + getPaddingLeft() + getPaddingRight();
+        } else {
+            height = maxHeight + getPaddingTop() + getPaddingBottom();
+        }
+
+        setMeasuredDimension(width, height);
     }
 /*
     @Override

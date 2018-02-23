@@ -102,6 +102,12 @@ public class MainActivity extends AppCompatActivity {
             temp = Const.TEMP_MAX;
         }
         getLogger().add("setTemp(roomId=" + roomId + ", temp=" + temp + ")");
+
+        Room r = getHouse().getRoom(roomId);
+        r.isSensorTemp = false;
+        r.temp = temp;
+        updateRoom(r);
+
         handler.removeCallbacksAndMessages(null);
         handler.postDelayed(new Runnable() {
 
@@ -338,6 +344,7 @@ public class MainActivity extends AppCompatActivity {
                                         room.percent =  b[i++];
                                         i++; // data[2];
                                         room.temp = 5 *  b[i++];
+                                        room.isSensorTemp = true;
                                         room.lastRequestedTemp = room.temp;
                                         room.autoActive = (status & 1)==0;
                                         room.boostActive = (status & 4)>0;

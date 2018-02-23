@@ -15,6 +15,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,11 +33,7 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
         TextView txtPercent;
         TextView txtMsgCnt;
         ImageView imgStatus;
-        Button btnOff;
-        Button btnOn;
-        Button btnPreset0;
-        Button btnPreset1;
-        Button btnPreset2;
+        SeekBar seekBar;
         LinearLayout layoutCmd;
     }
 
@@ -63,11 +60,7 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
             holder.txtPercent = rowView.findViewById(R.id.txtRoomStatusPercent);
             holder.txtMsgCnt = rowView.findViewById(R.id.txtRoomStatusMsgCnt);
             holder.imgStatus = rowView.findViewById(R.id.imageStatus);
-            holder.btnOff = rowView.findViewById(R.id.btnOff);
-            holder.btnOn = rowView.findViewById(R.id.btnOn);
-            holder.btnPreset0 = rowView.findViewById(R.id.btnPreset0);
-            holder.btnPreset1 = rowView.findViewById(R.id.btnPreset1);
-            holder.btnPreset2 = rowView.findViewById(R.id.btnPreset2);
+            holder.seekBar =  rowView.findViewById(R.id.seekBar);
             holder.layoutCmd = rowView.findViewById(R.id.layoutCmd);
             rowView.setTag(holder);
         } else {
@@ -79,7 +72,7 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
         holder.txtName.setText( room.name + " : ");
         String mode = "";
         String temp = "";
-        String percent = "";
+        String percent = "(?)";
 
         if(room.valid) {
             temp = Format.tempToString(room.temp);
@@ -112,54 +105,55 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
                 icon = R.drawable.ic_failed;
                 break;
         }
-        holder.txtTemp.setText(temp);
+        holder.txtTemp.setText((room.isSensorTemp?"":">") + temp);
         holder.txtPercent.setText(percent);
         holder.imgStatus.setImageResource(icon);
         holder.txtMsgCnt.setText(""+room.msgCount);
         final int roomId = room.id;
-        final int roomPresetTemp0 = room.presetTemp.get(0);
-        final int roomPresetTemp1 = room.presetTemp.get(1);
-        final int roomPresetTemp2 = room.presetTemp.get(2);
 
-        holder.btnPreset0.setText(Format.tempToString(roomPresetTemp0));
-        holder.btnPreset1.setText(Format.tempToString(roomPresetTemp1));
-        holder.btnPreset2.setText(Format.tempToString(roomPresetTemp2));
-
-        holder.btnOff.setOnClickListener(new View.OnClickListener() {
+        holder.seekBar.setMax(10);
+        holder.seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
-            public void onClick(View v) {
-                mainActivity.requestSetTemp(roomId, Const.TEMP_MIN);
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+//               Log.d("temp", Integer.toString(i) +  " : " + Boolean.toString(b));
+                int temp = 0;
+                if (i<=0) {
+                    temp = Const.TEMP_MIN;
+                }
+                else if (i>=10) {
+                    temp = Const.TEMP_MAX;
+                } else {
+                    temp = 175 + (i*5);
+                }
+                mainActivity.requestSetTemp(roomId, temp);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
             }
         });
 
-        holder.btnOn.setOnClickListener(new View.OnClickListener() {
+        holder.txtName.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                mainActivity.requestSetTemp(roomId, Const.TEMP_MAX);
+            public void onClick(View view) {
+                mainActivity.showRoomSettingsActivity(roomId);
             }
         });
 
-        holder.btnPreset0.setOnClickListener(new View.OnClickListener() {
+        holder.txtPercent.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                mainActivity.requestSetTemp(roomId, roomPresetTemp0);
+            public void onClick(View view) {
+                mainActivity.requestStatusOfRoom(roomId);
             }
         });
-
-        holder.btnPreset1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mainActivity.requestSetTemp(roomId, roomPresetTemp1);
-            }
-        });
-
-        holder.btnPreset2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mainActivity.requestSetTemp(roomId, roomPresetTemp2);
-            }
-        });
-
+        //        mainActivity.requestSetTemp(roomId, Const.TEMP_MIN);
+/*
         rowView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -181,7 +175,7 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
                 return false;
             }
         });
-
+*/
 
         rowView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
