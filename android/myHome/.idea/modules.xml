@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/myHome.iml" filepath="$PROJECT_DIR$/myHome.iml" />
+      <module fileurl="file://$PROJECT_DIR$/segmentedView/segmentedView.iml" filepath="$PROJECT_DIR$/segmentedView/segmentedView.iml" />
     </modules>
   </component>
 </project>

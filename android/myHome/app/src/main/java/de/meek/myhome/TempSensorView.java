@@ -1,8 +1,10 @@
+/**
+ * Copyright (c) 2017 by Stefan Schmidt
+ */
 package de.meek.myhome;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -11,19 +13,13 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
 
-/**
- * Created by stefan on 17.02.2018.
- */
-
 public class TempSensorView extends View {
 
     private Paint paintShape;
     private int txtColor;
     private int backgroundColor;
     Drawable icon = null;
-    private float temp = 0.0f;
-    private float humidity = 0.0f;
-
+    SensorData data = null;
 
     public TempSensorView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -35,19 +31,31 @@ public class TempSensorView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         paintShape.setColor(backgroundColor);
-        canvas.drawRoundRect(0,0,this.getWidth(), this.getHeight(), 5, 5, paintShape);
+        //canvas.drawRoundRect(0,0,this.getWidth(), this.getHeight(), 5, 5, paintShape);
+        canvas.drawRect(0,0,this.getWidth(), this.getHeight(), paintShape);
 
         paintShape.setAntiAlias(true);
         paintShape.setColor(txtColor);
         paintShape.setTextSize(35);
-     //   paintShape.setFakeBoldText(true);
         paintShape.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        int x = 75;
 
-        canvas.drawText(String.format("%.1f°", temp) , 80, 40, paintShape);
-     //   paintShape.setFakeBoldText(false);
-        paintShape.setTextSize(25);
-        paintShape.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
-        canvas.drawText(Integer.toString((int)humidity) + "%", 85, 70, paintShape);
+        if (data != null) {
+            if (data.temperatureValid) {
+                canvas.drawText(String.format("%.1f°", data.temperature), x, 40, paintShape);
+            }
+
+            paintShape.setTextSize(25);
+            paintShape.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
+
+            if (data.humidityValid) {
+                canvas.drawText(Integer.toString((int) data.humidity) + "%", x, 70, paintShape);
+            }
+
+            if (data.dewPointValid) {
+                canvas.drawText(String.format("%.1f°", data.dewPoint), x + 55, 70, paintShape);
+            }
+        }
 
         if(icon!=null) {
             icon.draw(canvas);
@@ -60,30 +68,20 @@ public class TempSensorView extends View {
    }
 
     private void setupAttributes(AttributeSet attrs) {
-        // Obtain a typed array of attributes
         TypedArray a = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.TempSensorView, 0, 0);
-        // Extract custom attributes into member variables
         try {
-            // ?android:attr/textColorSecondary
             txtColor = a.getColor(R.styleable.TempSensorView_textColor, Color.WHITE);
             backgroundColor = a.getColor(R.styleable.TempSensorView_backgroundColor, Color.BLACK);
             icon = a.getDrawable(R.styleable.TempSensorView_tempIcon);
             icon.setBounds(15, 20, 60, 60);
             icon.setAlpha(200);
-         //   displayShapeName = a.getBoolean(R.styleable.ShapeSelectorView_displayShapeName, false);
         } finally {
-            // TypedArray objects are shared and must be recycled.
             a.recycle();
         }
     }
 
-    public void setTemp(float val) {
-        this.temp = val;
-        invalidate();
-    }
-
-    public void setHumidity(float val) {
-        this.humidity = val;
+    public void setData(SensorData data) {
+        this.data = data;
         invalidate();
     }
 
@@ -91,14 +89,12 @@ public class TempSensorView extends View {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        final float RATIO = 4f / 3f;
         int width = getMeasuredWidth();
         int height = getMeasuredHeight();
         int widthWithoutPadding = width - getPaddingLeft() - getPaddingRight();
         int heigthWithoutPadding = height - getPaddingTop() - getPaddingBottom();
-
-        int maxWidth = (int) (widthWithoutPadding);// * RATIO);
-        int maxHeight = (int) (heigthWithoutPadding);// / RATIO);
+        int maxWidth = (int) (widthWithoutPadding);
+        int maxHeight = (int) (heigthWithoutPadding);
 
         if (widthWithoutPadding  > maxWidth) {
             width = maxWidth + getPaddingLeft() + getPaddingRight();
@@ -146,6 +142,5 @@ public class TempSensorView extends View {
     // Pass base view state on to super
     super.onRestoreInstanceState(state);
   }
-
 */
 }

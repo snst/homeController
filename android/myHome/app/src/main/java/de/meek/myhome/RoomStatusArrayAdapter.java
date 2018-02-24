@@ -5,19 +5,14 @@
 package de.meek.myhome;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.github.czy1121.view.SegmentedView;
 
 import java.util.ArrayList;
 
@@ -33,8 +28,7 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
         TextView txtPercent;
         TextView txtMsgCnt;
         ImageView imgStatus;
-        SeekBar seekBar;
-        LinearLayout layoutCmd;
+        SegmentedView sv;
     }
 
     public RoomStatusArrayAdapter(Context context, ArrayList<Room> rooms) {
@@ -42,6 +36,28 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
         this.context = context;
         this.rooms = rooms;
         this.mainActivity = (MainActivity) context;
+    }
+
+    private void updateConnectionStatusIcon(UserHolder holder, eConnectionState state) {
+        int icon = R.drawable.ic_offline;
+        switch(state) {
+            case CONNECTED:
+                icon = R.drawable.ic_online;
+                break;
+            case CONNECTING:
+                icon = R.drawable.ic_connecting;
+                break;
+            case QUEUED:
+                break;
+            case FAILED:
+                icon = R.drawable.ic_failed;
+                break;
+            case DISCONNECTED:
+            default:
+                icon = R.drawable.ic_offline;
+                break;
+        }
+        holder.imgStatus.setImageResource(icon);
     }
 
     @Override
@@ -60,19 +76,21 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
             holder.txtPercent = rowView.findViewById(R.id.txtRoomStatusPercent);
             holder.txtMsgCnt = rowView.findViewById(R.id.txtRoomStatusMsgCnt);
             holder.imgStatus = rowView.findViewById(R.id.imageStatus);
-            holder.seekBar =  rowView.findViewById(R.id.seekBar);
-            holder.layoutCmd = rowView.findViewById(R.id.layoutCmd);
+            holder.sv = rowView.findViewById(R.id.sv1);
             rowView.setTag(holder);
         } else {
             holder = (UserHolder) rowView.getTag();
         }
 
         Room room = rooms.get(position);
-        holder.layoutCmd.setVisibility(room.showControls ? View.VISIBLE : View.GONE);
+        holder.sv.setVisibility(room.showControls ? View.VISIBLE : View.GONE);
         holder.txtName.setText( room.name + " : ");
         String mode = "";
         String temp = "";
-        String percent = "(?)";
+        String percent = "";
+
+        float alphaTxt = room.refreshing ? 0.3f : 1.0f;
+//        float alphaIcon = room.refreshing ? 0.3f : 0.7f;
 
         if(room.valid) {
             temp = Format.tempToString(room.temp);
@@ -85,57 +103,33 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
             if(mode.length()>0)
                 mode += " ";
 
-            percent = "("+mode+room.percent+"%)";
+            percent +=  mode + room.percent + "%";
         }
 
-        int icon = R.drawable.ic_offline;
-        switch(room.connectionState) {
-            case CONNECTED:
-                icon = R.drawable.ic_online;
-                break;
-            case CONNECTING:
-                icon = R.drawable.ic_connecting;
-                break;
-            case QUEUED:
-                break;
-            case DISCONNECTED:
-                icon = R.drawable.ic_offline;
-                break;
-            case FAILED:
-                icon = R.drawable.ic_failed;
-                break;
-        }
-        holder.txtTemp.setText((room.isSensorTemp?"":">") + temp);
+        updateConnectionStatusIcon(holder, room.connectionState);
+
+//        holder.txtTemp.setText((room.isSensorTemp ? "" : ">") + temp);
+        holder.txtTemp.setText(temp);
         holder.txtPercent.setText(percent);
-        holder.imgStatus.setImageResource(icon);
         holder.txtMsgCnt.setText(""+room.msgCount);
+
+        holder.txtTemp.setAlpha(alphaTxt);
+        holder.txtPercent.setAlpha(alphaTxt);
+//        holder.imgStatus.setAlpha(alphaIcon);
+
         final int roomId = room.id;
-
-        holder.seekBar.setMax(10);
-        holder.seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        holder.sv.setOnItemSelectedListener(new SegmentedView.OnItemSelectedListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-//               Log.d("temp", Integer.toString(i) +  " : " + Boolean.toString(b));
-                int temp = 0;
-                if (i<=0) {
-                    temp = Const.TEMP_MIN;
-                }
-                else if (i>=10) {
-                    temp = Const.TEMP_MAX;
-                } else {
-                    temp = 175 + (i*5);
-                }
-                mainActivity.requestSetTemp(roomId, temp);
-            }
+            public void onSelected(int index, String text) {
+               // Toast.makeText(this,  index + " : " + text, Toast.LENGTH_SHORT).show();
+                int val = 0;
+                if(text.equals("on"))
+                    val = Const.TEMP_MAX;
+                else if(text.equals("off"))
+                    val = Const.TEMP_MIN;
+                else val = Integer.parseInt(text) * 10;
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
+                mainActivity.requestSetTemp(roomId, val);
             }
         });
 
@@ -146,36 +140,16 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
             }
         });
 
-        holder.txtPercent.setOnClickListener(new View.OnClickListener() {
+        final UserHolder h = holder;
+        View.OnClickListener l = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mainActivity.requestStatusOfRoom(roomId);
+                mainActivity.repaintRooms();
             }
-        });
-        //        mainActivity.requestSetTemp(roomId, Const.TEMP_MIN);
-/*
-        rowView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (touchPositionX < view.getWidth() * 2 / 3) {
-                    mainActivity.showRoomSettingsActivity(roomId);
-                } else {
-                    mainActivity.requestStatusOfRoom(roomId);
-                }
-
-            }
-        });
-
-        rowView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN){
-                    touchPositionX = (int)event.getX();
-                }
-                return false;
-            }
-        });
-*/
+        };
+        holder.txtPercent.setOnClickListener(l);
+        holder.imgStatus.setOnClickListener(l);
 
         rowView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -184,9 +158,6 @@ public class RoomStatusArrayAdapter extends ArrayAdapter<Room> {
                 return false;
             }
         });
-
         return rowView;
     }
-
-
 }

@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -24,7 +23,7 @@ import java.util.Date;
 // https://wildanmsyah.wordpress.com/2017/05/11/mqtt-android-client-tutorial/
 public class MainActivity extends AppCompatActivity {
 
-    final String APP_VERSION = "0.3.0";
+    final String APP_VERSION = "0.3.1";
 
     MqttHelper mqttHelper = null;
     Handler handler = new Handler();
@@ -34,9 +33,14 @@ public class MainActivity extends AppCompatActivity {
     RoomSettings roomSettings = null;
     RoomStatusArrayAdapter adapter = null;
     SwipeRefreshLayout refreshLayout = null;
-    TempSensorView tempSensorViewOutside = null;
-    TempSensorView tempSensorViewInside = null;
     boolean mqttConnected = false;
+    DwdWeatherProvider dwd = new DwdWeatherProvider() {
+        @Override
+        public void onNewData(SensorData data) {
+            super.onNewData(data);
+            showSensorData(data);
+        }
+    };
 
     protected MyApplication getMyApp() {
         return ((MyApplication)getApplicationContext());
@@ -73,19 +77,23 @@ public class MainActivity extends AppCompatActivity {
 
         sendCmd(new Cmd(-1,eCmd.GETTEMP));
 
-
         for(int i=0; i<getHouse().getSize(); i++) {
             Room r = getHouse().getRoom(i);
             if(forceAll || r.updateOnStart) {
-                r.connectionState = eConnectionState.DISCONNECTED;
                 requestStatusOfRoom(i);
             }
         }
-        updateAllRooms();
+        repaintRooms();
+        dwd.update();
     }
 
     public void requestStatusOfRoom(int roomId) {
-        sendCmd(new CmdGetStatus(roomId));
+        Room r = getHouse().getRoom(roomId);
+        if (r != null) {
+//            r.connectionState = eConnectionState.DISCONNECTED;
+            r.refreshing = true;
+            sendCmd(new CmdGetStatus(roomId));
+        }
     }
 
     public void closeConnection(int roomId) {
@@ -103,10 +111,10 @@ public class MainActivity extends AppCompatActivity {
         }
         getLogger().add("setTemp(roomId=" + roomId + ", temp=" + temp + ")");
 
-        Room r = getHouse().getRoom(roomId);
-        r.isSensorTemp = false;
-        r.temp = temp;
-        updateRoom(r);
+//        Room r = getHouse().getRoom(roomId);
+//        r.isSensorTemp = false;
+//        r.temp = temp;
+//        updateRoom(r);
 
         handler.removeCallbacksAndMessages(null);
         handler.postDelayed(new Runnable() {
@@ -118,32 +126,32 @@ public class MainActivity extends AppCompatActivity {
         }, 200); //delay
     }
 
-    public void updateAllRooms() {
+    public void repaintRooms() {
         adapter.notifyDataSetChanged();
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        updateAllRooms();
 
         if (resultCode == RESULT_OK) {
             if (requestCode == Const.ACTIVITY_TEMP) {
 
                 int cmd = data.getIntExtra(Const.INTENT_NEW_CMD, 0);
                 int roomId = data.getIntExtra(Const.INTENT_ROOM_ID, 0);
-                if(cmd!=0) {
+                if(cmd != 0) {
                     sendCmd(new Cmd(roomId, eCmd.values()[cmd]));
                 } else {
                     int newTemp = data.getIntExtra(Const.INTENT_NEW_TEMP, -1);
                     if(newTemp != -1) {
                         requestSetTemp(roomId, newTemp);
-                        return;
+    //                    return;
                     }
                 }
             } else if( requestCode == Const.ACTIVITY_SETTINGS) {
                 restartMqtt();
             }
         }
+
+        repaintRooms();
     }
 
     public void log(String str, boolean toast) {
@@ -209,10 +217,6 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent,Const.ACTIVITY_LOG);
     }
 
-    void updateRoom(Room room) {
-        adapter.notifyDataSetChanged();
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -224,8 +228,6 @@ public class MainActivity extends AppCompatActivity {
         AccountConfig.load(this);
         roomSettings = new RoomSettings(this);
         listView = findViewById(R.id.listViewRooms);
-        tempSensorViewInside = findViewById(R.id.tempViewInside);
-        tempSensorViewOutside = findViewById(R.id.tempViewOutside);
 
         for (int j = 0; j < AccountConfig.NUMBER_OF_ROOMS; j++) {
             Room room = new Room(j);
@@ -247,11 +249,9 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
 
-
-        updateAllRooms();
+        repaintRooms();
         startMqtt();
     }
-
 
     @Override
     public void onBackPressed() {
@@ -274,22 +274,28 @@ public class MainActivity extends AppCompatActivity {
         setTitle("myHome - " + (mqttConnected ? "connected" : "disconnected") + " #" + msgCntMode);
     }
 
-    void showSensorData(int sensorId, float temp, int humidity, float pressure) {
-        TempSensorView t = null;
-        switch(sensorId) {
+    void showSensorData(SensorData data) {
+        int id = 0;
+        switch(data.source) {
             case 1: {
-                t = tempSensorViewInside;
+                id = R.id.tempViewInside;
                 break;
             }
             case 2: {
-                t = tempSensorViewOutside;
+                id = R.id.tempViewOutside;
                 break;
             }
-            default: break;
+            case 3: {
+                id = R.id.tempViewDWD;
+                break;
+            }
+            default:
+                return;
         }
-        if (t != null) {
-            t.setTemp(temp);
-            t.setHumidity(humidity);
+        TempSensorView view = findViewById(id);
+
+        if (view != null) {
+            view.setData(data);
         }
     }
 
@@ -344,16 +350,17 @@ public class MainActivity extends AppCompatActivity {
                                         room.percent =  b[i++];
                                         i++; // data[2];
                                         room.temp = 5 *  b[i++];
-                                        room.isSensorTemp = true;
+                                        //room.isSensorTemp = true;
                                         room.lastRequestedTemp = room.temp;
                                         room.autoActive = (status & 1)==0;
                                         room.boostActive = (status & 4)>0;
                                         room.lowBattery = (status & 80)>0;
                                         room.valid = true;
+                                        room.refreshing = false;
                                         room.msgCount++;
                                         room.lastUpdate = new Date();
                                         room.connectionState = eConnectionState.CONNECTED;
-                                        updateRoom(room);
+                                        repaintRooms();
                                     } else {
                                         log("Invalid roomId", addr);
                                     }
@@ -376,10 +383,10 @@ public class MainActivity extends AppCompatActivity {
                                     if (room != null) {
                                         room.connectionState = eConnectionState.values()[b[i]];
                                         log(">" + topic + ": connState: " + room.connectionState.toString(), addr);
-                                        updateRoom(room);
                                     } else {
                                         log(">" + topic + ": connState: no matching room", addr);
                                     }
+                                    repaintRooms();
                                 }
                             } break;
                             case SENSOR: {
@@ -393,8 +400,11 @@ public class MainActivity extends AppCompatActivity {
 
                                     String str = "" + sensorId + ", temp=" + temperature + ", humidity=" + humidity;
                                     log(">" + topic + ": sensor:" + str);
-                                    //showShortToast(str);
-                                    showSensorData(sensorId, temperature, humidity, 0);
+
+                                    SensorData data = new SensorData(sensorId);
+                                    data.setTemperature(temperature);
+                                    data.setHumidity(humidity);
+                                    showSensorData(data);
                                 }
                             } break;
                             default: {

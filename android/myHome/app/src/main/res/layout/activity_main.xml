@@ -30,13 +30,30 @@
                     android:orientation="horizontal">
 
                     <de.meek.myhome.TempSensorView
-                        android:id="@+id/tempViewInside"
-                        android:layout_width="150dp"
+                        android:id="@+id/tempViewDWD"
+                        android:layout_width="130dp"
                         android:layout_height="60dp"
                         android:layout_alignParentLeft="true"
                         android:layout_alignParentRight="true"
                         android:layout_alignParentTop="true"
-                        android:layout_marginLeft="10dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_weight="0.2"
+                        app:backgroundColor="@color/listBackground"
+                        app:tempIcon="@drawable/ic_flight"
+                        app:textColor="?android:attr/textColorSecondary" />
+
+                    <Space
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8" />
+
+                    <de.meek.myhome.TempSensorView
+                        android:id="@+id/tempViewInside"
+                        android:layout_width="110dp"
+                        android:layout_height="60dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentTop="true"
                         android:layout_marginTop="10dp"
                         android:layout_weight="0.2"
                         app:backgroundColor="@color/listBackground"
@@ -50,12 +67,11 @@
 
                     <de.meek.myhome.TempSensorView
                         android:id="@+id/tempViewOutside"
-                        android:layout_width="150dp"
+                        android:layout_width="110dp"
                         android:layout_height="60dp"
                         android:layout_alignParentLeft="true"
                         android:layout_alignParentRight="true"
                         android:layout_alignParentTop="true"
-                        android:layout_marginRight="10dp"
                         android:layout_marginTop="10dp"
                         android:layout_weight="0.2"
                         app:backgroundColor="@color/listBackground"
