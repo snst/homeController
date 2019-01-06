@@ -30,7 +30,7 @@ bool MqttHandler::getResponse(MqttResponse &msg) {
 
 
 void MqttHandler::sendResponseStatus(const BTAddr &addr, const uint8_t *pData, size_t length) {
-  if (addr.isValid() && pData && length==6) {
+  if (addr.isValid() && pData && length>=6) {
     MqttResponseTempState msg(addr, &pData[2]);
     msg.print();
     addResponse(msg);
