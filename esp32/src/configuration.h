@@ -5,7 +5,7 @@
 
 #define VERSION_MAJOR   0
 #define VERSION_MINOR   4
-#define VERSION_REV     0
+#define VERSION_REV     1
 
 #define USE_SOFT_I2C
 
@@ -41,7 +41,7 @@
 
 #define UPDATE_INTERVAL_TEMP (3*60*1000)
 
-#define TRACE_LEVEL 10
+#define TRACE_LEVEL 25
 
 
 #endif
